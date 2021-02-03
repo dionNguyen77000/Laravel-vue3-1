@@ -19,6 +19,12 @@ use App\Http\Controllers\Auth\RegisterController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::get('/welcome', function () {
+    return view('welcome');
+ })->name('welcome');
+ 
+
 Route::get('/home', function () {
    return view('home');
 })->name('home');
@@ -41,8 +47,10 @@ Route::get('/posts', function () {
 });
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts');
+Route::get('/posts_vue', [PostController::class, 'index_vue'])->name('posts');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 Route::post('/posts', [PostController::class, 'store']);
+Route::post('/posts_vue', [PostController::class, 'store_vue']);
 Route::delete('/posts{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 
 

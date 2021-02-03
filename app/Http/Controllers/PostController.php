@@ -34,6 +34,20 @@ class PostController extends Controller
          'posts' => $posts
          ]);
     }
+    public function index_vue()
+    {
+        // dd(Carbon::now()->isoFormat('dddd D'));
+         
+        // dd(Post::find(2)->created_at->isoFormat('dddd D')); //This return Carbon- third party - can read document to find out how to use it
+        // $posts = Post::orderBy('created_at','desc') or latest()
+        $posts = Post::latest()->with(['user','likes'])->get() ; //all Post::where or Post::find(1) - return collection
+        // $posts = Post::all()-> sortByDesc("id")->paginate(20);
+        // $posts = Post::paginate(2);
+        // $posts= Post::all();
+        // dd($posts);
+
+        return  $posts;
+    }
 
     public function show(Post $post){
         return view('posts.show',[
@@ -59,6 +73,25 @@ class PostController extends Controller
         $request->user()->posts()->create($request->only('body'));
 
         return back();
+    }
+    public function store_vue(Request $request)
+    {
+        $this->validate($request, [
+            'body' => 'required'
+        ]);
+
+        // Post::create([
+        //     'user_id' => auth()->id(),
+        //     'body' => $request->body
+        // ]);
+
+        // $request->user()->posts()->create([
+        //     'body' => $request->body
+        // ]);
+
+        $post = $request->user()->posts()->create($request->only('body'));
+
+        return $post->load(['user']);
     }
 
     public function destroy(Post $post)

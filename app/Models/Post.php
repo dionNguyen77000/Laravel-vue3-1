@@ -14,6 +14,13 @@ class Post extends Model
         'body'
     ];
 
+    protected $appends = ['howLong'];
+
+    public function getHowLongAttribute()
+    {
+        return $this->created_at->diffForHumans();
+    }
+
     public function likedBy(User $user){
         return $this->likes->contains('user_id', $user->id);  //contains: colleciton method
     }
