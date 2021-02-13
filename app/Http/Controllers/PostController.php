@@ -36,6 +36,7 @@ class PostController extends Controller
     }
     public function index_vue()
     {
+
         // dd(Carbon::now()->isoFormat('dddd D'));
          
         // dd(Post::find(2)->created_at->isoFormat('dddd D')); //This return Carbon- third party - can read document to find out how to use it
@@ -92,6 +93,7 @@ class PostController extends Controller
         $post = $request->user()->posts()->create($request->only('body'));
 
         return $post->load(['user']);
+      
     }
 
     public function destroy(Post $post)
@@ -106,6 +108,19 @@ class PostController extends Controller
 
         $post->delete();
         return back();
+    }
+    public function destroy_vue(Post $post)
+    {
+
+        // to check if the correct user to delete 
+        // if (!$post->ownedBy(auth()->user())){
+        //     dd('no');
+        // }
+
+        //using policy to check if the correct user delete
+        $this->authorize('delete',$post);
+        $post->delete();
+        return $post;
     }
 
 }

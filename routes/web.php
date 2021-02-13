@@ -47,11 +47,12 @@ Route::get('/posts', function () {
 });
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts');
-Route::get('/posts_vue', [PostController::class, 'index_vue'])->name('posts');
+Route::get('/posts_vue', [PostController::class, 'index_vue'])->name('posts_vue');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 Route::post('/posts', [PostController::class, 'store']);
 Route::post('/posts_vue', [PostController::class, 'store_vue']);
-Route::delete('/posts{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+Route::delete('/posts_vue/{post}', [PostController::class, 'destroy_vue'])->name('posts_vue.destroy');
 
 
 // Route::post('/posts/{id}/likes', [PostLikeController::class, 'store']) -> name('posts.likes') ;
