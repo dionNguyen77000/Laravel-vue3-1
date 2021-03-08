@@ -21,12 +21,11 @@
             <a href="{{route('dashboard')}}" class="p-3">Dashboard</a>
         </li>
         <li>
-            <a href="{{route('posts')}}" class="p-3">Post</a>
+            <a href="{{route('reminder')}}" class="p-3">Reminder</a>
         </li>
         </ul>
 
         <ul class="flex items-center">
-      
         <!-- @if (auth()->user()) -->
         @auth
         <li>

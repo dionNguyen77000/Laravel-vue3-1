@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PostController;
+use App\Http\Controllers\Reminder\PostController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\UserPostController;
 use App\Http\Controllers\DashboardController;
@@ -20,9 +20,9 @@ use App\Http\Controllers\Auth\RegisterController;
 |
 */
 
-Route::get('/welcome', function () {
-    return view('welcome');
- })->name('welcome');
+Route::get('/reminder', function () {
+    return view('reminder.index');
+ })->name('reminder');
  
 
 Route::get('/home', function () {
@@ -46,14 +46,15 @@ Route::get('/posts', function () {
     return view('posts.index');
 });
 
-Route::get('/posts', [PostController::class, 'index'])->name('posts');
-Route::get('/posts_vue', [PostController::class, 'index_vue'])->name('posts_vue');
-Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
-Route::post('/posts', [PostController::class, 'store']);
-Route::post('/posts_vue', [PostController::class, 'store_vue']);
-Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-Route::delete('/posts_vue/{post}', [PostController::class, 'destroy_vue'])->name('posts_vue.destroy');
+// Route::get('/posts', [PostController::class, 'index'])->name('posts');
+// Route::get('/posts_vue', [PostController::class, 'index_vue'])->name('posts_vue');
+// Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+// Route::post('/posts', [PostController::class, 'store']);
+// Route::post('/posts_vue', [PostController::class, 'store_vue']);
+// Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+// Route::delete('/posts_vue/{post}', [PostController::class, 'destroy_vue'])->name('posts_vue.destroy');
 
+Route::resource('posts', PostController::class);
 
 // Route::post('/posts/{id}/likes', [PostLikeController::class, 'store']) -> name('posts.likes') ;
 Route::post('/posts/{post}/likes', [PostLikeController::class, 'store'])->name('posts.likes');

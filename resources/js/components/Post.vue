@@ -2,44 +2,121 @@
 <div class="mb-3 p-3 border border-indigo-600 rounded-md shadow-md">
     <a href="" class="font-bold text-lg">{{post.user.name}}</a> -
     <span class="text-gray-600 text-sm">{{post.howLong}}</span>
-    <p class="mb-1 text-xl">{{post.body}}</p>
-    
+    <template v-if="editForm.id === post.id">
+        <div>
+            <form action="#">
+                <textarea autoFocus :id='post.id'  v-model="editForm.fields.body" class="p-2 resize border border-grey-800 rounded-md w-full" :class="{ 'border-3 border-red-700': editForm.errors.body }" >  
+                </textarea>
+            </form>
+            <div v-if="editForm.fields.body.length == 0">
+                <p class="mb-1 text-red-700 font-bold" v-if="editForm.errors.body">{{editForm.errors.body}}</p>
+            </div>
+        </div>
+         <button 
+        class="bg-transparent border border-gray-600 mr-1 p-2  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none"
+        @click="editForm.id = null"
+         >
+         Cancel
+         </button>
+         
+        <button  
+        v-if="editForm.id === post.id" 
+        class=" mr-1 py-1 px-3 shadow-md rounded-full bg-blue-400 text-white text-sm hover:bg-red-700 focus:outline-none"
+        @click="update"
+        >
+        Save
+        </button>
+    </template>
+    <template v-else>
+        <p class="mb-1 text-xl">{{post.body}}</p>
+         <button  
+        v-if="user != null && user.id === post.user.id && editForm.id !== post.id" 
+        class=" mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-green-700 focus:outline-none"
+        @click="edit(post)"
+        >
+        Edit
+        </button>
         <button  
         v-if="user != null && user.id === post.user.id " 
-        class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none active:bg-green-crimson"
+        class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
         @click="deletePost(post)"
         >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        Delete
         </button>
-
-
-
+    </template>
 </div>
 </template>
 
 <script>
 // import LikeButton from './LikeButton.vue'
-import {mapGetters, mapActions} from 'vuex'
+import {mapActions} from 'vuex'
+import axios from 'axios'
+
 export default {
+    
     name: 'Post',
-    data () {
-        return {
-            user: window.User
-        }
-    },
+    
     props: [
         'post'
     ],
     
+    data () {
+        return {
+            column: 'body',
+            user: window.User,
+            editForm: {
+                id: null,
+                fields: {'body': ''},
+                errors: []
+            },
+        }
+    },
+    computed: {
+        // ...mapGetters(['editForm',]),
+    },
+  
     components: [
             // LikeButton
     ],
 
      methods: {
-        ...mapActions(['deletePost']),
+        ...mapActions(['fetchPosts']),
+        edit (post) {
+            this.editForm.id=post.id
+            this.editForm.fields.body = post.body
+            this.editForm.errors = []
+            // this.editForm.fileds = _.pick(post, ['body'])
+            // this.editing.id = post.id
+        },
+
+        async update() {
+            await axios.patch(`/posts/${this.editForm.id}`,this.editForm.fields)
+            .then((response) => {
+                this.fetchPosts().then(() => {
+                        // commit('resetTheForm')
+                        this.editForm.id = null
+                        this.editForm.fields.body = ''
+                        this.editForm.errors = []
+                })
+            }).catch((error) => {
+                if (error.response.status === 422) {
+                     this.editForm.errors.body = error.response.data.errors.body[0]
+                } 
+            })
+        },
+        
+        async deletePost(post){
+            if (!window.confirm('Are you sure ?')){
+                return
+            }
+            await axios.delete(`posts/${post.id}`)
+            .then((response)=>{
+                this.fetchPosts()
+            })
+        },
     },
     mounted(){
-    //    console.log(this.user) // 'bar'
+   
     }
    
 }

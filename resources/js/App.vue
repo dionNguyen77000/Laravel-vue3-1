@@ -1,37 +1,50 @@
 <template>
 <div class="flex justify-center">
-    <div class="w-8/12 bg-white p-6 roudned-lg">
+    <div class="w-11/12 bg-white p-6 roudned-lg">
+    <!-- All Posts {{posts}} -->
+   
     <PostForm/>
+
+     <Pagination :meta="allPaginationMeta" v-on:pagination="fetchPosts"/>
     <Post v-for="post in allPosts" :post="post" :key="post.id"> </Post>
+    <Pagination :meta="allPaginationMeta" v-on:pagination="fetchPosts"/>
     </div>
 </div>
 </template>
 
 <script>
+
 import PostForm from './components/PostForm.vue'
 import Post from './components/Post.vue'
+import Pagination from './components/pagination/Pag.vue'
 import {mapGetters, mapActions} from 'vuex'
 export default {
     name: 'App',
     data(){
         return {
-           posts:[],
-            user: window.User
+            user: window.User,
         }
-    },  
-    computed: mapGetters(['allPosts']),
+    },
+
+    computed: {
+         posts(){
+            //  return this.$store.state.posts
+         },
+        ...mapGetters([
+        'allPosts', 'allPaginationMeta',
+        ]),
+    },
     methods: {
-        ...mapActions(['fetchPosts', 'deletePost', "updatePost"]),
+        ...mapActions(['fetchPosts']),
     },
     components:{
-        PostForm, Post,
+        PostForm, Post, Pagination
     },
   
     mounted() {
         
-        this.fetchPosts()
-            // this.$http.get('/posts').then((response) => {
-                
+         this.fetchPosts()
+            // this.$http.get('/posts').then((response) => {                
             // });
             // eventHub.$on('post-added', this.addPost)
 
