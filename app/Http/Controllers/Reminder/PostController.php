@@ -59,7 +59,7 @@ class PostController extends Controller
         // dd(Post::find(2)->created_at->isoFormat('dddd D')); //This return Carbon- third party - can read document to find out how to use it
         // $posts = Post::orderBy('created_at','desc') or latest()
         return new PostResource(
-            Post::latest()->with(['user','likes'])->paginate(15)  //all Post::where or Post::find(1) - return collection
+            Post::latest()->with(['user','likes'])->paginate(20)  //all Post::where or Post::find(1) - return collection
         );
         // $posts = Post::latest()->with(['user','likes'])->get() ; //all Post::where or Post::find(1) - return collection
         // $posts = Post::all()-> sortByDesc("id")->paginate(20);

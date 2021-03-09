@@ -35457,9 +35457,9 @@ const _hoisted_5 = { action: "#" }
 const _hoisted_6 = { key: 0 }
 const _hoisted_7 = {
   key: 0,
-  class: "mb-1 text-red-700 font-bold"
+  class: "mb-2 text-red-700 font-bold"
 }
-const _hoisted_8 = { class: "mb-1 text-xl" }
+const _hoisted_8 = { class: "mb-2 text-xl" }
 ;(0,vue__WEBPACK_IMPORTED_MODULE_0__.popScopeId)()
 
 const render = /*#__PURE__*/_withId((_ctx, _cache, $props, $setup, $data, $options) => {
@@ -35489,7 +35489,7 @@ const render = /*#__PURE__*/_withId((_ctx, _cache, $props, $setup, $data, $optio
               : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)
           ]),
           (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("button", {
-            class: "bg-transparent border border-gray-600 mr-1 p-2  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none",
+            class: "bg-transparent border border-gray-600 mr-1 p-1  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none",
             onClick: _cache[2] || (_cache[2] = $event => ($data.editForm.id = null))
           }, " Cancel "),
           ($data.editForm.id === $props.post.id)
@@ -35505,7 +35505,7 @@ const render = /*#__PURE__*/_withId((_ctx, _cache, $props, $setup, $data, $optio
           ($data.user != null && $data.user.id === $props.post.user.id && $data.editForm.id !== $props.post.id)
             ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)("button", {
                 key: 0,
-                class: " mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-green-700 focus:outline-none",
+                class: " mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none",
                 onClick: _cache[4] || (_cache[4] = $event => ($options.edit($props.post)))
               }, " Edit "))
             : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true),
@@ -35547,7 +35547,7 @@ const _hoisted_4 = {
   class: "text-red-700 font-bold"
 }
 const _hoisted_5 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("div", { class: "grid justify-items-center" }, [
-  /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("button", { class: "bg-blue-500 text-white px-4 py-2 rounded font-medium" }, " Post ")
+  /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("button", { class: "bg-indigo-500 hover:bg-indigo-800 text-white px-4 py-2 rounded " }, " Post ")
 ], -1 /* HOISTED */)
 const _hoisted_6 = {
   key: 1,
@@ -35617,7 +35617,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("nav", _hoisted_2, [
       (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("a", {
         href: "#",
-        class: "relative border border-gray-300 inline-flex items-center px-2 py-2 rounded-l-md  bg-white text-sm font-medium text-gray-500 hover:bg-gray-50",
+        class: "relative border border-gray-300 inline-flex items-center px-1 py-1.5 rounded-l-md  bg-white text-sm font-medium text-gray-500 hover:bg-gray-50",
         onClick: _cache[1] || (_cache[1] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)($event => ($options.switched($props.meta.current_page - 1)), ["prevent"]))
       }, [
         _hoisted_3
@@ -35625,14 +35625,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.meta.last_page, (x) => {
         return ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)("a", {
           key: x,
-          class: [{ 'bg-blue-400': $props.meta.current_page === x}, "relative inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-blue-200"],
+          class: [{ 'bg-blue-400': $props.meta.current_page === x}, "relative inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-blue-200"],
           href: "#",
           onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)($event => ($options.switched(x)), ["prevent"])
         }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(x), 11 /* TEXT, CLASS, PROPS */, ["onClick"]))
       }), 128 /* KEYED_FRAGMENT */)),
       (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)("a", {
         href: "#",
-        class: "relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50",
+        class: "relative inline-flex items-center px-1 py-1.5 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50",
         onClick: _cache[2] || (_cache[2] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)($event => ($options.switched($props.meta.current_page + 1)), ["prevent"]))
       }, [
         _hoisted_4

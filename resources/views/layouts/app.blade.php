@@ -36,8 +36,21 @@
             @csrf
             <button type="submit">Logout</button>
             </form>
-           
         </li>
+
+
+        {{-- @role('admin')
+        <li>
+           <a href="">Admin</a>
+        </li>
+        @endrole --}}
+
+        {{-- another way --}}
+        @if (auth()->user()->hasRole('admin'))
+        <li>
+            <a href="">Admin</a>
+         </li>
+        @endif
         @endauth
         <!-- @else -->
         @guest

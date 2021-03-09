@@ -3,17 +3,17 @@
     <a href="" class="font-bold text-lg">{{post.user.name}}</a> -
     <span class="text-gray-600 text-sm">{{post.howLong}}</span>
     <template v-if="editForm.id === post.id">
-        <div>
+        <div >
             <form action="#">
                 <textarea autoFocus :id='post.id'  v-model="editForm.fields.body" class="p-2 resize border border-grey-800 rounded-md w-full" :class="{ 'border-3 border-red-700': editForm.errors.body }" >  
                 </textarea>
             </form>
             <div v-if="editForm.fields.body.length == 0">
-                <p class="mb-1 text-red-700 font-bold" v-if="editForm.errors.body">{{editForm.errors.body}}</p>
+                <p class="mb-2 text-red-700 font-bold" v-if="editForm.errors.body">{{editForm.errors.body}}</p>
             </div>
         </div>
          <button 
-        class="bg-transparent border border-gray-600 mr-1 p-2  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none"
+        class="bg-transparent border border-gray-600 mr-1 p-1  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none"
         @click="editForm.id = null"
          >
          Cancel
@@ -28,10 +28,10 @@
         </button>
     </template>
     <template v-else>
-        <p class="mb-1 text-xl">{{post.body}}</p>
+        <p class="mb-2 text-xl">{{post.body}}</p>
          <button  
         v-if="user != null && user.id === post.user.id && editForm.id !== post.id" 
-        class=" mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-green-700 focus:outline-none"
+        class=" mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
         @click="edit(post)"
         >
         Edit

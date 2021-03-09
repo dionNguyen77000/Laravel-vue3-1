@@ -29,6 +29,13 @@ Route::get('/home', function () {
    return view('home');
 })->name('home');
 
+Route::get('/test_user', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+    $user->withdrawPermissionTo('delete posts', 'edit posts');
+    dump($user->can('delete posts'));
+  
+});
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
@@ -57,5 +64,22 @@ Route::get('/posts', function () {
 Route::resource('posts', PostController::class);
 
 // Route::post('/posts/{id}/likes', [PostLikeController::class, 'store']) -> name('posts.likes') ;
-Route::post('/posts/{post}/likes', [PostLikeController::class, 'store'])->name('posts.likes');
-Route::delete('/posts/{post}/likes', [PostLikeController::class, 'destroy'])->name('posts.likes');
+
+
+// -------role and permission midlleware -----
+// Route::post('/posts/{post}/likes', [PostLikeController::class, 'store'])->name('posts.likes');
+// Route::delete('/posts/{post}/likes', [PostLikeController::class, 'destroy'])->name('posts.likes');
+
+
+
+// Route::group(['middleware' => 'role:admin'], function () {
+//     Route::group(['middleware' => 'role:admin,delete users'], function () {
+//         Route::get('/admin/users', function () {
+//             return 'Delete users in admin panel';
+//         });
+//     });
+
+//     Route::get('/admin', function () {
+//         return 'Admin panel';
+//     });
+// });
