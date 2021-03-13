@@ -53,6 +53,7 @@ class PostController extends Controller
     // }
 
     public function index () {
+        // return 'hello'
         
         // dd(Carbon::now()->isoFormat('dddd D'));
          

@@ -20,38 +20,55 @@ use App\Http\Controllers\Auth\RegisterController;
 |
 */
 
-Route::get('/reminder', function () {
-    return view('reminder.index');
- })->name('reminder');
+
+Route::get('/{any}', function () {
+    return view('welcome');
+ })->where('any','.*');
+ 
+//  Route::get('/welcome', function () {
+//     return view('welcome');
+//  })->name('welcome');
  
 
-Route::get('/home', function () {
-   return view('home');
-})->name('home');
+// Route::get('/reminder', function () {
+//     return view('reminder.index');
+//  })->name('reminder');
+ 
 
-Route::get('/test_user', function (\Illuminate\Http\Request $request) {
-    $user = $request->user();
-    $user->withdrawPermissionTo('delete posts', 'edit posts');
-    dump($user->can('delete posts'));
+// Route::get('/home', function () {
+//    return view('home');
+// })->name('home');
+
+// Route::get('/test_user', function (\Illuminate\Http\Request $request) {
+//     $user = $request->user();
+//     $user->withdrawPermissionTo('delete posts', 'edit posts');
+//     dump($user->can('delete posts'));
   
-});
+// });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->name('dashboard');
+// Route::get('/dashboard', [DashboardController::class, 'index'])
+//     ->name('dashboard');
 
-Route::get('/users/{user:username}/posts', [UserPostController::class, 'index'])->name('users.posts');
+// Route::get('/users/{user:username}/posts', [UserPostController::class, 'index'])->name('users.posts');
 
-Route::get('/register', [RegisterController::class, 'index'])->name('register');
-Route::post('/register', [RegisterController::class, 'store']);
+// Route::get('/register', [RegisterController::class, 'index'])->name('register');
+// Route::post('/register', [RegisterController::class, 'store']);
 
-Route::get('/login', [LoginController::class, 'index'])->name('login');
-Route::post('/login', [LoginController::class, 'store']);
+// Route::get('/login', [LoginController::class, 'index'])->name('login');
+// Route::post('/login', [LoginController::class, 'store']);
 
-Route::post('/logout', [LogoutController::class, 'store'])->name('logout');
+// Route::post('/logout', [LogoutController::class, 'store'])->name('logout');
 
-Route::get('/posts', function () {
-    return view('posts.index');
-});
+// Route::get('/posts', function () {
+//     return view('posts.index');
+// });
+
+
+// Route::resource('posts', PostController::class);
+
+
+
+// ------------------until here ---------------
 
 // Route::get('/posts', [PostController::class, 'index'])->name('posts');
 // Route::get('/posts_vue', [PostController::class, 'index_vue'])->name('posts_vue');
@@ -61,7 +78,6 @@ Route::get('/posts', function () {
 // Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 // Route::delete('/posts_vue/{post}', [PostController::class, 'destroy_vue'])->name('posts_vue.destroy');
 
-Route::resource('posts', PostController::class);
 
 // Route::post('/posts/{id}/likes', [PostLikeController::class, 'store']) -> name('posts.likes') ;
 
@@ -83,3 +99,5 @@ Route::resource('posts', PostController::class);
 //         return 'Admin panel';
 //     });
 // });
+
+// data table

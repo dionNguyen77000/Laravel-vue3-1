@@ -12,9 +12,10 @@
 
 <script>
 
-import PostForm from './components/PostForm.vue'
-import Post from './components/Post.vue'
-import Pagination from './components/pagination/Pag.vue'
+
+import PostForm from '../components/PostForm.vue'
+import Post from '../components/Post.vue'
+import Pagination from '../components/pagination/Pag.vue'
 import {mapGetters, mapActions} from 'vuex'
 export default {
     name: 'App',

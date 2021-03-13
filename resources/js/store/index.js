@@ -3,14 +3,23 @@ import axios from 'axios'
 
 export default createStore({
   state: {
+    sideBarOpen: true,
     posts:[],
     meta: {}
   },
   getters: {
+    sideBarOpen: state => {
+      return state.sideBarOpen
+    },
     allPosts: (state) => state.posts,
     allPaginationMeta: (state) => state.meta,
   },
   mutations: { 
+    toggleSidebar (state) {
+      state.sideBarOpen = !state.sideBarOpen
+      console.log("🚀 ~ file: index.js ~ line 20 ~ toggleSidebar ~ state.sideBarOpen ", state.sideBarOpen )
+      
+    },
     setPosts: (state,posts) => {
       state.posts = posts
     },
@@ -19,8 +28,11 @@ export default createStore({
     },
   },
   actions: {
+    toggleSidebar(context) {
+      context.commit('toggleSidebar')
+    },
     async fetchPosts({commit},page) {
-      const response = await axios.get('/posts',{
+      const response = await axios.get('/api/posts',{
         params: {
           page
         }
