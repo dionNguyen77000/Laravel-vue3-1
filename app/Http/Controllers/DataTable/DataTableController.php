@@ -190,7 +190,8 @@ abstract class DataTableController extends Controller
 
     protected function getRecords(Request $request)
     {
-        $builder = $this->builder;
+            // return $this->builder->get();
+            $builder = $this->builder;
 
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
@@ -200,7 +201,8 @@ abstract class DataTableController extends Controller
             return $builder->limit($request->limit)->orderBy('id', 'asc')->get($this->getDisplayableColumns());
         } catch (QueryException $e) {
             return [];
-        }    }
+        }    
+    }
 
        /**
      * If the request has the columns required to search.

@@ -4,6 +4,7 @@ import Dashboard from "../Pages/Dashboard.vue";
 import Reminder from "../Pages/Reminder.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
+import User_Management from "../Pages/Admin/User_Management.vue";
 
 const routes = [
 
@@ -28,11 +29,26 @@ const routes = [
     name: "Register",
     component: Register,
   },
+
   {
     path: "/login",
     name: "Login",
     component: Login,
   },
+
+  {
+    path: "/login",
+    name: "Login",
+    component: Login,
+  },
+
+  {
+    path: "/user_management",
+    name: "User_Management",
+    component: User_Management,
+  },
+
+
 ];
 
 const router = createRouter({

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Reminder\PostController;
+use App\Http\Controllers\DataTable\UserController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\UserPostController;
 use App\Http\Controllers\DashboardController;
@@ -36,15 +37,17 @@ use App\Models\Post;
 
 Route::get('posts', [PostController::class,'index']);
 
+Route::resource('datatable/users', UserController::class);
 
-// Route::get('/reminder', function () {
-//     return view('reminder.index');
-//  })->name('reminder');
- 
+Route::group(['prefix' => 'auth'], function () {
+    Route::post('register', [RegisterController::class, 'store']);
+    Route::post('login', [LoginController::class, 'action']);
+});
 
-// Route::get('/home', function () {
-//    return view('home');
-// })->name('home');
+
+// Route::get('/admin/users', 'Admin\UserController@index');
+// Route::get('/admin/plans', 'Admin\PlanController@index');
+
 
 // Route::get('/test_user', function (\Illuminate\Http\Request $request) {
 //     $user = $request->user();

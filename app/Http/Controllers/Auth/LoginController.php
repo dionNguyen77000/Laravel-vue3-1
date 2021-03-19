@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\User\PrivateUserResource;
 
 class LoginController extends Controller
 {
@@ -37,5 +38,29 @@ class LoginController extends Controller
         return redirect()->route('dashboard');
     
         // dd('ok');
+    }
+
+    public function action(Request $request)
+    {
+        //validation
+        $this->validate($request,[
+            'email' => 'required',
+            'password' => 'required'
+        ]);
+
+        if (!$token = Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'errors' => [
+                    'email' => ['Could not sign you in with those details.']
+                ]
+            ], 422);
+        } else {
+        return (new PrivateUserResource($request->user()))
+            ->additional([
+                'meta' => [
+                    'token' => $token
+                ]
+            ]);
+        }
     }
 }

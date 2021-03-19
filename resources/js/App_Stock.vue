@@ -16,10 +16,10 @@
 <script>
 
 export default {
-    data() {
+    // data() {
         // thecurrentpath = this.$route.path
         // this.$route.path ==='/dashboard' ? this.showSidebarHamburger = true : this.showSidebarHamburger = false
-    },
+    // },
 
      mounted() {
          

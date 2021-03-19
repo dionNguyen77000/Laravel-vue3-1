@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Hash;
 use App\Permissions\HasPermissionsTrait;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
@@ -30,9 +31,25 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+        
+        // static::creating(function ($user) {
+        //     // $user->password = bcrypt($user->password);
+        //     $user->password = Hash::make($user->password);
+        // });
+
+        // static::updating(function ($user) {
+        //     // $user->password = bcrypt($user->password);
+        //     $user->password = Hash::make($user->password);
+        // });
+
+        
+    }
 
     /**
      * The attributes that should be cast to native types.
