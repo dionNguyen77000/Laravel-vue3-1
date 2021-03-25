@@ -1,5 +1,6 @@
 <template>
-    <form  v-if = "user != null" method="post" class="mb-4"  @submit.prevent="post">
+ 
+    <form method="post" class="mb-4"  @submit.prevent="post">
         <div class="mb-1">
             <label for="body" class="sr-only">Body</label>
             <textarea 
@@ -24,8 +25,7 @@
 </template>
 
 <script>
-    import { mapActions } from "vuex";
-
+    import {mapGetters, mapActions} from 'vuex'
     export default {
         name: "PostForm",
         data (){
@@ -40,6 +40,9 @@
             }
         },
        computed: {
+            ...mapGetters({
+                getAuth: 'auth/getAuth'
+            }),
         },
         methods: {
             ...mapActions(['fetchPosts']),

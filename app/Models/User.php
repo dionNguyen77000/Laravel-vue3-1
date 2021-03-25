@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Permissions\HasPermissionsTrait;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable , HasPermissionsTrait;
 
@@ -76,4 +77,14 @@ class User extends Authenticatable
         return $this->hasManyThrough(Like::class, Post::class);
     }
     
+
+    public function getJWTIdentifier()
+    {
+        return $this->id;
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
 }

@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
+import auth from './auth'
 
 export default createStore({
   state: {
@@ -8,21 +9,25 @@ export default createStore({
     meta: {}
   },
   getters: {
+  
     sideBarOpen: state => {
       return state.sideBarOpen
     },
     allPosts: (state) => state.posts,
     allPaginationMeta: (state) => state.meta,
+   
   },
   mutations: { 
+  
     toggleSidebar (state) {
       state.sideBarOpen = !state.sideBarOpen
-      console.log("🚀 ~ file: index.js ~ line 20 ~ toggleSidebar ~ state.sideBarOpen ", state.sideBarOpen )
+      // console.log("🚀 ~ file: index.js ~ line 20 ~ toggleSidebar ~ state.sideBarOpen ", state.sideBarOpen )
       
     },
     setPosts: (state,posts) => {
       state.posts = posts
     },
+
     setPaginationMeta: (state,meta) => {
       state.meta = meta
     },
@@ -37,12 +42,14 @@ export default createStore({
           page
         }
       })
-      console.log(response.data)
-      console.log(response.data.meta)
+      // console.log(response.data)
+      // console.log(response.data.meta)
       commit('setPosts', response.data.data)
       commit('setPaginationMeta', response.data.meta)
     },
+    
   },
   modules: {
+    auth
   }
 })

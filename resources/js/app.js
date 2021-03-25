@@ -1,4 +1,5 @@
 require('./bootstrap');
+require('./store/subscriber')
 
 import {createApp} from 'vue'
 import App from './App.vue'
@@ -11,8 +12,6 @@ import Footer from './Pages/page_component/footer.vue'
 import Sidebar from './Pages/page_component/sidebar.vue'
 import Navbar from './Pages/page_component/Navbar.vue'
 import SidebarHamburger from './components/SidebarHamburger.vue'
-
-
 
 // const app = createApp(App)
 const app = createApp(App_Stock)
@@ -28,7 +27,11 @@ app.component('SidebarHamburger',SidebarHamburger)
 app.use(store)
 app.use(router)
 app.config.globalProperties.user = window.User
-app.mount('#app')
+// app.mount('#app')
+// call setupLoginedAuth in auth.js, this help to authenticate the user
+store.dispatch('auth/setUpLoginedAuth',localStorage.getItem('token')).then(()=> {
+    app.mount('#app')
+})
 
 
 

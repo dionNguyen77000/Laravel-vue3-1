@@ -1,4 +1,5 @@
 <template>
+
 <div class="flex justify-center">
     <div class="w-11/12 bg-white p-6 roudned-lg">
     <!-- All Posts {{posts}} -->
@@ -12,13 +13,17 @@
 
 <script>
 
-
+import auth from '../router/middleware/auth'
+import guest from '../router/middleware/guest'
 import PostForm from '../components/PostForm.vue'
 import Post from '../components/Post.vue'
 import Pagination from '../components/pagination/Pag.vue'
 import {mapGetters, mapActions} from 'vuex'
 export default {
     name: 'App',
+      middleware: [
+            auth
+        ],
     data(){
         return {
             user: window.User,
@@ -30,8 +35,9 @@ export default {
             //  return this.$store.state.posts
          },
         ...mapGetters([
-        'allPosts', 'allPaginationMeta',
+        'allPosts', 'allPaginationMeta'
         ]),
+       
     },
     methods: {
         ...mapActions(['fetchPosts']),

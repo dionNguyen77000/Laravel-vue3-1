@@ -10,7 +10,8 @@
         <!-- <Navbar /> -->
 
       <div :class="sideBarOpen ? 'flex-auto' : 'w-full'">
-        <Home />
+        <!-- <Home /> -->
+        <router-view> </router-view>
       </div>
 
 
@@ -22,18 +23,22 @@
 
 
 <script>
-
+import auth from '../router/middleware/auth'
 import { mapState } from 'vuex'
 import Home from './Home.vue'
 export default {
-  
+  middleware: [
+    auth
+  ],
  computed: {
     ...mapState(['sideBarOpen'])
   },
 
   components: {
     Home
-  }
+  },
+
+  
     
 }
 

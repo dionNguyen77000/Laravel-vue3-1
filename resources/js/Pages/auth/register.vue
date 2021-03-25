@@ -46,10 +46,9 @@
 </template>
 
 <script>
-
 export default {
     name: 'Register',
-   
+ 
 
     computed: {
        

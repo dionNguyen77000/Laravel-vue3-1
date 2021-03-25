@@ -29,7 +29,7 @@ export default {
             //  return this.$store.state.posts
          },
         ...mapGetters([
-        'allPosts', 'allPaginationMeta',
+        'allPosts', 'allPaginationMeta', 'getAuth',
         ]),
     },
     methods: {
@@ -59,7 +59,11 @@ export default {
             //     this.posts= response.data;
             //     // console.log(this.posts);
             // })
-        }
+    },
+    created() {
+        axios.defaults.headers.common["Authorization"] = "Bearer" + localStorage.getItem("user_token");
+        this.getAuth()
+    }
 }
 </script>
 

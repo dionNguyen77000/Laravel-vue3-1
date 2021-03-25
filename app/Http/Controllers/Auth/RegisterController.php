@@ -5,17 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\User\PrivateUserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\User\PrivateUserResource;
 
 class RegisterController extends Controller
 {
-    public function index()
-    {
-        return view('auth.register');
-    }
-    public function store(Request $request)
+    public function action(Request $request)
     {
         // return $request;
         //validation
@@ -31,7 +27,6 @@ class RegisterController extends Controller
             'name' =>$request->name,
             'username' => $request->username,
             'email' => $request->email,
-
             'password' => Hash::make($request->password),
             // 'password' => $request->password,
             
@@ -39,6 +34,7 @@ class RegisterController extends Controller
         
         //sign the user in
         $credentials = $request->only('username', 'password');
+        
         Auth::attempt($credentials);
 
         return new PrivateUserResource($user);

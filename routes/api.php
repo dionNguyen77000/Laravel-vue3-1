@@ -1,16 +1,17 @@
 <?php
 
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Reminder\PostController;
-use App\Http\Controllers\DataTable\UserController;
+use App\Http\Controllers\Auth\MeController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\UserPostController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Models\Post;
+use App\Http\Controllers\Reminder\PostController;
+use App\Http\Controllers\DataTable\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,10 +40,18 @@ Route::get('posts', [PostController::class,'index']);
 
 Route::resource('datatable/users', UserController::class);
 
-Route::group(['prefix' => 'auth'], function () {
-    Route::post('register', [RegisterController::class, 'store']);
-    Route::post('login', [LoginController::class, 'action']);
+Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
+    Route::post('register', [RegisterController::class, 'action'])->name('register');
+    Route::post('login', [LoginController::class, 'action'])->name('login');
+    Route::post('logout', [LogoutController::class, 'action'])->name('logout');
+    Route::get('me', [MeController::class, 'action'])->name('me');
 });
+
+// Route::group(['prefix' => 'auth'], function () {
+//     Route::post('register', RegisterController::class)->name('login');
+//     Route::post('login', LoginController::class);
+//     Route::get('me', MeController::class);
+// });
 
 
 // Route::get('/admin/users', 'Admin\UserController@index');

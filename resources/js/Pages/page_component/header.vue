@@ -1,8 +1,7 @@
 <template>
+{{getAuth}}
   <nav class="w-full p-6 bg-yellow-600 sticky top-0 z-40 flex justify-between">
-     
-
-    
+        <!-- {{getAuth}} -->
         <ul class="flex items-center">
              <p class="font-semibold text-3xl text-blue-400 pl-4">LOGO</p>
             <router-link class="mr-4" to="/"> Home </router-link>
@@ -11,21 +10,24 @@
         </ul>
         <ul class="flex items-center">
         <!-- @if (auth()->user()) -->
-        <li>
-          Hi  
+        <template v-if="!getAuth.loggedIn">
+          <!-- <router-link class="mr-4" :to="{name:'Register'}">Register</router-link> -->
+          <router-link class="mr-4" :to="{name:'Login'}">Login</router-link>
+        </template>
+        <template v-else>
+          <li class="mr-4">
+          Hi  {{getAuth.user.name}}
+          <!-- <img src="https://a7sas.net/wp-content/uploads/2019/07/4060.jpeg" class="w-12 h-12 rounded-full shadow-lg" @click="dropDownOpen = !dropDownOpen"> -->
         </li>
         <li>
-            <form  method="post" class="p-3 inline">
-            <!-- @csrf -->
-            <button type="submit">Logout</button>
-            </form>
+          <a class="mr-4" @click.prevent="logOut">Logout</a>
+            <!-- <router-link class="mr-4" :to="{name:'Logout'}">Logout</router-link> -->
+            
         </li>
-        <li>
-           <a href="">Admin</a>
-        </li>
-        <router-link class="mr-4" :to="{name:'Login'}">Login</router-link>
-        <router-link class="mr-4" :to="{name:'Register'}">Register</router-link>
-         <img src="https://a7sas.net/wp-content/uploads/2019/07/4060.jpeg" class="w-12 h-12 rounded-full shadow-lg" @click="dropDownOpen = !dropDownOpen">
+        </template> 
+       
+      
+         
 
        
         </ul>
@@ -33,3 +35,34 @@
         <!-- @endif -->
 </nav>
 </template>
+
+
+<script>
+import { mapState } from 'vuex'
+import {mapGetters, mapActions} from 'vuex'
+
+export default {
+    name: 'Navbar',
+    
+    data() {
+    },
+    computed: {
+         ...mapGetters({
+           getAuth: 'auth/getAuth'
+         }),
+    },
+    methods: {
+       ...mapActions({
+         logOutAction: 'auth/logOut'
+       }),
+
+       logOut () {
+         this.logOutAction().then(()=>{
+           this.$router.replace({
+             name: 'Login'
+           })
+         })
+       }
+    },
+}
+</script>
