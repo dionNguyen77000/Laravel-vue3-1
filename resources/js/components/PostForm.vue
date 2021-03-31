@@ -1,6 +1,6 @@
 <template>
  
-    <form method="post" class="mb-4"  @submit.prevent="post">
+    <form v-if="getAuth.loggedIn" method="post" class="mb-4"  @submit.prevent="post">
         <div class="mb-1">
             <label for="body" class="sr-only">Body</label>
             <textarea 
@@ -47,7 +47,7 @@
         methods: {
             ...mapActions(['fetchPosts']),
             async post(){
-                await axios.post('/posts',this.postForm.fields)
+                await axios.post('api/posts',this.postForm.fields)
                     .then((response)=>{
                         this.fetchPosts()
                         .then((response) => {

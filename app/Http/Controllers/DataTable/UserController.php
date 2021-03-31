@@ -61,8 +61,8 @@ class UserController extends DataTableController
                 'name' => $request->name,
                 'username' => $request->username,
                 'email' => $request->email,
-                'password' =>$request->password,
-                // 'password' => Hash::make($request->password),
+                // 'password' =>$request->password,
+                'password' => Hash::make($request->password),
                 // 'created_at' => $request->created_at,
             ]
         );

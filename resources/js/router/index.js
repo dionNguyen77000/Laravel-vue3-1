@@ -51,7 +51,7 @@ const routes = [
         component: Home 
       },
       {
-        path: "/dashboard/user_management",
+        path: "/user_management",
         name: "User_Management",
         component: User_Management,
         // meta: {
@@ -94,11 +94,13 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next)=> {
+
+  
   
   let middleware = to.matched.map((matched) => {
+    console.log('our middleware',matched.components.default.middleware);
     return matched.components.default.middleware
   })
-
   //remove undefined middlewares 
   .filter((middleware) => {
     return middleware !== undefined
@@ -129,6 +131,7 @@ router.beforeEach((to, from, next)=> {
   }
 
   console.log('middleware is',middleware[0])
+
   return middleware[0]({ 
     ...context, 
     next: middlewarePipeline(context, middleware, 1) 

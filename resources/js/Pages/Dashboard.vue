@@ -24,6 +24,8 @@
 
 <script>
 import auth from '../router/middleware/auth'
+    // import redirectIfNotCustomer from '../router/middleware/redirectIfNotCustomer'
+
 import { mapState } from 'vuex'
 import Home from './Home.vue'
 export default {

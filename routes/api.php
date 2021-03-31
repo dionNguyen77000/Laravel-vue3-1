@@ -36,7 +36,9 @@ use App\Http\Controllers\DataTable\UserController;
 */
 
 
-Route::get('posts', [PostController::class,'index']);
+// Route::get('posts', [PostController::class,'index']);
+Route::resource('posts', PostController::class);
+// Route::post('/posts', [PostController::class, 'store']);
 
 Route::resource('datatable/users', UserController::class);
 

@@ -25,8 +25,10 @@ export default {
         SET_LOGIN (state) {
             if (state.auth.user && state.auth.token) {
                 state.auth.loggedIn = true
+                state.auth.isCustomer=false
             } else {
                 state.auth.loggedIn = false
+                state.auth.isCustomer=false
             }
         }
     },
@@ -48,7 +50,7 @@ export default {
                     // }
                 })
                 commit('SET_USER', response.data.data)
-                commit('SET_LOGIN')
+                commit('SET_LOGIN',state)
 
             } catch (e) {
                 commit('SET_TOKEN', null)

@@ -21,7 +21,7 @@
          
         <button  
         v-if="editForm.id === post.id" 
-        class=" mr-1 py-1 px-3 shadow-md rounded-full bg-blue-400 text-white text-sm hover:bg-red-700 focus:outline-none"
+        class=" mr-1 py-1 px-3 shadow-md rounded-full bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"
         @click="update"
         >
         Save
@@ -29,15 +29,15 @@
     </template>
     <template v-else>
         <p class="mb-2 text-xl">{{post.body}}</p>
-         <button  
-        v-if="user != null && user.id === post.user.id && editForm.id !== post.id" 
+         <button   
+        v-if="getAuth.loggedIn && getAuth.user.id != null && getAuth.user.id === post.user.id && editForm.id !== post.id" 
         class=" mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
         @click="edit(post)"
         >
         Edit
         </button>
         <button  
-        v-if="user != null && user.id === post.user.id " 
+        v-if="getAuth.user != null && getAuth.user.id === post.user.id " 
         class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
         @click="deletePost(post)"
         >
@@ -49,7 +49,8 @@
 
 <script>
 // import LikeButton from './LikeButton.vue'
-import {mapActions} from 'vuex'
+
+import {mapGetters, mapActions} from 'vuex'
 import axios from 'axios'
 
 export default {
@@ -73,6 +74,9 @@ export default {
     },
     computed: {
         // ...mapGetters(['editForm',]),
+         ...mapGetters({
+                getAuth: 'auth/getAuth'
+            }),
     },
   
     components: [
@@ -90,7 +94,7 @@ export default {
         },
 
         async update() {
-            await axios.patch(`/posts/${this.editForm.id}`,this.editForm.fields)
+            await axios.patch(`/api/posts/${this.editForm.id}`,this.editForm.fields)
             .then((response) => {
                 this.fetchPosts().then(() => {
                         // commit('resetTheForm')
@@ -109,7 +113,7 @@ export default {
             if (!window.confirm('Are you sure ?')){
                 return
             }
-            await axios.delete(`posts/${post.id}`)
+            await axios.delete(`api/posts/${post.id}`)
             .then((response)=>{
                 this.fetchPosts()
             })
