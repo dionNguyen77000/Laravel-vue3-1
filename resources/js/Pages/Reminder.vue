@@ -15,6 +15,7 @@
 
 import auth from '../router/middleware/auth'
 import guest from '../router/middleware/guest'
+import redirectIfNotCustomer from '../router/middleware/redirectIfNotCustomer'
 import PostForm from '../components/PostForm.vue'
 import Post from '../components/Post.vue'
 import Pagination from '../components/pagination/Pag.vue'

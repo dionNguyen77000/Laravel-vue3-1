@@ -23,7 +23,7 @@ class CreateGoodsMaterialsTable extends Migration
             $table->foreign('unit_id')->references('id')->on('units');
             $table->foreignId('supplier_id')->nullable()->constrained();
             $table->foreignId('category_id')->nullable()->constrained();
-            $table->text('description');
+            $table->text('description')->nullable();
 
             $table->timestamps();
         });

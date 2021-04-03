@@ -127,7 +127,7 @@
 // import Chart from 'chart.js'
 
 export default {
-    name: 'DashboardHome',
+    name: 'Home',
     data() {
         return {
             buyersData: {

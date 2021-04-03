@@ -18,7 +18,7 @@ export default {
         },
 
         SET_USER (state, authenticatedUser) {
-            console.log("🚀 ~ file: auth.js ~ line 18 ~ SET_USER ~ authenticatedUser", authenticatedUser)
+            // console.log("🚀 ~ file: auth.js ~ line 18 ~ SET_USER ~ authenticatedUser", authenticatedUser)
             state.auth.user = authenticatedUser
         },
 
@@ -44,11 +44,13 @@ export default {
             }
 
             try {
-                let response = await axios.get('api/auth/me',{
+                let response = await axios.get('api/auth/me'
+                // ,{
                     // headers: {
                     //     'Authorization' : 'Bearer' + token
                     // }
-                })
+                // }
+                )
                 commit('SET_USER', response.data.data)
                 commit('SET_LOGIN',state)
 

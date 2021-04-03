@@ -31,7 +31,7 @@
         <p class="mb-2 text-xl">{{post.body}}</p>
          <button   
         v-if="getAuth.loggedIn && getAuth.user.id != null && getAuth.user.id === post.user.id && editForm.id !== post.id" 
-        class=" mr-1 py-1 px-4 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
+        class=" mr-1 py-1 px-2 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
         @click="edit(post)"
         >
         Edit

@@ -3,11 +3,16 @@ import store from '../store'
 
 //router components
 import Home from "../Pages/Home.vue";
+import DashboardHome from "../Pages/Home.vue";
 import Dashboard from "../Pages/Dashboard.vue";
 import Reminder from "../Pages/Reminder.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
 import User_Management from "../Pages/Admin/User_Management.vue";
+import Category from "../Pages/stock/category.vue";
+
+//router component Stock Setup
+import Supplier from "../Pages/stock/Supplier.vue";
 
 //Midelware 
 import auth from './middleware/auth'
@@ -50,6 +55,7 @@ const routes = [
         path: '', 
         component: Home 
       },
+
       {
         path: "/user_management",
         name: "User_Management",
@@ -60,7 +66,30 @@ const routes = [
         //   ]
         // },
       },
+
+      {
+        path: "/supplier",
+        name: "Supplier",
+        component: Supplier,
+        // meta: {
+        //   middleware: [
+        //     auth, redirectIfNotCustomer
+        //   ]
+        // },
+      },
+
+      {
+        path: "/category",
+        name: "Category",
+        component: Category,
+        // meta: {
+        //   middleware: [
+        //     auth, redirectIfNotCustomer
+        //   ]
+        // },
+      },
     ],
+
    
     // beforeEnter: (to, from, next) => {
     //   if(!store.getters['auth/getAuth'].loggedIn){
@@ -98,7 +127,7 @@ router.beforeEach((to, from, next)=> {
   
   
   let middleware = to.matched.map((matched) => {
-    console.log('our middleware',matched.components.default.middleware);
+    // console.log('our middleware',matched.components.default.middleware);
     return matched.components.default.middleware
   })
   //remove undefined middlewares 
@@ -110,7 +139,7 @@ router.beforeEach((to, from, next)=> {
   .flat()
 
 
-  console.log('middleware is ', middleware)
+  // console.log('middleware is ', middleware)
 
   if (!middleware.length){
     return next()
@@ -130,7 +159,7 @@ router.beforeEach((to, from, next)=> {
     store
   }
 
-  console.log('middleware is',middleware[0])
+  // console.log('middleware is',middleware[0])
 
   return middleware[0]({ 
     ...context, 

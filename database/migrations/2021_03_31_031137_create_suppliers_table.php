@@ -16,10 +16,11 @@ class CreateSuppliersTable extends Migration
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->string('category')->nullable();
-            $table->string('represtative_person')->nullable();
-            $table->timestamp('phone')->nullable();
+            $table->string('group')->nullable();
+            $table->string('representative_person')->nullable();
+            $table->string('phone')->nullable();
             $table->string('address')->nullable();;
+            $table->text('description')->nullable();;
             $table->timestamps();
     
         });

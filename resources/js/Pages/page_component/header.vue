@@ -1,9 +1,20 @@
 <template>
-{{getAuth}}
-  <nav class="w-full p-6 bg-yellow-600 sticky top-0 z-40 flex justify-between">
+<!-- {{getAuth}} -->
+  <div id="header" class="w-full p-4 bg-yellow-600 sticky top-0 z-40 text-center">
+    <div id="logo">
+      <img :src="'/img/logo_backend.png'" alt="Golden Lor Yarrabilba"
+      class="text-center sm:hidden h-12 mx-auto pb-2"
+      >
+    </div>
+    
+
+    <nav class="z-40 flex justify-between flex-wrap">
         <!-- {{getAuth}} -->
         <ul class="flex items-center">
-             <p class="font-semibold text-3xl text-blue-400 pl-4">LOGO</p>
+          <div id="logo">
+            <img :src="'/img/logo_backend.png'" alt="Golden Lor Yarrabilba"
+            class="hidden sm:block  text-center h-14 ">
+          </div>
             <router-link class="mr-4" to="/"> Home </router-link>
             <router-link class="mr-4" :to="{name:'Dashboard'}">Dashboard</router-link>
             <router-link class="mr-4" :to="{name:'Reminder'}">Reminder</router-link>
@@ -25,15 +36,12 @@
             
         </li>
         </template> 
-       
-      
-         
-
-       
         </ul>
        
         <!-- @endif -->
 </nav>
+  </div>
+  
 </template>
 
 

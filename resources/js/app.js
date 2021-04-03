@@ -13,23 +13,25 @@ import Sidebar from './Pages/page_component/sidebar.vue'
 import Navbar from './Pages/page_component/Navbar.vue'
 import SidebarHamburger from './components/SidebarHamburger.vue'
 
-// const app = createApp(App)
-const app = createApp(App_Stock)
 
-// register global component
-app.component('Header',Header)
-app.component('Navbar',Navbar)
-app.component('Footer',Footer)
-app.component('Sidebar',Sidebar)
-app.component('SidebarHamburger',SidebarHamburger)
-
-// add plugins 
-app.use(store)
-app.use(router)
-app.config.globalProperties.user = window.User
 // app.mount('#app')
+
 // call setupLoginedAuth in auth.js, this help to authenticate the user
 store.dispatch('auth/setUpLoginedAuth',localStorage.getItem('token')).then(()=> {
+        // const app = createApp(App)
+    const app = createApp(App_Stock)
+
+    // register global component
+    app.component('Header',Header)
+    app.component('Navbar',Navbar)
+    app.component('Footer',Footer)
+    app.component('Sidebar',Sidebar)
+    app.component('SidebarHamburger',SidebarHamburger)
+
+    // add plugins 
+    app.use(store)
+    app.use(router)
+    app.config.globalProperties.user = window.User
     app.mount('#app')
 })
 

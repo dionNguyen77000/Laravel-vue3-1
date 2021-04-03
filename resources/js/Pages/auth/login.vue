@@ -49,14 +49,16 @@
 </template>
 
 <script>
-import { mapActions } from "vuex"
+import {mapGetters, mapActions} from 'vuex'
 import guest from '../../router/middleware/guest'
-
+import auth from '../../router/middleware/auth'
+import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
 
 export default {
     name: 'Login',
      middleware: [
-        guest
+        guest,
+        //    redirectIfNotCustomer
     ],
     data () {
         return {
@@ -103,10 +105,10 @@ export default {
                     
                 })
                 .catch((error) => {
-                console.log("🚀 ~ file: login.vue ~ line 96 ~ login ~ error", error)
+                console.log("🚀error", error)
                     
                     if (error.response.status === 401) { 
-                        console.log('have erro')
+                        console.log('have error')
                         // this.loginForm.errors.body = error.response.data.errors.body[0]
                         // commit('setTheFormError', error.response.data.errors)
                     }
@@ -114,6 +116,9 @@ export default {
             },
         
     },
+    mounted(){
+    
+    }
    
 }
 </script>

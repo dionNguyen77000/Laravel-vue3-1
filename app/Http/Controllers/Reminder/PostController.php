@@ -141,6 +141,7 @@ class PostController extends Controller
 
         //using policy to check if the correct user delete
         $this->authorize('delete',$post);
+        
         $post->delete();
         return $post;
     }

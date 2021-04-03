@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Reminder\PostController;
 use App\Http\Controllers\DataTable\UserController;
+use App\Http\Controllers\DataTable\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,7 @@ Route::resource('posts', PostController::class);
 // Route::post('/posts', [PostController::class, 'store']);
 
 Route::resource('datatable/users', UserController::class);
+Route::resource('datatable/categories', CategoryController::class);
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');
