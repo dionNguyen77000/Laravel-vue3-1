@@ -5,6 +5,8 @@ namespace App\Http\Controllers\DataTable;
 use Illuminate\Http\Request;
 use App\Models\Stock\Category;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\QueryException;
+use App\Http\Resources\Stock\CategoryResourceDB;
 
 
 class CategoryController extends DataTableController
@@ -13,9 +15,38 @@ class CategoryController extends DataTableController
 
     protected $allowDeletion = true;
 
+    
+    public function index(Request $request)
+    {
+    //   return $this->builder->get();
+      return response()->json([
+        'data' => [
+          'table' => $this->builder->getModel()->getTable(),
+          'db_column_name' =>array_values($this->getDatabaseColumnNames()),
+          'displayable' => array_values($this->getDisplayableColumns()),
+          'updatable' => array_values($this->getUpdatableColumns()),
+          'records' => $this->getRecords($request),
+          'custom_columns' => $this->getCustomColumnsNames(),
+          'categoryParentOptions'=> $this->getcategoryParentOptions(),
+          'allow' => [
+              'creation' => $this->allowCreation,
+              'deletion' => $this->allowDeletion,
+          ]
+        ]
+
+      ]);
+    }
+
     public function builder()
     {
         return Category::query();
+    }
+
+    public function getCustomColumnsNames()
+    {
+        return [
+            'parent_id' => 'Parent Category',
+        ];
     }
 
     public function getDisplayableColumns()
@@ -34,23 +65,19 @@ class CategoryController extends DataTableController
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required',
+            'name' => 'required|unique:categories,name',
             'slug' => 'required|unique:categories,slug',
         ]);
 
-        $this->builder->create(
-            [
-                'name' => $request->name,
-                'slug' => $request->slug,
-                'parent_id' => $request->parent_id,            ]
-        );
+        // dd($request);
+        $this->builder->create($request->only($this->getUpdatableColumns()));
         return "successfully created";
     }
 
     public function update($id, Request $request)
     {
         $this->validate($request, [
-            'name' => 'required',
+            'name' => 'required|unique:categories,name,' . $id,
             'slug' => 'required|unique:categories,slug,' . $id,
         ]);
 
@@ -59,4 +86,45 @@ class CategoryController extends DataTableController
         return "successfully updated";
         // return new PrivateUserResource($user);
     }
+
+    protected function getRecords(Request $request)
+    {
+        // //   // get highest level Parents
+        // return CategoryResource::collection(
+        //     // Category::with('children')->parentHighest()->ordered()->get()
+        //     Category::get()
+        //     // Category::all()
+        // );
+            // return $this->builder->get();
+
+        //    dd (Category::get());
+        $builder = $this->builder;
+
+        if ($this->hasSearchQuery($request)) {
+            $builder = $this->buildSearch($builder, $request);
+        }
+
+        try {
+           return CategoryResourceDB::collection(
+                $builder->limit($request->limit)->orderBy('id', 'asc')->get($this->getDisplayableColumns())
+           );
+        } catch (QueryException $e) {
+            return [];
+        }    
+    }
+
+    public function getcategoryParentOptions()
+    {
+        
+          // get highest level Parents
+        $v = Category::all('id','name');
+
+        $returnArr = [];
+        foreach ($v as  $i) {
+            $returnArr[$i['id']] = $i['name'];
+        }
+        return $returnArr;
+        // return $returnArr;
+    }
+
 }

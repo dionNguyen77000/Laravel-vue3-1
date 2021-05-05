@@ -1,5 +1,6 @@
 <template>    
 <div class="mb-3 p-3 border border-indigo-600 rounded-md shadow-md">
+  
     <a href="" class="font-bold text-lg">{{post.user.name}}</a> -
     <span class="text-gray-600 text-sm">{{post.howLong}}</span>
     <template v-if="editForm.id === post.id">

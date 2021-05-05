@@ -225,7 +225,7 @@
         methods: {
             
             getRecords(){
-                console.log(this.getQueryParameters())
+                // console.log(this.getQueryParameters())
                 return axios.get(`${this.endpoint}?${this.getQueryParameters()}`).then((response)=> {
                     this.response = response.data.data;
                 })
@@ -266,8 +266,7 @@
                 }).catch((error) => {
                     if (error.response.status === 422) {                        
                         this.editing.errors = error.response.data.errors
-                        console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                        console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
+                        // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
                     }
                 })
             },
@@ -287,7 +286,6 @@
                 })
             },
             destroy(record){
-            // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
                 if(!window.confirm(`Are you sure you want to delete this?`)){
                     return

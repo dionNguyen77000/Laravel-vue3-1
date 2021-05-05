@@ -15,10 +15,9 @@
                 
             </div>
 
-
                     <div class="flex justify-center" v-if="response.allow.creation && creating.active">
-                        <div class="w-9/12  p-6 rounded-lg">
-                        <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New user</h3>
+                        <div class="w-10/12 md:w-8/12 lg:6/12  p-6 rounded-lg">
+                        <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
                             <form action="#" @submit.prevent="store">
                                 <!-- @csrf -->
                                 <div class="mb-2" v-for="column in response.updatable" :key="column" >
@@ -120,9 +119,30 @@
                         class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 border-b block pl-8 pr-6 py-2 w-full bg-white text-sm placeholder-gray-400 text-gray-700 focus:bg-white focus:placeholder-gray-600 focus:text-gray-700" />
                 </div>
             </div>
-           
+         <!-- show hide column section -->
+        <div id="show_hide_section" class="text-center mx-4 space-y-2">
+            <p> <b>Show Hide Column </b></p>
+            <ul id="hide_show_column_section" class="width-3/4 flex flex-wrap justify-center">
+                <li  class="mr-2" v-for="column in response.displayable" :key="column">
+                    <input type="checkbox" 
+                    :value="column" 
+                    :id="column" 
+                    :checked="hideColumns.includes(column)"
+                    v-model="hideColumns">
+                    {{ column }}
+                </li>
+                <li class="mr-2">
+                    <input type="checkbox" 
+                    value="password" 
+                    id="password" 
+                    :checked="hideColumns.includes('password')"
+                    v-model="hideColumns">
+                    password
+                </li>
+            </ul>
+          
+        </div>
             <!-- start Table -->
-            
                 <div class="bg-white shadow-md rounded my-6  overflow-x-auto">
                     <table class="min-w-max w-full table-auto">
                         <thead>
@@ -133,7 +153,12 @@
                                      :checked="filteredRecords.length === selected.length"
                                      >
                                 </th>
-                                <th v-for="column in response.displayable" :key="column" class="text-left">
+                              <template v-for="column in response.displayable" :key="column">
+                                <th  
+                                class="text-left"  
+                                v-if="!hideColumns.includes(column)"
+                                >
+    
                                     <span class="sortable" @click="sortBy(column)">{{column}}</span>
                                     <div 
                                     class="arrow" 
@@ -141,9 +166,10 @@
                                     :class="{ 'arrow--asc': sort.order === 'asc', 'arrow--desc': sort.order === 'desc'}">
                                     </div> 
                                 </th>
-                                <th class="text-left">Password</th>
-                                <th>&nbsp;</th>
-                                 <th>&nbsp;</th>
+                                </template>
+
+                                <th class="text-left" v-if="!hideColumns.includes('password')">Password</th>
+                                <th    class="text-left"  >Actions</th>
                               
                             </tr>
                         </thead>
@@ -153,7 +179,9 @@
                                 <td v-if="canSelectItems" class=" text-center">
                                     <input type="checkbox" :value="record.id" v-model="selected">
                                 </td>
-                                <td v-for="columnValue,column in record" :key="column" class="py-2 text-left">
+
+                                <template v-for="columnValue,column in record" :key="column">
+                                <td v-if="!hideColumns.includes(column)" class="py-2 text-left">
                                     <template v-if="editing.id === record.id && isUpdatable(column)">
                                     <div >
                                         <input type="text"  
@@ -170,15 +198,13 @@
 
                                     <template v-else>
                                     <div class="flex items-center">
-                                        <span class="font-medium" v-if="column=='password'">Unshown</span>
-                                        <span class="font-medium" v-else>{{columnValue}}</span>
+                                        <!-- <span class="font-medium" v-if="column=='password' ">Unshown</span> -->
+                                        <span class="font-medium">{{columnValue}}</span>
                                     </div>
                                     </template>  
-
-                                   
                                 </td>
-                                
-                                <td class="py-2  text-left">
+                                </template>
+                                <td v-if="!hideColumns.includes('password')" class="py-2  text-left">
                                     <template v-if="editing.id === record.id">
                                     <div class="inline">
                                         <input type="text"  placeholder="Leave Blank if no change"
@@ -202,6 +228,12 @@
                                     >
                                     Edit
                                     </a>   
+
+                                    <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
+                                    class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
+                                    >
+                                    Delete
+                                    </a>  
                                      </div>
                                     <div>
                                     <template v-if="editing.id === record.id"> 
@@ -219,14 +251,6 @@
                                     </template>
                                     </div>
                                 </td> 
-
-                                <td>
-                                    <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion" 
-                                    class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
-                                    >
-                                        Delete
-                                    </a>  
-                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -278,6 +302,7 @@ export default {
                 
                 
                 selected: [],
+                hideColumns:['created_at','updated_at','password'],
                 limit:50,
                 quickSearchQuery: '',
 
@@ -328,7 +353,7 @@ export default {
    methods: {
             
             getRecords(){
-                console.log(this.getQueryParameters())
+                // console.log(this.getQueryParameters())
                 // return axios.get(`database/users?${this.getQueryParameters()}`).then((response)=> {
                 //     this.response = response.data.data;
                 // })
@@ -372,7 +397,7 @@ export default {
                         this.editing.id = null
                         this.editing.form = null
                        if(response.data=='successfully created') {
-                            console.log('created successfully !')
+                            // console.log('created successfully !')
                         } else {
                             alert ('unsucessfully created! please contact Dion')
                         }

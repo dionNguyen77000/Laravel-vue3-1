@@ -9,10 +9,15 @@ import Reminder from "../Pages/Reminder.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
 import User_Management from "../Pages/Admin/User_Management.vue";
-import Category from "../Pages/stock/category.vue";
+
 
 //router component Stock Setup
-import Supplier from "../Pages/stock/Supplier.vue";
+import Category from "../Pages/stock/category.vue";
+import Supplier from "../Pages/stock/supplier.vue";
+import Unit from "../Pages/stock/unit.vue";
+import Goods_Material from "../Pages/stock/goods_material.vue";
+import Intermediate_Product from "../Pages/stock/intermediate_product.vue";
+import Daily_Emp_Work from "../Pages/stock/daily_emp_work.vue";
 
 //Midelware 
 import auth from './middleware/auth'
@@ -71,22 +76,32 @@ const routes = [
         path: "/supplier",
         name: "Supplier",
         component: Supplier,
-        // meta: {
-        //   middleware: [
-        //     auth, redirectIfNotCustomer
-        //   ]
-        // },
       },
 
       {
         path: "/category",
         name: "Category",
         component: Category,
-        // meta: {
-        //   middleware: [
-        //     auth, redirectIfNotCustomer
-        //   ]
-        // },
+      },
+      {
+        path: "/unit",
+        name: "Unit",
+        component: Unit,
+      },
+      {
+        path: "/goods_material",
+        name: "Goods_Material",
+        component: Goods_Material,
+      },
+      {
+        path: "/intermediate_product",
+        name: "Intermediate_Product",
+        component: Intermediate_Product,
+      },
+      {
+        path: "/daily_emp_work",
+        name: "Daily_Emp_Work",
+        component: Daily_Emp_Work,
       },
     ],
 

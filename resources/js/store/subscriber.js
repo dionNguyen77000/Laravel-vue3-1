@@ -4,7 +4,7 @@ import axios from 'axios'
 store.subscribe((mutation)=>{
     switch (mutation.type){
         case 'auth/SET_TOKEN':
-            console.log('here is',mutation.payload)
+            // console.log('here is',mutation.payload)
 
             if(mutation.payload) {
                 axios.defaults.headers.common["Authorization"] = `Bearer ${mutation.payload}`  

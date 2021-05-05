@@ -11,8 +11,13 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Reminder\PostController;
+use App\Http\Controllers\DataTable\UnitController;
 use App\Http\Controllers\DataTable\UserController;
 use App\Http\Controllers\DataTable\CategoryController;
+use App\Http\Controllers\DataTable\SupplierController;
+use App\Http\Controllers\DataTable\Daily_Emp_WorkController;
+use App\Http\Controllers\DataTable\Goods_MaterialController;
+use App\Http\Controllers\DataTable\Intermediate_ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +48,14 @@ Route::resource('posts', PostController::class);
 
 Route::resource('datatable/users', UserController::class);
 Route::resource('datatable/categories', CategoryController::class);
+Route::resource('datatable/suppliers', SupplierController::class);
+Route::resource('datatable/units', UnitController::class);
+Route::resource('datatable/goods_material', Goods_MaterialController::class);
+Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
+Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
+Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController::class, 'saveImage']);
+Route::post('datatable/intermediate_product/saveImage/{id}', [Intermediate_ProductController::class, 'saveImage']);
+
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');

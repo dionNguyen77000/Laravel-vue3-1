@@ -30,13 +30,13 @@ class UserController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'username', 'email'
+            'id','name', 'username', 'email','created_at','updated_at'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-           'name', 'username','email'
+           'name', 'username','email','created_at','updated_at'
         ];
     }
 
@@ -87,7 +87,7 @@ class UserController extends DataTableController
         $user = null;
 
         if($request->password_new){
-           $user =  $this->builder->find($id)->update(
+           $this->builder->find($id)->update(
                 [
                     
                     'name' => $request->name,

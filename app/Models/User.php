@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Stock\Daily_Emp_Work;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Permissions\HasPermissionsTrait;
@@ -86,5 +87,10 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+    
+    public function daily_emp_works()
+    {
+        return $this->hasMany(Daily_Emp_Work::class);
     }
 }

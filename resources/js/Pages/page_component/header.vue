@@ -1,6 +1,6 @@
 <template>
 <!-- {{getAuth}} -->
-  <div id="header" class="w-full p-4 bg-yellow-600 sticky top-0 z-40 text-center">
+  <div id="header" class="w-full p-4 bg-yellow-600 lg:sticky top-0 z-40 text-center">
     <div id="logo">
       <img :src="'/img/logo_backend.png'" alt="Golden Lor Yarrabilba"
       class="text-center sm:hidden h-12 mx-auto pb-2"

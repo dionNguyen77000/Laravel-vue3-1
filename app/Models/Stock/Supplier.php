@@ -12,9 +12,11 @@ class Supplier extends Model
     protected $fillable = [
         'name',
         'group',
-        'representative_person',
+        'representative',
         'phone',
-        'address'
+        'address',
+        'description',
+        'email'
     ];
 
     public function goods_materials()
