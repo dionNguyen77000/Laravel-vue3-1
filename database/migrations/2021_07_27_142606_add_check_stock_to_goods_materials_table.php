@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddCheckStockToIntermediateProductTable extends Migration
+class AddCheckStockToGoodsMaterialsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class AddCheckStockToIntermediateProductTable extends Migration
      */
     public function up()
     {
-        Schema::table('intermediate_products', function (Blueprint $table) {
+        Schema::table('goods_materials', function (Blueprint $table) {
             $table->float('current_qty')->default(0);
             $table->float('prepared_point')->default(0);
             $table->float('coverage')->default(0);
@@ -31,7 +31,7 @@ class AddCheckStockToIntermediateProductTable extends Migration
      */
     public function down()
     {
-        Schema::table('intermediate_products', function (Blueprint $table) {
+        Schema::table('goods_materials', function (Blueprint $table) {
             //
         });
     }

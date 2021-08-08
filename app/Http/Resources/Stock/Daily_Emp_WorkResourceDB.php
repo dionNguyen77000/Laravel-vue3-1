@@ -12,9 +12,21 @@ class Daily_Emp_WorkResourceDB extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    // public function toArray($request)
-    // {
-    //     return [
+    public function toArray($request)
+    {
+        return [
+                'date' => $this->date,
+                'user_id'=> $this->user_id,
+                // 'user_role'=>$this->user->roles,
+                'intermediate_product_id'=> $this->intermediate_product_id,
+                'done_qty'=> $this->done_qty,
+                'intermediate_product_id'=> $this->intermediate_product_id,
+                'current_prepared_qty'=> $this->current_prepared_qty,
+                'required_qty'=> $this->required_qty,
+                'role_id'=> $this->intermediate_product->role_id,
+                'Status'=> $this->Status,
+                'Note'=> $this->Note,
+               
     //         'id'=>$this->id,
     //         'name' => $this->name,
     //         'slug' => $this->slug,
@@ -34,11 +46,11 @@ class Daily_Emp_WorkResourceDB extends JsonResource
     //         'Active'=> $this->Active,
     //         'image' => $this->image,
           
-    //     ];
-    // }
-
-    public function toArray($request)
-    {
-        return parent::toArray($request);
+        ];
     }
+
+    // public function toArray($request)
+    // {
+    //     return parent::toArray($request);
+    // }
 }

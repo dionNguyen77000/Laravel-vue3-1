@@ -5,6 +5,7 @@ namespace App\Http\Controllers\DataTable;
 use Image;
 
 use App\Models\Role;
+use App\Models\Permission;
 use App\Models\Stock\Unit;
 use Illuminate\Http\Request;
 use App\Models\Stock\Category;
@@ -12,6 +13,7 @@ use App\Models\Stock\Supplier;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Stock\Intermediate_product;
 use App\Http\Resources\Stock\Intermediate_ProductResourceDB;
@@ -38,8 +40,8 @@ class Intermediate_ProductController extends DataTableController
           'unitOptions'=> $this->getUnitOptions(),
           'supplierOptions'=> $this->getSupplierOptions(),
           'categoryOptions'=> $this->getCategoryOptions(),
-          'roleOptions'=> $this->getRoleOptions(),
-          'statusOptions'=> $this->getStatusOptions(),
+          'permissionOptions'=> $this->getPermissionOptions(),
+          'PreparationOptions'=> $this->getPreparationOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
               'deletion' => $this->allowDeletion,
@@ -60,15 +62,14 @@ class Intermediate_ProductController extends DataTableController
         return [
             'unit_id' => 'Unit',
             'category_id' => 'Category',
-            'role_id' => 'Role',
+            'permission_id' => 'Permission',
         ];
     }
 
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'thumbnail','slug', 'price',
-            'unit_id',
+            'id','name', 'thumbnail','slug', 'price', 'unit_id',
             'category_id',
             'description',
             'image',
@@ -76,8 +77,8 @@ class Intermediate_ProductController extends DataTableController
             'prepared_point',
             'coverage',
             'required_qty',
-            'role_id',
-            'Status',
+            'permission_id',
+            'Preparation',
             'Active',
         ];
     }
@@ -92,8 +93,8 @@ class Intermediate_ProductController extends DataTableController
             'prepared_point',
             'coverage',
             'required_qty',
-            'role_id',
-            'Status',
+            'permission_id',
+            'Preparation',
             'Active'
         ];
     }
@@ -108,8 +109,8 @@ class Intermediate_ProductController extends DataTableController
             'prepared_point',
             'required_qty',
             'coverage',
-            'role_id',
-            'Status',
+            'permission_id',
+            'Preparation',
             'Active'
         ];
     }
@@ -117,22 +118,25 @@ class Intermediate_ProductController extends DataTableController
     public function store(Request $request)
 
     {
+        // dd($request->permission_id);
         $this->validate($request, [
             'name' => 'required|unique:intermediate_products,name',
-            'current_qty' => 'required',
-            'prepared_point' => 'required',
-            'coverage' => 'required',
+            'slug' => 'unique:intermediate_products,slug',
+            'price' => 'numeric',
+            'current_qty' => 'required|numeric',
+            'prepared_point' => 'required|numeric',
+            'coverage' => 'required|numeric',
         ]);
 
         $newI =  $this->builder->create($request->only($this->getCreatedColumns()));
-        if($request->Status != 'Ongoing') {
+        if($request->Preparation != 'OnGoing') {
             if ($request->current_qty <= $request->prepared_point){
                 $newI->required_qty = $request->coverage - $request->current_qty;
-                $newI->Status = 'Prepare';
+                $newI->Preparation = 'Yes';
                 $newI->save();
             } else{
                 $newI->required_qty = 0;
-                $newI->Status = '';
+                $newI->Preparation = 'No';
                 $newI->save();
             }
         }
@@ -144,28 +148,61 @@ class Intermediate_ProductController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:intermediate_products,name,' . $id,
+            'price' => 'numeric',
+            'current_qty' => 'required|numeric',
+            'prepared_point' => 'required|numeric',
+            'coverage' => 'required|numeric',
         ]);
 
         // dd($request->current_qty);
-        // $updated_intermediate = $this->builder->find($id);
-
-        // dd($updated_intermediate);
         $intermediate = $this->builder->find($id);
+        // dd($intermediate->Preparation);
+        if ($intermediate->Preparation == 'OnGoing'){
+            return 'Error - OnGoing Update';
+        }
         $updatedSuccess =  $intermediate ->update(
             $request->only($this->getUpdatableColumns())
         );
 
         if ($updatedSuccess == 1 & $intermediate->current_qty <= $intermediate->prepared_point){
-            $intermediate->Status = 'Prepare';
+            $intermediate->Preparation = 'Yes';
             $intermediate->required_qty = $intermediate->coverage -   $intermediate->current_qty;  
             $intermediate->save();
         } elseif ($updatedSuccess == 1 & $intermediate->current_qty > $intermediate->prepared_point){
-            $intermediate->Status = '';
+            $intermediate->Preparation = 'No';
             $intermediate->required_qty = 0;
             $intermediate->save();
         }
 
         return $updatedSuccess;
+    }
+
+    public function destroy($ids, Request $request)
+    {
+        if (!$this->allowDeletion) {
+            return;
+        }
+
+        $arrayIds = explode(',',$ids);
+
+        if (count($arrayIds) > 1 ) {
+            $this->builder->whereIn('id', explode(',', $ids))->delete();
+        } else if (count($arrayIds) == 1){
+            $inter_p = Intermediate_product::withCount('daily_emp_works')->find($ids);
+            if($inter_p->daily_emp_works_count == 0){
+                $inter_p->delete();
+                return ('deleted');
+            } else {
+                // return ('deleted')->setPreparationCode(422);
+                return response(array(
+                    'message' => 'Foreign Key Problem',
+                    'error' => 'Cannot delete this product, this product has been used in Daily Emp Work. You need to delete them first in Daily Emp Work before you can delete here.',
+                 ), 422);
+            }
+
+            // dd($this->builder->find($ids)->with(['daily_emp_works']));
+            // $this->builder->find($ids)->delete();
+        }
     }
 
     public function saveImage($id, Request $request)
@@ -219,10 +256,23 @@ class Intermediate_ProductController extends DataTableController
         // return "successfully saved";
     }
 
-
-
+        /**
+    * Get all values from specific key in a multidimensional array
+    *
+    * @param $key string
+    * @param $arr array
+    * @return null|string|array
+    */
+    public function array_value_recursive($key, array $arr){
+        $val = array();
+        array_walk_recursive($arr, function($v, $k) use($key, &$val){
+            if($k == $key) array_push($val, $v);
+        });
+        return count($val) > 1 ? $val : array_pop($val);
+    }
+   
     protected function getRecords(Request $request)
-    {
+    {  
         $builder = $this->builder;
 
         if ($this->hasSearchQuery($request)) {
@@ -232,11 +282,39 @@ class Intermediate_ProductController extends DataTableController
         if (isset($request->category_id)) {
             $builder =   $builder->where('category_id','=',$request->category_id);
         }
-        if (isset($request->role_id)) {
-            $builder =   $builder->where('role_id','=',$request->role_id);
+        if (isset($request->permission_id)) {
+            if($request->permission_id == 'All'){
+                $user = auth()->user();
+                $userPermissions = $user->getPermissions();
+                $userPermissionIds = array();
+                $key = 'id';
+                array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
+                    if($k == $key) array_push($userPermissionIds, $v);
+                });
+                // dd($userPermissionIds);
+                $builder =   $builder->whereIn('permission_id',$userPermissionIds);
+
+            } else {
+                // dd($request->permission_id);
+                $builder =   $builder->where('permission_id','=',$request->permission_id);
+            }
         }
-        if (isset($request->Status)) {
-            $builder =   $builder->where('Status','=',$request->Status);
+
+        if (isset($request->Preparation)) {
+            // dd($request->Preparation);
+            if( strpos($request->Preparation,',' ) !== false ) {
+                
+                $arrayPreps = explode(',',$request->Preparation);
+                // dd( $arrayPreps[0]);
+                // dd( $arrayPreps[1]);
+                $builder =  $builder->whereIn('Preparation',$arrayPreps);
+                                   
+           } else 
+            $builder =   $builder->where('Preparation','=',$request->Preparation);
+        }
+
+        if (isset($request->Active)) {
+            $builder =   $builder->where('Active','=',$request->Active);
         }
 
         try {
@@ -251,6 +329,9 @@ class Intermediate_ProductController extends DataTableController
             return [];
         }    
     }
+
+  
+    
 
     public function getUnitOptions()
     {
@@ -283,9 +364,9 @@ class Intermediate_ProductController extends DataTableController
         }
         return $returnArr;
     }
-    public function getRoleOptions()
+    public function getPermissionOptions()
     {
-        $r = Role::all('id','name');
+        $r = Permission::all('id','name');
 
         $returnArr = [];
         foreach ($r as  $sr) {
@@ -293,10 +374,38 @@ class Intermediate_ProductController extends DataTableController
         }
         return $returnArr;
     }
-    public function getStatusOptions()
+    public function getPreparationOptions()
     {
-        $returnArr = ['Prepare'];
+        $returnArr = ['Yes'];
         return $returnArr;
+    }
+
+    
+    public function sendMail()
+    {   
+        return 'not work';
+        dd(storage_path('img/logo_backend.png'));
+        $data = [
+            'email' => 'anhduc.nguyen77000@gmail.co',
+            'title' => 'Mail from Golden Lor Yarrabilba',
+            'body' => 'This is for testing mail with attachment using gmail'
+        ];
+
+        $files = [
+            storage_path('img/logo_backend.png')
+        ];
+        Mail::send('emails.myTestMail', $data, function($message)use($data, $files) {
+            $message->to($data["email"], $data["email"])
+                    ->subject($data["title"]);
+ 
+            foreach ($files as $file){
+                $message->attach($file);
+            }
+            
+        });
+        // Mail::to('anhduc.nguyen77000@gmail.com')->send(new MyTestMail($details));
+
+        dd("Email is Sent ok ok.");
     }
    
 

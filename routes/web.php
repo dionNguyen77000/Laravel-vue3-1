@@ -9,6 +9,10 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -21,7 +25,11 @@ use App\Http\Controllers\Auth\RegisterController;
 */
 
 
-Route::get('/{any}', function () {
+Route::get('/{any}', function (Request $request) {
+    // $user = $request->user();
+    // dd( $request->user());
+    // $user = Auth::user();
+    // dd($user);
     return view('welcome');
  })->where('any','.*');
  
@@ -41,8 +49,9 @@ Route::get('/{any}', function () {
 
 // Route::get('/test_user', function (\Illuminate\Http\Request $request) {
 //     $user = $request->user();
-//     $user->withdrawPermissionTo('delete posts', 'edit posts');
-//     dump($user->can('delete posts'));
+//     dd($user);
+//     // $user->withdrawPermissionTo('delete posts', 'edit posts');
+//     // dump($user->can('delete posts'));
   
 // });
 

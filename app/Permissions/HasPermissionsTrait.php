@@ -24,7 +24,7 @@ trait HasPermissionsTrait
 
     public function withdrawPermissionTo(...$permissions)
     {
-        $permissions = $this->getAllPermissions(Arr::flatten($permissions));
+        $permissions = $this->getAllPermissions(Arr::flatten($permissions)); // this return laravel collection
 
         $this->permissions()->detach($permissions);
 

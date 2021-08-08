@@ -16,9 +16,14 @@ class PrivateUserResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'name' => $this ->name,
             'username' => $this->username,
             'email' =>$this -> email,
-            'name' => $this ->name
+            // 'roles' => $this->roles->pluck('name','id'),
+            'roles' => $this->roles->map->only(['id', 'name']),
+            // 'roles' => $this->getRoleNames(),
+            'permissions' =>  $this->getPermissions(),
+            'intermediateProducts' =>  $this->getIntermediateProducts(),
         ];
     }
 }

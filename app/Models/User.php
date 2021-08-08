@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use ArrayObject;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Models\Stock\Daily_Emp_Work;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Permissions\HasPermissionsTrait;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Stock\Intermediate_product;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -25,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'username',
         'email',
         'password',
+
     ];
 
     /**
@@ -92,5 +97,138 @@ class User extends Authenticatable implements JWTSubject
     public function daily_emp_works()
     {
         return $this->hasMany(Daily_Emp_Work::class);
+    }
+    // public function intermediate_products()
+    // {
+    //     return $this->belongsToMany(Intermediate_product::class,'daily_emp_works');
+    // }
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class,'users_roles');
+    }
+    public function getRoleNames()
+    {
+        $allRoleNameOfUser = [];
+        foreach ($this->roles as $role) {
+            array_push($allRoleNameOfUser,$role);
+        }   
+        return $allRoleNameOfUser;
+
+    }
+    public function getPermissions()
+    {
+        $allPermissionsOfUser = [];
+
+         // get all permissions from the role of user
+       
+        foreach ($this->roles as $role) {
+            $permissionsOfTheRole = $role->permissions->map->only(['id', 'name']);
+            // return var_dump(json_decode(json_encode($permissionsOfTheRole,true)));
+            // $permissionsOfTheRorleArray =  json_decode(json_encode($permissionsOfTheRole,true));
+            // array_merge($allPermissionsOfTheRole,$myArray);
+            $included = true;
+            // get all permissions from the role of user
+            foreach($permissionsOfTheRole as $theConsideredPermission) {
+                //test if the consider permission is alredy in 
+                foreach($allPermissionsOfUser as $thePermission){
+                    if($theConsideredPermission['id'] == $thePermission['id']){
+                        $included = false;
+                    } 
+                }
+                if($included) {
+                    array_push($allPermissionsOfUser,$theConsideredPermission);
+                }
+            }
+        }   
+
+       
+        // get all permissions from the the pivot table of user_permission
+        $user_permissions = $this->permissions->map->only(['id', 'name']);
+        $included = true;
+        foreach($user_permissions as $theConsideredPermission)
+        {
+          
+            foreach($allPermissionsOfUser as $thePermission){
+                if($theConsideredPermission['id'] == $thePermission['id']){
+                    $included = false;
+                } 
+            }
+            if($included) {
+                array_push($allPermissionsOfUser,$theConsideredPermission);
+            }
+        }
+     
+
+            // $arr = json_decode($permissionsOfTheRole);
+            // $arrayobj->append($permissionsOfTheRole);
+            // array_push($allPermissionsOfTheRole, $arr);
+        
+
+            //  // get all permissions from the role of user
+            //  foreach($user_roles as $role){
+            //     foreach($role->permissions as $permission){
+            //         // $userPermission[$permission->id] = $permission->name;
+            //         array_push($userPermissionId,$permission->id);
+            //     }
+            // }
+    
+            //  // get all permissions from the the pivot table of user_permission
+            //  foreach($user_permissions as $permission)
+            //  {
+            //      if(!in_array($permission->id,$userPermissionId))    
+            //      array_push($userPermissionId,$permission->id);
+            //  }
+
+        // return $allPermissionsOfTheRole;
+        return $allPermissionsOfUser;
+        // return $merge_object;
+        // return $arrayobj;
+
+    }
+
+    public function getIntermediateProducts()
+    {
+         // get all roles of the user from pivot table user_role
+         $user_roles = $this->roles;
+         // get all permissions of the user from pivot table user_permission
+         $user_permissions = $this->permissions;
+
+         $userPermissionId =[];
+        
+         $returnArr = [];
+
+          // get all permissions from the role of user
+        foreach($user_roles as $role){
+            foreach($role->permissions as $permission){
+                // $userPermission[$permission->id] = $permission->name;
+                array_push($userPermissionId,$permission->id);
+            }
+        }
+
+         // get all permissions from the the pivot table of user_permission
+         foreach($user_permissions as $permission)
+         {
+             if(!in_array($permission->id,$userPermissionId))    
+             array_push($userPermissionId,$permission->id);
+         }
+        
+         // foreach($user_roles as $role){
+             $r = Intermediate_Product::select('id','name','required_qty')
+             ->whereIn('Preparation',['Yes','OnGoing'])
+             ->where('active',1)
+             ->whereIn('permission_id',$userPermissionId)
+             ->get();           
+          
+             foreach ($r as  $sr) {
+                 $returnArr[$sr['id']] = $sr;
+             }
+       
+         // }
+         // $r_array = json_decode(json_encode($r), true);
+ 
+         // return $r;
+         // return $r_array;
+         return $returnArr;
+         // return $user_roles;
     }
 }

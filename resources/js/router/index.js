@@ -9,6 +9,9 @@ import Reminder from "../Pages/Reminder.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
 import User_Management from "../Pages/Admin/User_Management.vue";
+import Role from "../Pages/Admin/Role.vue";
+import Permission from "../Pages/Admin/Permission.vue";
+
 
 
 //router component Stock Setup
@@ -70,6 +73,17 @@ const routes = [
         //     auth, redirectIfNotCustomer
         //   ]
         // },
+      },
+      {
+        path: "/role",
+        name: "Role",
+        component: Role,
+      },
+
+      {
+        path: "/permission",
+        name: "Permission",
+        component: Permission,
       },
 
       {

@@ -24,9 +24,9 @@ class Intermediate_product extends Model
         'prepared_point',
         'coverage',
         'required_qty',
-        'role_id',
+        'permission_id',
         'Active',
-        'Status'
+        'Preparation'
     ];
     
     

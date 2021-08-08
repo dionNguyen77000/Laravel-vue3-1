@@ -14,11 +14,11 @@ class CreateDailyEmpWorkTable extends Migration
     public function up()
     {
         Schema::create('daily_emp_works', function (Blueprint $table) {
-            $table->datetime('date');
+            $table->date('date');
             $table->foreignId('user_id')->nullable()->constrained();
             $table->foreignId('intermediate_product_id')->nullable()->constrained();
             $table->primary(['user_id', 'intermediate_product_id','date'],'user_intermediate_date_primary');
-            $table->float('doneByEmployee')->nullable();
+            $table->float('done_qty')->nullable();
             $table->float('current_prepared_qty')->nullable();
             $table->float('required_qty')->nullable();
             $table->string('Status')->nullable();

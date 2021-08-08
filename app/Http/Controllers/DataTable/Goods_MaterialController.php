@@ -4,21 +4,24 @@ namespace App\Http\Controllers\DataTable;
 
 use Image;
 
-use Money\Currencies\ISOCurrencies;
-use Money\Parser\IntlMoneyParser;
+use App\Mail\TestMail;
+use App\Mail\MyTestMail;
 
 
+use App\Models\Permission;
 use App\Models\Stock\Unit;
 use Illuminate\Http\Request;
 use App\Models\Stock\Category;
 use App\Models\Stock\Supplier;
 use Illuminate\Support\Carbon;
+use Money\Parser\IntlMoneyParser;
+use Money\Currencies\ISOCurrencies;
 use App\Http\Controllers\Controller;
 use App\Models\Stock\Goods_material;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Stock\Goods_MaterialResourceDB;
-
 
 class Goods_MaterialController extends DataTableController
 {
@@ -41,6 +44,8 @@ class Goods_MaterialController extends DataTableController
           'unitOptions'=> $this->getUnitOptions(),
           'supplierOptions'=> $this->getSupplierOptions(),
           'categoryOptions'=> $this->getCategoryOptions(),
+          'permissionOptions'=> $this->getPermissionOptions(),
+          'PreparationOptions'=> $this->getPreparationOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
               'deletion' => $this->allowDeletion,
@@ -62,6 +67,7 @@ class Goods_MaterialController extends DataTableController
             'unit_id' => 'Unit',
             'supplier_id' => 'Supplier',
             'category_id' => 'Category',
+            'permission_id' => 'Permission',
         ];
     }
 
@@ -72,20 +78,49 @@ class Goods_MaterialController extends DataTableController
             'unit_id',
             'supplier_id',
             'category_id',
-            'description','image'
+            'description','image',
+            'current_qty',
+            'prepared_point',
+            'coverage',
+            'required_qty',
+            'permission_id',
+            'Preparation',
+            'Active',
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-            'name', 'slug', 'thumbnail','price','unit_id','supplier_id','category_id', 'description','image'
+            'name', 'thumbnail','slug', 'price',
+            'unit_id',
+            'supplier_id',
+            'category_id',
+            'description','image',
+            'current_qty',
+            'prepared_point',
+            'coverage',
+            'required_qty',
+            'permission_id',
+            'Preparation',
+            'Active',
         ];
     }
 
     public function getCreatedColumns()
     {
         return [
-            'name', 'slug', 'price','unit_id','supplier_id','category_id', 'description'
+            'name', 'thumbnail','slug', 'price',
+            'unit_id',
+            'supplier_id',
+            'category_id',
+            'description','image',
+            'current_qty',
+            'prepared_point',
+            'coverage',
+            'required_qty',
+            'permission_id',
+            'Preparation',
+            'Active',
         ];
     }
     
@@ -94,6 +129,10 @@ class Goods_MaterialController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:goods_materials,name',
+            'price' => 'numeric',
+            'current_qty' => 'required|numeric',
+            'prepared_point' => 'required|numeric',
+            'coverage' => 'required|numeric'
             // 'image' => 'image|mimes:jpeg,png,jpg,gif,svg'
         ]);
 
@@ -139,7 +178,11 @@ class Goods_MaterialController extends DataTableController
     public function update($id, Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|unique:goods_materials,name,' . $id
+            'name' => 'required|unique:goods_materials,name,' . $id,
+            'price' => 'numeric',
+            'current_qty' => 'required|numeric',
+            'prepared_point' => 'required|numeric',
+            'coverage' => 'required|numeric'
         ]);
 
         // $currencies = new ISOCurrencies();
@@ -149,7 +192,9 @@ class Goods_MaterialController extends DataTableController
         
         // dd ($money->getAmount()); // outputs 100
 
-        $updatedGM =  $this->builder->find($id)->update(
+        $GM =  $this->builder->find($id);
+        
+        $updatedSuccess = $GM->update(
         
             $request->only($this->getUpdatableColumns())
             // array_merge(
@@ -160,8 +205,17 @@ class Goods_MaterialController extends DataTableController
         
         );
 
-        return $updatedGM;
-        // return new PrivateUserResource($user);
+        if ($updatedSuccess == 1 & $GM->current_qty <= $GM->prepared_point){
+            $GM->Preparation = 'Yes';
+            $GM->required_qty = $GM->coverage -   $GM->current_qty;  
+            $GM->save();
+        } elseif ($updatedSuccess == 1 & $GM->current_qty > $GM->prepared_point){
+            $GM->Preparation = 'No';
+            $GM->required_qty = 0;
+            $GM->save();
+        }
+
+        return $updatedSuccess;
     }
 
     public function saveImage($id, Request $request)
@@ -259,6 +313,42 @@ class Goods_MaterialController extends DataTableController
     }
 
 
+    // public function show(){
+      
+    //     $details = [
+    //         'title' => 'Mail from Golden Lor Yarrabilba',
+    //         'body' => 'This is for testing mail using gmail'
+    //     ];
+
+    //     Mail::to('anhduc.nguyen77000@gmail.com')->send(new MyTestMail($details));
+
+    //     return ("Email is Sent.");
+    // }
+    public function show(){
+      
+        // dd(storage_path('img/logo_backend.png'));
+        $details = [
+            'email' => 'anhduc.nguyen77000@gmail.com',
+            'title' => 'Mail from Golden Lor Yarrabilba',
+            'body' => 'This is for testing mail with attachment using gmail'
+        ];
+
+        $files = [
+            public_path('GoldenLor_Database.xlsx')
+        ];
+        Mail::send('emails.myTestMail', $details, function($message)use($details, $files) {
+            $message->to($details["email"], $details["email"])
+                    ->subject($details["title"]);
+ 
+            foreach ($files as $file){
+                $message->attach($file);
+            }
+            
+        });
+        // Mail::to('anhduc.nguyen77000@gmail.com')->send(new MyTestMail($details));
+
+        dd("Email is Sent ok ok.");
+    }
 
     protected function getRecords(Request $request)
     {
@@ -275,6 +365,41 @@ class Goods_MaterialController extends DataTableController
 
         if (isset($request->category_id)) {
             $builder =   $builder->where('category_id','=',$request->category_id);
+        }
+
+        if (isset($request->permission_id)) {
+            if($request->permission_id == 'All'){
+                $user = auth()->user();
+                $userPermissions = $user->getPermissions();
+                $userPermissionIds = array();
+                $key = 'id';
+                array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
+                    if($k == $key) array_push($userPermissionIds, $v);
+                });
+                // dd($userPermissionIds);
+                $builder =   $builder->whereIn('permission_id',$userPermissionIds);
+
+            } else {
+                // dd($request->permission_id);
+                $builder =   $builder->where('permission_id','=',$request->permission_id);
+            }
+        }
+
+        if (isset($request->Preparation)) {
+            // dd($request->Preparation);
+            if( strpos($request->Preparation,',' ) !== false ) {
+                
+                $arrayPreps = explode(',',$request->Preparation);
+                // dd( $arrayPreps[0]);
+                // dd( $arrayPreps[1]);
+                $builder =  $builder->whereIn('Preparation',$arrayPreps);
+                                   
+           } else 
+            $builder =   $builder->where('Preparation','=',$request->Preparation);
+        }
+
+        if (isset($request->Active)) {
+            $builder =   $builder->where('Active','=',$request->Active);
         }
 
         try {
@@ -321,5 +446,22 @@ class Goods_MaterialController extends DataTableController
         }
         return $returnArr;
     }
+
+    public function getPermissionOptions()
+    {
+        $r = Permission::all('id','name');
+
+        $returnArr = [];
+        foreach ($r as  $sr) {
+            $returnArr[$sr['id']] = $sr['name'];
+        }
+        return $returnArr;
+    }
+    public function getPreparationOptions()
+    {
+        $returnArr = ['Yes'];
+        return $returnArr;
+    }
+    
 
 }

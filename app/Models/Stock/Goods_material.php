@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Goods_material extends Model
 {
-    use HasFactory, HasPrice;
+    use HasFactory;
     protected $fillable = [
         'name',
         'slug',
@@ -22,6 +22,13 @@ class Goods_material extends Model
         'supplier_id',
         'category_id',
         'description',
+        'current_qty',
+        'prepared_point',
+        'coverage',
+        'required_qty',
+        'permission_id',
+        'Active',
+        'Preparation'
     ];
     
     public function getRouteKeyName()

@@ -1,6 +1,6 @@
 <template>
   <div id="unit" class="p-6"> 
-        <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center">
+        <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
             <div class="w-full p-1">
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Table {{response.table}}</div>

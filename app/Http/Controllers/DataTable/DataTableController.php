@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 abstract class DataTableController extends Controller
 { /**
@@ -137,7 +138,14 @@ abstract class DataTableController extends Controller
             return;
         }
 
-        $this->builder->whereIn('id', explode(',', $ids))->delete();
+        $arrayIds = explode(',',$ids);
+
+        if (count($arrayIds) > 1 ) {
+            $this->builder->whereIn('id', explode(',', $ids))->delete();
+        } else if (count($arrayIds) == 1){
+            $this->builder->find($ids)->delete();
+            // $this->builder->find($ids)->delete();
+        }
     }
 
 
@@ -277,4 +285,5 @@ abstract class DataTableController extends Controller
             $queryParts['value']
         );
     }
+    
 }

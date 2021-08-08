@@ -2,17 +2,41 @@
 
 namespace App\Http\Controllers\DataTable;
 
+use App\Models\Role;
 use App\Models\User;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\PrivateUserResource;
+use App\Http\Resources\User\PrivateUserResource;
 
 class UserController extends DataTableController
 {
     protected $allowCreation = true;
 
     protected $allowDeletion = true;
+
+    public function index(Request $request)
+    {
+    //   return $this->builder->get();
+      return response()->json([
+        'data' => [
+          'table' => $this->builder->getModel()->getTable(),
+          'db_column_name' =>array_values($this->getDatabaseColumnNames()),
+          'displayable' => array_values($this->getDisplayableColumns()),
+          'updatable' => array_values($this->getUpdatableColumns()),
+          'records' => $this->getRecords($request),
+          'custom_columns' => $this->getCustomColumnsNames(),
+          'roleOptions'=> $this->getRoleOptions(),
+          'permissionOptions'=> $this->getPermissionOptions(),
+          'allow' => [
+              'creation' => $this->allowCreation,
+              'deletion' => $this->allowDeletion,
+          ]
+        ]
+
+      ]);
+    }
 
     public function builder()
     {
@@ -30,13 +54,15 @@ class UserController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'username', 'email','created_at','updated_at'
+            'id','name', 'username', 'email'
+            // , 'created_at','updated_at'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-           'name', 'username','email','created_at','updated_at'
+           'name', 'username','email'
+        //    ,'created_at','updated_at'
         ];
     }
 
@@ -56,7 +82,7 @@ class UserController extends DataTableController
         // return $request;
 
         // $this->builder->create($request->only($this->getUpdatableColumns()));
-        $this->builder->create(
+        $newUser =  $this->builder->create(
             [
                 'name' => $request->name,
                 'username' => $request->username,
@@ -66,7 +92,13 @@ class UserController extends DataTableController
                 // 'created_at' => $request->created_at,
             ]
         );
-        return "successfully created";
+
+        
+        if($request->assignedRoleIds && count($request->assignedRoleIds) > 0 ) {
+            $newUser->roles()->attach($request->assignedRoleIds);
+        }
+
+        return $newUser;
     }
 
 
@@ -76,6 +108,7 @@ class UserController extends DataTableController
         // $request_object = get_object_vars($request);
 
         // return gettype($request_object);
+        // dd($request->assignedRoleIds);
 
         $this->validate($request, [
             'name' => 'required',
@@ -85,9 +118,9 @@ class UserController extends DataTableController
         ]);
 
         $user = null;
-
+        $theUser = $this->builder->find($id);
         if($request->password_new){
-           $this->builder->find($id)->update(
+            $theUser->update(
                 [
                     
                     'name' => $request->name,
@@ -97,18 +130,68 @@ class UserController extends DataTableController
                     'password' => Hash::make($request->password_new),
 
                 ]);
+                $theUser->roles()->sync($request->assignedRoleIds);
             // $request->except(['password']);
             // $this->builder->find($id)->password = Hash::make($request->password)->save();
             // $user = User::find(1);
             // $user->timestamps = false;
             // $user->age = 72;
             // $user->save();
-            return "password updated";
+          
         } else {
-            $this->builder->find($id)->update($request->only($this->getUpdatableColumns()));
+            $theUser->update($request->only($this->getUpdatableColumns()));
+            $theUser->roles()->sync($request->assignedRoleIds);
+        }
+        return $theUser->load('roles');
+        // return new PrivateUserResource($user);
+    }
+    protected function getRecords(Request $request)
+    {
+        $builder = $this->builder;
+
+        if ($this->hasSearchQuery($request)) {
+            $builder = $this->buildSearch($builder, $request);
+        }
+     
+
+        if (isset($request->supplier_id)) {
+            $builder =   $builder->where('supplier_id','=',$request->supplier_id);
         }
 
-        // return new PrivateUserResource($user);
+
+        try {
+            return PrivateUserResource::collection(
+                $builder->limit($request->limit)
+                ->orderBy('id', 'asc')
+                ->get($this->getDisplayableColumns())
+            );
+            
+          
+        } catch (QueryException $e) {
+            return [];
+        }    
+    }
+
+    public function getRoleOptions()
+    {
+        $r = Role::all('id','name');
+
+        $returnArr = [];
+        foreach ($r as  $sr) {
+            $returnArr[$sr['id']] = $sr['name'];
+        }
+        return $returnArr;
+    }
+
+    public function getPermissionOptions()
+    {
+        $r = Permission::all('id','name');
+
+        $returnArr = [];
+        foreach ($r as  $sr) {
+            $returnArr[$sr['id']] = $sr['name'];
+        }
+        return $returnArr;
     }
 }
 

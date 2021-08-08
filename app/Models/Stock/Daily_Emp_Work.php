@@ -15,7 +15,7 @@ class Daily_emp_work extends Model
         'date',
         'user_id',
         'intermediate_product_id',
-        'doneByEmployee',
+        'done_qty',
         'current_prepared_qty',
         'required_qty',
         'Status',

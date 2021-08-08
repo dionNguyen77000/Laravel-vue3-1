@@ -19,7 +19,8 @@ class Goods_MaterialResourceDB extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'thumbnail' => $this->thumbnail,
-            'price' => $this->formattedPrice,
+            'price' => $this->price,
+            // 'price' => $this->formattedPrice,
             'unit_id' => $this->unit_id,
             // 'unit_name' => is_null($this->unit) ? '' : $this->unit['name'],
             'supplier_id' => $this->supplier_id,
@@ -27,6 +28,13 @@ class Goods_MaterialResourceDB extends JsonResource
             'category_id' => $this->category_id,
             // 'category_name' => is_null($this->category) ? '' : $this->category['name'],
             'description' => $this->description,
+            'current_qty'=> $this->current_qty,
+            'prepared_point'=> $this->prepared_point,
+            'coverage'=> $this->coverage,
+            'required_qty'=> $this->required_qty,
+            'permission_id'=> $this->permission_id,
+            'Preparation'=> $this->Preparation,
+            'Active'=> $this->Active,
             'image' => $this->image,
           
         ];

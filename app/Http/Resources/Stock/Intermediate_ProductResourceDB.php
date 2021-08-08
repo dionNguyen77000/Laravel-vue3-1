@@ -29,8 +29,8 @@ class Intermediate_ProductResourceDB extends JsonResource
             'prepared_point'=> $this->prepared_point,
             'coverage'=> $this->coverage,
             'required_qty'=> $this->required_qty,
-            'role_id'=> $this->role_id,
-            'Status'=> $this->Status,
+            'permission_id'=> $this->permission_id,
+            'Preparation'=> $this->Preparation,
             'Active'=> $this->Active,
             'image' => $this->image,
           

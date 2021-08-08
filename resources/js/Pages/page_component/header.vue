@@ -1,6 +1,6 @@
 <template>
 <!-- {{getAuth}} -->
-  <div id="header" class="w-full p-4 bg-yellow-600 lg:sticky top-0 z-40 text-center">
+  <div id="header" class="w-full flex justify-center min-w-screen  p-4 bg-yellow-600 lg:sticky top-0 z-40 text-center">
     <div id="logo">
       <img :src="'/img/logo_backend.png'" alt="Golden Lor Yarrabilba"
       class="text-center sm:hidden h-12 mx-auto pb-2"
@@ -8,7 +8,7 @@
     </div>
     
 
-    <nav class="z-40 flex justify-between flex-wrap">
+    <nav class="w-full z-40 flex justify-between flex-wrap">
         <!-- {{getAuth}} -->
         <ul class="flex items-center">
           <div id="logo">
@@ -31,7 +31,7 @@
           <!-- <img src="https://a7sas.net/wp-content/uploads/2019/07/4060.jpeg" class="w-12 h-12 rounded-full shadow-lg" @click="dropDownOpen = !dropDownOpen"> -->
         </li>
         <li>
-          <a class="mr-4" @click.prevent="logOut">Logout</a>
+          <a class="mr-4 cursor-pointer" @click.prevent="logOut">Logout</a>
             <!-- <router-link class="mr-4" :to="{name:'Logout'}">Logout</router-link> -->
             
         </li>

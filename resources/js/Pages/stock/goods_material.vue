@@ -1,14 +1,18 @@
 <template>
+
+<!-- {{filteredRecords}} -->
+
+      
   <div id="goods_material" class="p-6"> 
       
-        <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center">
+        <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
             <div class="w-full p-1">
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Goods & Materials</div>
                 <div>
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                    v-if="response.allow.creation"
+                    v-if="response.allow.creation && isFirstLevelUser"
                     @click.prevent="creating.active = !creating.active">
                     {{ creating.active ? 'Hide' : 'New record' }}
                     </a>
@@ -25,7 +29,7 @@
                             
                             <template v-if="column=='thumbnail'">
                                 <!-- Photo File Input -->
-                                <label class="text-gray-700 mb-1 " for="product_photo">
+                                <label  class="font-semibold" for="product_photo">
                                     Product Photo<span class="text-red-600"> </span>
                                 </label>
                                  <!-- Current Profile Photo -->
@@ -37,9 +41,8 @@
                                 </div>                       
                             </template>  
                              <template v-else-if="column=='unit_id'">
-                            <label :for="column">Unit </label>
+                            <label :for="column"  class="font-semibold">Unit : </label>
                             <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value=""></option>
                                 <option :value="index" v-for="option,index in response.unitOptions" :key="option">
                                     {{option}}
                                 </option>
@@ -47,20 +50,31 @@
                             </template>    
 
                             <template v-else-if="column=='category_id'">
-                            <label :for="column">Category</label>
+                            <label :for="column"  class="font-semibold">Category : </label>
        
                             <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value=""></option>
                                 <option :value="index" v-for="option,index in response.categoryOptions" :key="option">
                                     {{option}}
                                 </option>
                             </select>
                             </template> 
 
-                             <template v-else-if="column=='supplier_id'">
-                            <label :for="column">Supplier </label>
+                             <template v-else-if="column=='permission_id'">
+                            <label  class="font-semibold" :for="column">Assign To : </label>
+       
                             <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value=""></option>
+                                <option  :value="index" v-for="option,index in response.permissionOptions" :key="option">
+                                    <!-- <template v-if="getAuth.user.permissions.includes('edit_posts1')"> -->
+                                    {{option}}
+                                    <!-- </template> -->
+
+                                </option>
+                            </select>
+                            </template>    
+
+                             <template v-else-if="column=='supplier_id'">
+                            <label :for="column"  class="font-semibold">Supplier :  </label>
+                            <select :name="column" :id="column" v-model="creating.form[column]">
                                 <option :value="index" v-for="option,index in response.supplierOptions" :key="option">
                                     {{option}}
                                 </option>
@@ -69,6 +83,25 @@
 
                              <template v-else-if="column=='image'">
                             
+                            </template> 
+                             <template v-else-if="column=='required_qty'">
+                            <input type="text" :name="column" :id="column" :placeholder="column" class=" hidden bg-gray-100 border-2 w-full p-1 rounded-lg"
+                            disabled>
+                            </template>
+                            <template v-else-if="column=='Preparation'">
+                            <input type="text" :name="column" :id="column" :placeholder="column" class=" hidden bg-gray-100 border-2 w-full p-1 rounded-lg"
+                            disabled>
+                            </template> 
+
+                            
+                            <template v-else-if="column=='Active'">
+                            <label  class="font-semibold" :for="column">Active : </label>
+       
+                            <select :name="column" :id="column" v-model="creating.form[column]">
+                                <option  value="1">Yes</option>
+                                <option  value="0">No</option>
+                               
+                            </select>
                             </template> 
 
                             <template v-else>
@@ -93,7 +126,7 @@
         
           <!-- show hide column section -->
         <div id="show_hide_section" class="text-center mx-4 space-y-2">
-            <p> <b>Show Hide Column </b></p>
+            <p> <b>Hide Column </b></p>
             <ul id="hide_show_column_section" class="width-3/4 flex flex-wrap justify-center">
                 <li  class="mr-3" v-for="column in response.displayable" :key="column"
                 :class="{ 'hidden': hiddenSelectedColumns.includes(column)}"
@@ -186,6 +219,74 @@
             </div>
             </div>
 
+            <div class="flex flex-row mb-1 sm:mb-0">          
+                <div class="relative">
+                    <select v-model="selected_permission" @change="getRecords"
+                        class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option   value= 'All'>Check All</option>
+                        <template v-for="permission in getAuth.user.permissions" :key="permission.id">
+                            <option  :value="permission.id" >
+                             <!-- <template v-if="getAuth.user.permissions.includes(option)"> -->
+                                    {{permission.name}}
+                            <!-- </template> -->
+                             
+                            </option>
+                        </template>   
+                        
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-row mb-1 sm:mb-0">          
+                <div class="relative">
+                    <select v-model="selected_preparation" @change="getRecords"
+                        class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option  value= ''>Prep - All</option>
+
+                        <option value="Yes">
+                            Prep-Yes
+                        </option>
+                        <option value= "No" >
+                            Prep-No
+                        </option>         
+                              
+                        
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-row mb-1 sm:mb-0">          
+                <div class="relative">
+                    <select v-model="selected_active" @change="getRecords"
+                        class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option  value= ''>Active&Inactive</option>         
+                        <option value="0">
+                            Inactive
+                        </option>
+                        <option value="1" >
+                            Active
+                        </option>
+                    
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <div class="block relative">
                 <span class="h-full absolute inset-y-0 left-0 flex items-center pl-2">
                     <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current text-gray-500">
@@ -205,24 +306,48 @@
             <table class="min-w-max w-full table-auto">
                 <thead>
                     <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                        <th class="py-2" v-if="canSelectItems">
+                        <th 
+                        v-if="isFirstLevelUser && canSelectItems"
+                        class="py-2"
+                        >
                                 <input type="checkbox" 
                                 @change="toggleSelectAll" 
                                 :checked="filteredRecords.length === selected.length"
                                 >
                         </th>
                         <template v-for="column in response.displayable" :key="column">
-                        <th  
-                        class="text-left"  
-                        v-if="!hideColumns.includes(column)"
-                        >
-                            <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
-                            <div 
-                            class="arrow" 
-                            v-if="sort.key===column"
-                            :class="{ 'arrow--asc': sort.order === 'asc', 'arrow--desc': sort.order === 'desc'}">
-                            </div> 
-                        </th>
+                         <!-- heading when user click edit button -->
+                         <template v-if="editing.id && isUpdatable(column)">
+                                <!-- thumbnail heading should not be appear -->
+                                <template v-if="column == 'thumbnail'">
+                                </template>
+                                <template v-else>
+                                    <th 
+                                    class="text-left"  
+                                    v-if="!hideColumns.includes(column)"
+                                    >
+                                        <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
+                                        <div 
+                                        class="arrow" 
+                                        v-if="sort.key===column"
+                                        :class="{ 'arrow--asc': sort.order === 'asc', 'arrow--desc': sort.order === 'desc'}">
+                                        </div> 
+                                    </th>
+                                </template>
+                            </template>
+                            <template v-else>
+                                <th  
+                                class="text-left"  
+                                v-if="!hideColumns.includes(column)"
+                                >
+                                    <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
+                                    <div 
+                                    class="arrow" 
+                                    v-if="sort.key===column"
+                                    :class="{ 'arrow--asc': sort.order === 'asc', 'arrow--desc': sort.order === 'desc'}">
+                                    </div> 
+                                </th>
+                            </template>
                         </template>
                         <th class="text-left">Actions</th>
                         
@@ -230,18 +355,35 @@
                 </thead>
                 <tbody class="text-gray-600 text-sm font-light">
                     
-                    <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100">
+                    <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100"
+                    :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Preparation==('Yes')}" 
+                    >
                        
-                        <td v-if="canSelectItems" class=" text-center">
+                        <td v-if="isFirstLevelUser && canSelectItems" class=" text-center">
                             <input type="checkbox" :value="record.id" v-model="selected">
                         </td>
                         <template v-for="columnValue,column in record" :key="column">
+                        <!-- when user click edit button - thumbnail data should not be appear -->
+                        <template v-if="column == 'thumbnail' && editing.id">
+                        </template>
+
+
+                        <template v-else>
                         <td class="py-2 text-left"  v-if="!hideColumns.includes(column)">
+                            <!-- if in edit mode -->
                             <template v-if="editing.id === record.id && isUpdatable(column)">
                         
                                 <template v-if="column=='unit_id'">
                                     <!-- {{record}} -->
-                                    <select class="w-1/2" :name="column" :id="column" v-model="editing.form[column]">
+                                    <select 
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    :class="{
+                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    }"
+                                    :name="column" :id="column" 
+                                    :disabled= "notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    v-model="editing.form[column]"
+                                    >
                                         <option  value=""></option>
                                         <template v-for="option,index in response.unitOptions" >   
                                             <template v-if="record.id != option.id">                  
@@ -249,15 +391,116 @@
                                                 {{option}} 
                                             </option>
                                             </template>
+                                        </template>   
+                                    </select>
+                                </template>    
+                                
+                                <template v-else-if="column=='category_id'">
+                                    <!-- {{record}} -->
+                                    <select
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                     :class="{
+                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    }"
+                                    :name="column" :id="column" 
+                                    v-model="editing.form[column]"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    >
+                                        <option  value=""></option>
+                                        <template v-for="option,index in response.categoryOptions" >
+                
+                                            <template v-if="record.id != option.id" >                  
+                                            <option :value="index" :key="option">
+                                              {{option}} 
+                                            </option>
+                                            </template>
+                                        </template>                                       
+                                    </select>                                   
+                                </template>  
+
+                                <template v-else-if="column=='permission_id'">
+                                    <!-- {{record}} -->
+                                    <select
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    :class="{
+                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    }"                                    
+                                    :name="column" :id="column" v-model="editing.form[column]"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+
+                                    >
+                                        <option  value=""></option>
+                                        <template v-for="option,index in response.permissionOptions" >
+                
+                                            <template v-if="record.id != option.id">                  
+                                            <option :value="index" :key="option">
+                                              {{option}} 
+                                            </option>
+                                            </template>
                                         </template>
                                         
                                     </select>
+                                    
+                                </template>  
 
-                                </template>    
-                                <template v-else-if="column=='supplier_id'">
+                                <template v-else-if="column=='Preparation'">
                                     <!-- {{record}} -->
-                                      <!-- {{record}} -->
-                                    <select class="w-1/2" :name="column" :id="column" v-model="editing.form[column]">
+                                    <select 
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                     :class="{
+                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    }"
+                                    :name="column" :id="column" v-model="editing.form[column]"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    >   
+                                        <option value="Yes">Yes</option>                                  
+                                        <option  value="No">No</option>     
+                                    </select>
+                                    
+                                </template>    
+
+                                    
+                                <template v-else-if="column=='Active'">
+        
+                                    <select
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    :class="{
+                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    }"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :name="column" :id="column" 
+                                    v-model="editing.form[column]">
+                                    <option  value="1">Yes</option>
+                                    <option  value="0">No</option>
+                                
+                                     </select>
+                                </template> 
+
+                                <template v-else-if="column=='current_qty'">
+        
+                                   <input type="text"  
+                                    class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                    v-model="editing.form[column]"
+                                    :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    > 
+                                    <br>
+                                    <span v-if="editing.errors[column]" class="text-white font-bold">
+                                        <strong>{{ editing.errors[column][0] }}</strong>
+                                    </span>
+
+                                </template> 
+
+                                 <template v-else-if="column=='supplier_id'">
+                                    
+                                    <select 
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    :class="{
+                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    }"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :name="column" :id="column" 
+                                    v-model="editing.form[column]">                                    >
                                         <option  value=""></option>
                                         <template v-for="option,index in response.supplierOptions" >   
                                             <template v-if="record.id != option.id">                  
@@ -270,32 +513,18 @@
                                     </select>
                                     
                                 </template>    
-                                <template v-else-if="column=='category_id'">
-                                    <!-- {{record}} -->
-                                    <select class="w-1/2" :name="column" :id="column" v-model="editing.form[column]">
-                                        <option  value=""></option>
-                                        <template v-for="option,index in response.categoryOptions" >
-                
-                                            <template v-if="record.id != option.id">                  
-                                            <option :value="index" :key="option">
-                                              {{option}} 
-                                            </option>
-                                            </template>
-                                        </template>
-                                        
-                                    </select>
-                                    
-                                </template>    
 
-                                
                                 <template v-else>
                                     <input type="text"  
-                                    class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
-                                    v-model="editing.form[column]"
-                                    :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                   v-model="editing.form[column]"
+                                    :class="{ 
+                                    'border-3 border-red-700': editing.errors[column] ,
+                                     'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)}"
+                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
                                     > 
                                     <br>
-                                    <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                    <span v-if="editing.errors[column]" class="text-white font-bold">
                                         <strong>{{ editing.errors[column][0] }}</strong>
                                     </span>
                                 </template>
@@ -303,6 +532,7 @@
                             </template>
 
                             <template v-else>
+                            <!-- if not in edit mode -->
                             <div class="items-center">
                                    <!-- Thumbnail Image -->
                                 <template v-if="column=='thumbnail'">
@@ -341,8 +571,59 @@
                                 </div>
                                 </template>
 
+                                 <template v-else-if="column=='current_qty'"> 
+                                     <div class="text-center">                      
+                                    <template v-if="editing.currentQtyId === record.id && isUpdatable(column)">
+                                        <input type="text" 
+                                        class="w-20 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                        v-model="editing.form[column]"
+                                        :id="column+record.id" 
+                                        :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                        :ref="myInput"
+                                        > 
+                                        <br>
+                                        <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                            <strong>{{ editing.errors[column][0] }}</strong>
+                                        </span>
+
+                                        
+                                        <div class="mt-1">
+                                            <button @click.prevent="update('current_qty')"
+                                                class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none">                                         
+                                            Save
+                                        </button> 
+                                          <button  @click.prevent="editing.currentQtyId = null" 
+                                                class="ml-2 px-2 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-green-700  hover:text-white focus:outline-none">  
+                                            Cancel
+                                        </button>  
+                                        </div>
+                                    </template>                                 
+                                    <template v-else>
+                                        <button  @click.prevent="editCurrentQty(record)"
+                                        class=" ml-2 py-2 px-4 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
+                                        >
+                                        <span class="font-medium" >{{columnValue}}</span>
+                                       
+                                       
+                                        </button> 
+                                    </template>
+                                     </div>
+                                </template>
+
                                  <template v-else-if="column=='image'">                                 
                                          <img :src="columnValue" class="w-20 shadow">
+                                </template>
+
+                                 <template v-else-if="column=='description'">
+                                        <div class="flex items-center w-40">
+                                        <span class="font-medium" >{{columnValue}}</span>
+                                    </div>
+                                </template>
+
+                                <template v-else-if="column=='name'">
+                                        <div class="flex items-center w-20">
+                                        <span class="font-medium" >{{columnValue}}</span>
+                                    </div>
                                 </template>
 
                                 <template v-else-if="column=='unit_id'">
@@ -363,13 +644,20 @@
                                     </div>
                                 </template>
 
+                                
+                                <template v-else-if="column=='permission_id'">
+                                        <div class="flex items-center">
+                                        <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+                                    </div>
+                                </template>
+
                                 <template v-else>
                                     <span  class="font-medium" >{{columnValue}}</span>
                                 </template>
                             </div>
                             </template>   
                         </td>
-                         
+                           </template>
                         </template>
                         
                         <td>
@@ -423,7 +711,7 @@
 
 <script>
 import Modal from  '../../components/modal.vue'
-import { mapState } from 'vuex'
+import {mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
     middleware: [
@@ -445,7 +733,13 @@ export default {
                 },
                 creating: {
                     active: false,
-                    form: {},
+                    form: {
+                        Active: 1,
+                        permission_id: 1,
+                        supplier_id:1,
+                        unit_id:1,
+                        category_id:1
+                    },
                     errors: [],
                 },
                 editing: {
@@ -461,13 +755,19 @@ export default {
                 
                 
                 selected: [],
-                // hideColumns:['image'],
-                hideColumns:['slug','description','image'],
+                // hideColumns:['slug','description','image'],
+                hideColumns:['slug','description','image','price','unit_id','permission_id','category_id'],
+
                 hiddenSelectedColumns:['slug','image'],
+                notAllowEditExceptPeopleInCharge: ['name', 'price','unit_id','supplier_id','category_id','description','prepared_point', 'required_qty','coverage','Preparation','Active'],
+
                 limit:50,
                 quickSearchQuery: '',
                 selected_supplier: '',
                 selected_category: '',
+                selected_preparation: 'Yes',
+                selected_active: '1',
+                selected_permission: 'All',
 
                 //image upload
                 image:null,
@@ -478,14 +778,21 @@ export default {
                 selected_dropdown_active: false,
 
                 // showModal: false,
-                clickThumbnailId : null
+                clickThumbnailId : null,
+
+                
+                // Level of Users
+                firstLevelUsers : ['Admin' , 'Manager'],
+                secondLevelUsers : [],
                 
                
             }
         },
        
  computed: {
-
+    ...mapGetters({
+            getAuth: 'auth/getAuth'
+            }),
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 // return this.response.records;
@@ -515,9 +822,35 @@ export default {
                 }
                 return data
             },
+
             canSelectItems() {
                 return this.filteredRecords.length <= 500
             },
+             getRoleNames(){
+                const rolNameArray = [];
+                const allRoleNames = this.getAuth.user.roles;
+                allRoleNames.forEach(element => {
+                    rolNameArray.push(element.name)
+                });
+              
+                return rolNameArray;
+
+            },
+             notAllowToEditExceptPeopleInCharge(){
+                if(this.getRoleNames.includes('Admin') || this.getRoleNames.includes('Manager')) {
+                    this.notAllowEditExceptPeopleInCharge = []
+                }
+                return this.notAllowEditExceptPeopleInCharge
+            },
+             isFirstLevelUser() {
+                let firstLevelUser = false;
+                this.firstLevelUsers.forEach(element => {
+                    if(this.getRoleNames.includes(element)){
+                        firstLevelUser = true;
+                    }
+                });
+                return firstLevelUser;
+            }
     },
 
 methods: 
@@ -536,6 +869,9 @@ methods:
             limit: this.limit,
             supplier_id: this.selected_supplier,
             category_id: this.selected_category,
+            Preparation: this.selected_preparation,
+            Active: this.selected_active,
+            permission_id: this.selected_permission,
             // ...this.search
         }, 
         {
@@ -553,6 +889,12 @@ methods:
         this.editing.id = record.id
         this.editing.form = _.pick(record, this.response.updatable)
     },
+     editCurrentQty(record){
+        
+        this.editing.errors = []
+        this.editing.currentQtyId = record.id
+        this.editing.form = _.pick(record, this.response.updatable)
+    },
     isUpdatable (column) {
         return this.response.updatable.includes(column)
     },
@@ -564,7 +906,15 @@ methods:
 
         this.selected = _.map(this.filteredRecords, 'id')
     },
-    update () {
+   update(columnName) {
+        console.log('type is: ' + columnName)
+        console.log('editing.id' + this.editing.id);
+
+        if (columnName= 'current_qty' && this.editing.currentQtyId) {
+            this.editing.id= this.editing.currentQtyId
+            this.editing.currentQtyId = null
+        } 
+         console.log('editing.id'+this.editing.id);
         axios.patch(`/api/datatable/goods_material/${this.editing.id}`, this.editing.form).then((response) => {
             this.getRecords().then(() => {
                 this.editing.id = null

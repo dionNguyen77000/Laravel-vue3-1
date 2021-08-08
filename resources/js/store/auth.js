@@ -6,7 +6,11 @@ export default {
         auth: {
             token: null,
             loggedIn: false,
-            user: null
+            user: {
+                token: null,
+                loggedIn: false,
+                user: [],
+            },
           },
     },
     getters: {
@@ -18,7 +22,7 @@ export default {
         },
 
         SET_USER (state, authenticatedUser) {
-            // console.log("🚀 ~ file: auth.js ~ line 18 ~ SET_USER ~ authenticatedUser", authenticatedUser)
+            console.log("🚀 ~ file: auth.js ~ line 18 ~ SET_USER ~ authenticatedUser", authenticatedUser)
             state.auth.user = authenticatedUser
         },
 
@@ -52,7 +56,7 @@ export default {
                 // }
                 )
                 commit('SET_USER', response.data.data)
-                commit('SET_LOGIN',state)
+                commit('SET_LOGIN', state)
 
             } catch (e) {
                 commit('SET_TOKEN', null)
