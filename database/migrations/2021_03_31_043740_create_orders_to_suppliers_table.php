@@ -17,9 +17,9 @@ class CreateOrdersToSuppliersTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('supplier_id')->constrained();
-            $table->foreignId('invoices_from_supplier_id')->constrained();
-            $table->datetime('ordered_date');
-            $table->integer('estimated_price');
+            $table->foreignId('invoices_from_supplier_id')->nullable()->constrained();
+            $table->datetime('ordered_date')->nullable();;
+            $table->integer('estimated_price')->nullable();
             $table->timestamps();
         });
     }

@@ -5,8 +5,11 @@
       
   <div id="goods_material" class="p-6"> 
       
+       
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
-            <div class="w-full p-1">
+            
+        <div class="w-full p-1">
+            <!-- New Record section  -->
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Goods & Materials</div>
                 <div>
@@ -122,8 +125,72 @@
                     </form>
 
                 </div>
-        </div>
-        
+            </div>
+
+                <!-- Making Order Section  -->
+       
+            <div class="flex justify-between pt-4">
+                <div class="text-2xl font-semibold uppercase"> </div>
+                <div>
+                    <a href="#" 
+                    class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
+                    v-if="response.allow.creation && isFirstLevelUser"
+                    @click.prevent="creating.active = !creating.active">
+                    {{ creating.active ? 'Hide' : 'Place Order' }}
+                    </a>
+                </div>
+            </div>
+
+             <div class="flex justify-center" v-if="response.allow.creation && creating.active">
+                <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
+                <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New  Order</h3>
+
+                 <div>
+                     <label :for="column"  class="font-semibold"> Select Supplier :  </label>
+                   
+                        <select v-model="selected_supplier" @change="getRecords">
+                            <option  value= '' >Supplier</option>
+                            <option v-for="option,index in response.supplierOptions" :value="index" :key="option">
+                                {{option}} 
+                            </option>
+                            
+                        </select>
+                    
+                </div>
+
+                
+
+                <div>
+                 
+                    <button @click="exportFiles()"
+                    class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"
+                    > 
+                    Generate Excel </button>
+                    -->     
+                    <a href="/storage/image/2018/goods.xlsx">file</a>
+                </div>
+                        
+                Optional Content:
+               <div class="mb-1">
+                    <label for="body" class="sr-only">Optional Content</label>
+                    <textarea 
+                    name="body" id="body" cols="30" rows="4" 
+                    class="bg-gray-100 border-2 w-full p-4 rounded-lg shadow-md" 
+                    placeholder="Optional message to supplier ...">
+                    </textarea>
+                    
+                </div>
+               
+                <div class="grid justify-items-center">
+                <button class="bg-indigo-500 hover:bg-indigo-800 text-white px-4 py-2 rounded ">
+                    Send
+                </button>
+                </div>
+
+
+                </div>
+            </div>
+          
           <!-- show hide column section -->
         <div id="show_hide_section" class="text-center mx-4 space-y-2">
             <p> <b>Hide Column </b></p>
@@ -1048,7 +1115,32 @@ methods:
 
     makeClickIdNull() {
         this.clickThumbnailId = null;
-    }
+    },
+
+    importExcel(){
+        axios.post(`/api/datatable/goods_material/fileImport`).then(()=>{
+            
+        })
+        
+    },
+    exportFiles(){
+        
+        axios.get(`/api/datatable/goods_material/fileExport/${this.selected_supplier}`,
+            {responseType: 'arraybuffer'}
+        )
+        .then((response)=>{
+            console.log(response)
+            var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+            var fileLink = document.createElement('a');
+            fileLink.href = fileURL;
+            fileLink.setAttribute('download', 'goods.xlsx');
+            document.body.appendChild(fileLink);
+            fileLink.click();
+            console.log(fileLink);
+        }).catch((error) => {
+            console.log(error)
+        })
+    },
     
 },
 mounted() {

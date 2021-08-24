@@ -12,13 +12,14 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Reminder\PostController;
 use App\Http\Controllers\DataTable\RoleController;
-use App\Http\Controllers\DataTable\PermissionController;
 use App\Http\Controllers\DataTable\UnitController;
 use App\Http\Controllers\DataTable\UserController;
 use App\Http\Controllers\DataTable\CategoryController;
 use App\Http\Controllers\DataTable\SupplierController;
+use App\Http\Controllers\DataTable\PermissionController;
 use App\Http\Controllers\DataTable\Daily_Emp_WorkController;
 use App\Http\Controllers\DataTable\Goods_MaterialController;
+use App\Http\Controllers\DataTable\Orders_To_SupplierController;
 use App\Http\Controllers\DataTable\Intermediate_ProductController;
 
 
@@ -57,14 +58,24 @@ Route::resource('datatable/permissions', PermissionController::class);
 Route::resource('datatable/categories', CategoryController::class);
 Route::resource('datatable/suppliers', SupplierController::class);
 Route::resource('datatable/units', UnitController::class);
+
+Route::get('datatable/goods_material/fileExport/{supplier_id}', [Goods_MaterialController::class, 'fileExport']);
+
 Route::resource('datatable/goods_material', Goods_MaterialController::class);
-Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
-Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
 Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController::class, 'saveImage']);
+
+Route::get('datatable/goods_material/import-excel-csv', [Goods_MaterialController::class, 'fileImportExport']);
+
+Route::post('datatable/goods_material/fileImport', [Goods_MaterialController::class, 'fileImport']);
+
 Route::get('datatable/goods_material/sendMail11', [Goods_MaterialController::class, 'sendMail11']);
 Route::get('datatable/intermediate_product/sendMail', [Intermediate_ProductController::class, 'sendMail']);
+
+Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
+Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
 Route::post('datatable/intermediate_product/saveImage/{id}', [Intermediate_ProductController::class, 'saveImage']);
 
+Route::resource('datatable/orders_to_supplier', Orders_To_SupplierController::class);
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');

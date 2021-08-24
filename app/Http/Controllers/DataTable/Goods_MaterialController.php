@@ -8,6 +8,7 @@ use App\Mail\TestMail;
 use App\Mail\MyTestMail;
 
 
+use Barryvdh\DomPDF\PDF;
 use App\Models\Permission;
 use App\Models\Stock\Unit;
 use Illuminate\Http\Request;
@@ -20,6 +21,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Stock\Goods_material;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
+
+
+use App\Exports\Goods_MaterialExport;
+use App\Imports\Goods_MaterialImport;
+// use Maatwebsite\Excel\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\Stock\Goods_MaterialResourceDB;
 
@@ -325,8 +332,12 @@ class Goods_MaterialController extends DataTableController
     //     return ("Email is Sent.");
     // }
     public function show(){
-      
-        // dd(storage_path('img/logo_backend.png'));
+        // Store on default disk
+        // $path = 'public/image/goods.xlsx';
+        // return Excel::store(new Goods_MaterialExport(2018), $path);
+        // return Excel::download(new Goods_MaterialExport, 'goods.xlsx');
+        
+        // // dd(storage_path('img/logo_backend.png'));
         $details = [
             'email' => 'anhduc.nguyen77000@gmail.com',
             'title' => 'Mail from Golden Lor Yarrabilba',
@@ -334,7 +345,7 @@ class Goods_MaterialController extends DataTableController
         ];
 
         $files = [
-            public_path('GoldenLor_Database.xlsx')
+            public_path('/storage/image/goods.xlsx')
         ];
         Mail::send('emails.myTestMail', $details, function($message)use($details, $files) {
             $message->to($details["email"], $details["email"])
@@ -461,6 +472,62 @@ class Goods_MaterialController extends DataTableController
     {
         $returnArr = ['Yes'];
         return $returnArr;
+    }
+
+     /**
+    * @return \Illuminate\Support\Collection
+    */
+    public function fileImportExport()
+    {
+    //    return view('import');
+       return 'hello';
+    }
+     
+    /**
+    * @return \Illuminate\Support\Collection
+    */
+    public function fileExport($supplier_id,Request $request) 
+    {
+        // dd($supplier_id);
+        $currentYear = Carbon::now()->format('Y');
+        $currentMonth = Carbon::now()->format('M');
+
+        
+        $pathXLSX = "public/orders/$currentYear/$currentMonth/goods.xlsx";
+        $pathCSV = "public/orders/$currentYear/$currentMonth/goods.csv";
+        $pathPDF = "public/orders/$currentYear/$currentMonth/goods.pdf";
+        // return (new Goods_MaterialExport)->download('goods.xlsx',\Maatwebsite\Excel\Excel::CSV,
+        // ['Content-Type' => 'text/csv']
+        // );
+        // return (new Goods_MaterialExport)->download('goods.xlsx',\Maatwebsite\Excel\Excel::XLSX);
+        // return (new Goods_MaterialExport)->download('goods.xlsx',\Maatwebsite\Excel\Excel::XLSX);
+        // return (new Goods_MaterialExport)->download('goods.csv',\Maatwebsite\Excel\Excel::CSV);
+        // return (new Goods_MaterialExport)->download('goods.csv', \Maatwebsite\Excel\Excel::CSV, [
+        //     'Content-Type' => 'text/csv',
+        // ]);
+        (new Goods_MaterialExport)->store($pathXLSX );       
+        (new Goods_MaterialExport)->store($pathCSV );       
+        (new Goods_MaterialExport)->store($pathPDF );    
+        return (new Goods_MaterialExport)->download('goods.xlsx');  
+        
+    
+        // return (new Goods_MaterialExport)->store($pathPDF, \Barryvdh\DomPDF\PDF::DOMPDF);        
+  
+        // return (new Goods_MaterialExport)->store($pathXLSX);
+        // return Excel::store(new Goods_MaterialExport(2018), $pathCSV,\Maatwebsite\Excel\Excel::CSV);
+        // return Excel::store(new Goods_MaterialExport(2018), $pathXLSX);
+       
+        // return Excel::download(new Goods_MaterialExport, 'goods.xlsx');
+    }
+     
+    /**
+    * @return \Illuminate\Support\Collection
+    */
+    public function fileImport(Request $request) 
+    {
+        Excel::import(new Goods_MaterialImport,request()->file('file'));
+             
+        return back();
     }
     
 
