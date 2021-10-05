@@ -2,7 +2,7 @@ require('./bootstrap');
 require('./store/subscriber')
 
 import {createApp} from 'vue'
-import App from './App.vue'
+// import App from './App.vue'
 import App_Stock from './App_Stock.vue'
 import store from './store'
 import router from './router'

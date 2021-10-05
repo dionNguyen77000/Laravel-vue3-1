@@ -16,6 +16,10 @@ class Intermediate_product extends Model
     protected $fillable = [
         'name',
         'slug',
+        'img',
+        'img_two',
+        'img_three',
+        'img_thumbnail',
         'price',
         'unit_id',
         'category_id',
@@ -26,7 +30,8 @@ class Intermediate_product extends Model
         'required_qty',
         'permission_id',
         'Active',
-        'Preparation'
+        'Preparation',
+        'location',
     ];
     
     

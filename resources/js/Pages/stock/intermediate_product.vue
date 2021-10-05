@@ -1,15 +1,9 @@
 <template>
-<!-- {{getAuth.user.permissions}}
-<br>
-{{filteredRecords}}
-<br>
-{{selected}} -->
-      
-
-
-  <div id="intermediate_product" class="p-6 "> 
-      
+  <div id="intermediate_product" class="p-6 ">    
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
+            <loading v-model:active="isLoading"
+                :can-cancel="true"
+                :is-full-page="fullPage"/>
             <div class="w-full p-1">
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase">  Intermediates </div>
@@ -20,8 +14,7 @@
                     @click.prevent="creating.active = !creating.active">
                     {{ creating.active ? 'Hide' : 'New record' }}
                     </a>
-                </div>
-                
+                </div>               
             </div>
           
             <div class="flex justify-center" v-if="response.allow.creation && creating.active">
@@ -30,8 +23,7 @@
                     <form action="#" @submit.prevent="store" enctype="multipart/form-data">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >
-                            
-                            <template v-if="column=='thumbnail'">
+                            <template v-if="column=='img_thumbnail'">
                                 <!-- Photo File Input -->
                                 <label  class="font-semibold" for="product_photo">
                                     Product Photo
@@ -79,7 +71,7 @@
                             </select>
                             </template>    
 
-                             <template v-else-if="column=='image'">
+                             <template v-else-if="column=='img'">
                              <!-- <label class="text-gray-700 mb-1 " for="product_big_photo">
                                     Image<span class="text-red-600"> </span>
                                 </label>  -->
@@ -144,8 +136,7 @@
             </ul>
           
         </div>
-
-         
+  
         <div class="flex sm:flex-row flex-col">
             <div class="flex flex-row mb-1 sm:mb-0">
                <!-- delete with selected -->
@@ -290,12 +281,12 @@
                     class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 border-b block pl-8 pr-6 py-2 w-full bg-white text-sm placeholder-gray-400 text-gray-700 focus:bg-white focus:placeholder-gray-600 focus:text-gray-700" />
             </div>
         </div>
-
       
         <!-- start Table -->        
         <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto">
             <!-- {{filteredRecords}} -->
             <table class="min-w-max w-full table-auto">
+                <!-- Table Heading Section -->
                 <thead>
                     <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
@@ -308,15 +299,16 @@
                                 >
                         </th>
                         <template v-for="column in response.displayable" :key="column">
-                            <!-- heading when user click edit button -->
-                            <template v-if="editing.id && isUpdatable(column)">
-                                <!-- thumbnail heading should not be appear -->
-                                <template v-if="column == 'thumbnail'">
+                            <!-- Table Heading - Edit Mode-->
+                             <template v-if="editing.id">
+                                <!-- Table heading not shown in Edit Mode-->
+                                <template v-if="unshownColumnsInEditMode.includes(column)
+                                    || hideColumns.includes(column) ||!isUpdatable(column)">
                                 </template>
+                                <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th 
-                                    class="text-left"  
-                                    v-if="!hideColumns.includes(column)"
+                                    <th class="text-left"
+                                    :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
                                         <div 
@@ -327,9 +319,11 @@
                                     </th>
                                 </template>
                             </template>
-                            <template v-else>
+                            <!-- heading -not in edit mode-->
+                             <template v-else>
                                 <th  
-                                class="text-left"  
+                                class="text-left" 
+                                :class="{ 'text-center': textCenterColumns.includes(column) }"
                                 v-if="!hideColumns.includes(column)"
                                 >
                                     <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -341,12 +335,13 @@
                                 </th>
                             </template>
                         </template>
-                        <th class="text-left">Actions</th>
-                        
+                        <th class="text-left">Actions</th>                     
                     </tr>
                 </thead>
+                <!-- End Table Heading -->
+                <!-- Row (Records) Section -->
                 <tbody class="text-gray-600 text-sm font-light">
-                    
+                    <!-- Loop Through each records getting from controller -->
                     <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100" 
                     :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Preparation==('Yes') || record.Preparation==('OnGoing') }" 
                     >
@@ -354,21 +349,19 @@
                         <td v-if="isFirstLevelUser && canSelectItems" class=" text-center">
                             <input type="checkbox" :value="record.id" v-model="selected">
                         </td>
+
+                        <!-- Loop through each column-->
                         <template v-for="columnValue,column in record" :key="column">
-                        <!-- when user click edit button - thumbnail data should not be appear -->
-                        <template v-if="column == 'thumbnail' && editing.id">
-                        </template>
-
-
-                        <template v-else>
-                            <td class="py-2 text-left"  
-                            v-if="!hideColumns.includes(column)"
-                            >
-                           
-                            <!-- when user click edit button -->
-                            <template v-if="editing.id === record.id && isUpdatable(column)">
-                        <!-- || !getRoleNames.includes('Manager')) && notAllowEditExceptPeopleInCharge.includes(column)  -->
-                                <template v-if="column=='unit_id'">
+                        <!-- Edit Mode-->
+                        <template v-if="editing.id">
+                            <!-- Edit Mode - column not show -->
+                            <template v-if="unshownColumnsInEditMode.includes(column)
+                                    || hideColumns.includes(column) || !isUpdatable(column)">
+                            </template>
+                            <!-- if the record currently edit -->               
+                            <template v-else-if="editing.id === record.id">
+                                <td class="py-2 text-left" v-if="response.displayable.includes(column)">   
+                                    <template v-if="column=='unit_id'">
                                     <!-- {{record}} -->
                                     <select 
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
@@ -453,8 +446,7 @@
                                     </select>
                                     
                                 </template>    
-
-                                    
+                   
                                 <template v-else-if="column=='Active'">
         
                                     <select
@@ -476,7 +468,10 @@
                                    <input type="text"  
                                     class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                     v-model="editing.form[column]"
-                                    :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                    :class="{ 
+                                        'border-3 border-red-700': editing.errors[column], 
+                                        'text-center': textCenterColumns.includes(column) 
+                                        }"
                                     :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
                                     > 
                                     <br>
@@ -492,54 +487,138 @@
                                    v-model="editing.form[column]"
                                     :class="{ 
                                     'border-3 border-red-700': editing.errors[column] ,
-                                     'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)}"
+                                    'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column),
+                                    'text-center': textCenterColumns.includes(column) 
+                                    }"
                                     :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
                                     > 
                                     <br>
                                     <span v-if="editing.errors[column]" class="text-white font-bold">
                                         <strong>{{ editing.errors[column][0] }}</strong>
                                     </span>
-                                </template>
+                                </template>                                
+                            </td>                          
+                            </template> <!-- End the row current edit -->
+                                <template v-else>
+                                    <td class="py-2 text-left"  
+                                    :class="{'text-center': textCenterColumns.includes(column) }"
+                                    v-if="response.displayable.includes(column)">                                
+                                        <div class="items-center">
+                                            <template v-if="column=='current_qty'"> 
+                                                <div class="text-center">                      
+                                                <template v-if="editing.currentQtyId === record.id && isUpdatable(column)">
+                                                    <input type="text" 
+                                                    class="w-20 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                                    v-model="editing.form[column]"
+                                                    :id="column+record.id" 
+                                                    :class="{ 
+                                                        'border-3 border-red-700': editing.errors[column],
+                                                        'text-center': textCenterColumns.includes(column) 
+                                                    }"
+                                                    > 
+                                                    <br>
+                                                    <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                                        <strong>{{ editing.errors[column][0] }}</strong>
+                                                    </span>
 
-                            </template>
+                                                    
+                                                    <div class="mt-1">
+                                                        <button @click.prevent="update('current_qty')"
+                                                            class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none">                                         
+                                                        Save
+                                                    </button> 
+                                                        <button  @click.prevent="editing.currentQtyId = null" 
+                                                            class="ml-2 px-2 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-green-700  hover:text-white focus:outline-none">  
+                                                        Cancel
+                                                    </button>  
+                                                    </div>
+                                                </template>                                 
+                                                <template v-else>
+                                                    <button  @click.prevent="editCurrentQty(record)"
+                                                    class=" ml-2 py-2 px-4 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
+                                                    >
+                                                    <span class="font-medium" >{{columnValue}}</span>
+                                                    
+                                                    
+                                                    </button> 
+                                                </template>
+                                                    </div>
+                                            </template>
 
+                                            <template v-else-if="column=='name'">
+                                                    <div class="flex items-center w-24">
+                                                    <span class="font-medium" >{{columnValue}}</span>
+                                                </div>
+                                            </template>
+
+                                            <template v-else-if="column=='unit_id'">
+                                                    <div class="flex items-center">
+                                                    <span class="font-medium" >{{response.unitOptions[columnValue]}}</span>
+                                                </div>
+                                            </template>
+                                            
+                                            <template v-else-if="column=='category_id'">
+                                                    <div class="flex items-center">
+                                                    <span class="font-medium" >{{response.categoryOptions[columnValue]}}</span>
+                                                </div>
+                                            </template>
+                                       
+                                            <template v-else-if="column=='permission_id'">
+                                                    <div class="flex items-center">
+                                                    <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+                                                </div>
+                                            </template>
+
+                                            <template v-else>
+                                                <span  class="font-medium" >{{columnValue}}</span>
+                                            </template>
+                                        </div>
+                                    </td>  
+                                </template> <!-- End Edit Mode - the rows current not edit -->
+                        </template> <!-- End Edit Mode -->
+                        
+                        <!-- Not in Edit Mode-->
+                        <template v-else>
+                            <template v-if="hideColumns.includes(column)">
+                            </template>                          
                             <template v-else>
-                            <!-- if not in edit mode -->
+                            <td 
+                            class="py-2 text-left" 
+                             :class="{ 'text-center': textCenterColumns.includes(column) }"
+                            v-if="response.displayable.includes(column)">                              
                             <div class="items-center">
-                                   <!-- Thumbnail Image -->
-                                <template v-if="column=='thumbnail'">
-                                <span  :id="'previewImageUpdate_' + record.id" class="mt-2" x-show="!imagePreviewUpdate">
-                                    <template v-if="imagePreviewUpdate && record.id == currentPreviewUpdateId" >
-                                         <img :src="imagePreviewUpdate" class="w-14 h-14 shadow">
-                                    </template>
-                                    <template v-else>
-                                         <img @click="openImageModal(record.id)" :src="columnValue" class="w-14 h-14 shadow">
-                                    </template>                                      
-                                </span>
-                               
-                             
-                                <div class="mt-1">
-                                    <button  class=" px-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
-                                        <input type="file" @change="imageChanged($event,record.id)"  
-                                        :data-index="record.id"
-                                       :id="'changeImage_' + record.id"
-                                        accept=".jpg,.jpeg,.png"
-                                        class="hidden"/>
-                                        <label :for="'changeImage_' + record.id">Change</label>
-                                    </button>
-                                </div>
-                                <div class="mt-1 pl-2">
-                                     <button v-if="record.id == currentPreviewUpdateId" class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"> 
-                                         <input type="submit" @click="saveImage(record.id)"  :id="'saveUpdateImage_' + record.id" class="hidden"/>
-                                    <label :for="'saveUpdateImage_' + record.id">Save</label>
-                                    </button>   
-                                </div>
-                                <div class="mt-1 pl-2">
-                                     <button v-if="record.id == currentPreviewUpdateId" class="px-3 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-blue-700  focus:outline-none"> 
-                                         <input type="button" @click="imagePreviewUpdate = null; this.currentPreviewUpdateId= null;"  :id="'cancelUpdateImage_' + record.id" class="hidden"/>
-                                    <label :for="'cancelUpdateImage_' + record.id">Cancel</label>
-                                    </button>   
-                                </div>
+                            <!-- Thumbnail Image -->
+                                <template v-if="column=='img_thumbnail'">
+                                    <span  :id="'previewImageUpdate_' + record.id" class="mt-2" x-show="!imagePreviewUpdate">
+                                        <template v-if="imagePreviewUpdate && record.id == currentPreviewUpdateId" >
+                                                <img :src="imagePreviewUpdate" class="w-14 h-14 shadow">
+                                        </template>
+                                        <template v-else>
+                                                <img @click="openSliderImageModal(record)" :src="columnValue" class="w-14 h-14 shadow">
+                                        </template>                                      
+                                    </span>                                        
+                                    <div class="mt-1">
+                                        <button  class=" px-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
+                                            <input type="file" @change="imageChanged($event,record.id)"  
+                                            :data-index="record.id"
+                                            :id="'changeImage_' + record.id"
+                                            accept=".jpg,.jpeg,.png"
+                                            class="hidden"/>
+                                            <label :for="'changeImage_' + record.id">Change</label>
+                                        </button>
+                                    </div>
+                                    <div class="mt-1 pl-2">
+                                            <button v-if="record.id == currentPreviewUpdateId" class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"> 
+                                                <input type="submit" @click="saveImage(record.id)"  :id="'saveUpdateImage_' + record.id" class="hidden"/>
+                                        <label :for="'saveUpdateImage_' + record.id">Save</label>
+                                        </button>   
+                                    </div>
+                                    <div class="mt-1 pl-2">
+                                            <button v-if="record.id == currentPreviewUpdateId" class="px-3 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-blue-700  focus:outline-none"> 
+                                                <input type="button" @click="imagePreviewUpdate = null; this.currentPreviewUpdateId= null;"  :id="'cancelUpdateImage_' + record.id" class="hidden"/>
+                                        <label :for="'cancelUpdateImage_' + record.id">Cancel</label>
+                                        </button>   
+                                    </div>
                                 </template>
 
                                 <template v-else-if="column=='current_qty'"> 
@@ -547,7 +626,10 @@
                                         <input type="text" 
                                         class="w-20 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                         v-model="editing.form[column]"
-                                        :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                        :class="{ 
+                                            'border-3 border-red-700': editing.errors[column] ,
+                                            'text-center': textCenterColumns.includes(column) 
+                                        }"
                                         > 
                                         <br>
                                         <span v-if="editing.errors[column]" class="text-red-700 font-bold">
@@ -578,18 +660,12 @@
                                                               
                                 </template>
 
-                                 <template v-else-if="column=='image'">                                 
+                                 <template v-else-if="column=='img'">                                 
                                          <img :src="columnValue" class="w-20 shadow">
                                 </template>
 
-                                  <template v-else-if="column=='description'">
-                                        <div class="flex items-center w-40">
-                                        <span class="font-medium" >{{columnValue}}</span>
-                                    </div>
-                                </template>
-
                                 <template v-else-if="column=='name'">
-                                        <div class="flex items-center w-20">
+                                        <div class="flex items-center w-24">
                                         <span class="font-medium" >{{columnValue}}</span>
                                     </div>
                                 </template>
@@ -622,13 +698,11 @@
                                     <span  class="font-medium" >{{columnValue}}</span>
                                 </template>
                             </div>
-                            </template>   
                         </td>
                         </template>
-
-                         
-                        </template>
-                        
+                        </template> <!-- End Not in Edit Mode -->                   
+                        </template>  <!-- end Loop through each column of rows-->
+                         <!-- Last Column - Actions -->
                         <td>
                             <div>
                             <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
@@ -662,9 +736,20 @@
                             </template>
                             </div>
                         </td> 
-                        <!-- Modal to display big image when click thumbnail -->
-                          <div v-if="record.id== clickThumbnailId">
-                            <Modal :recordId="record.id" :bigImg="record.image" @close="makeClickIdNull" />
+                        <!-- Modal to display big img when click img_thumbnail -->
+                          <!-- <div v-if="record.id== clickThumbnailId">
+                            <Modal :recordId="record.id" :bigImg="record.img" @close="makeClickIdNull" />
+                        </div> -->
+
+                        
+                            <!-- Image Slider Modal -->
+                        <div v-if="record.id == clickImgSliderModalId">
+                            <Image_Slider_Modal  
+                            :record="record"                           
+                            :table_name="'intermediate_product'"
+                            @close="clickImgSliderModalId=null" 
+                            @getRecordForSlider="getRecords" 
+                            />
                         </div>
 
                     </tr>
@@ -682,7 +767,8 @@
 
 
 <script>
-import Modal from  '../../components/modal.vue'
+import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
+import Loading from 'vue-loading-overlay';
 import {mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
@@ -690,7 +776,7 @@ export default {
         //   redirectIfNotCustomer
       ],
 
-    components: {Modal},
+    components: {Loading, Image_Slider_Modal},
    data() {
             return {
                 response: {
@@ -724,13 +810,21 @@ export default {
                 //     operator:'equals',
                 //     column: 'id'
                 // },
-                
-                
+                isLoading: false,
+                fullPage: true,                
                 selected: [],
                
-                hideColumns:['slug','description','image','price','unit_id','permission_id','category_id'],
-                hiddenSelectedColumns:['slug','image'],
+                hideColumns:['slug','description','img','price','permission_id','category_id',
+                'prepared_point','coverage','Active','unit_id'],
+                               
+                hiddenSelectedColumns:['slug','img'],
+                unshownColumnsInEditMode:['img_thumbnail'],
+
                 notAllowEditExceptPeopleInCharge: ['name', 'price','unit_id', 'description','category_id' ,'prepared_point', 'required_qty','coverage','Preparation','Active'],
+                textCenterColumns:['price','current_qty',
+                'prepared_point','coverage','required_qty','Preparation','Active',
+                'permission_id','location'],
+                dollarsSymbolColumns:['price'],
 
                 limit:50,
                 quickSearchQuery: '',
@@ -750,6 +844,9 @@ export default {
                 // showModal: false,
                 clickThumbnailId : null,
 
+                // showIMGModal: false,
+                clickImgSliderModalId : null,
+                
                 // Level of Users
                 firstLevelUsers : ['Admin' , 'Manager'],
                 secondLevelUsers : [],
@@ -878,13 +975,14 @@ methods:
         this.selected = _.map(this.filteredRecords, 'id')
     },
     update(columnName) {
-        console.log('type is: ' + columnName)
-        console.log('editing.id' + this.editing.id);
+        if (this.editing.form.prepared_point >  this.editing.form.coverage){
+        window.alert('prepared point needs to be smaller than coverage')
+        return;
+        }
         if (columnName= 'current_qty' && this.editing.currentQtyId) {
             this.editing.id= this.editing.currentQtyId
             this.editing.currentQtyId = null
         } 
-        console.log('editing.id'+this.editing.id);
         axios.patch(`/api/datatable/intermediate_product/${this.editing.id}`, this.editing.form).then((response) => {
             console.log(response.data)
             if(response.data == 'Error - OnGoing Update'){
@@ -909,6 +1007,12 @@ methods:
         })
     },
     store () {
+
+        console.log(this.creating.form.current_qty)
+        if (this.creating.form.prepared_point >  this.creating.form.coverage){
+            window.alert('prepared point needs to be smaller than coverage')
+            return;
+        }
         if(this.image){
             let data = new FormData
             data.append('image', this.image)
@@ -920,9 +1024,7 @@ methods:
         // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
         //    console.log('this is repsonse id:', response.data.id)
         //    console.log('this is the image:', this.image)
-      
-            alert ('New Yesd Item added')
-            
+                 
            if(response.data.id && this.image) {
                 let data = new FormData;
                 data.append('image', this.image)
@@ -941,15 +1043,19 @@ methods:
             } 
 
             this.getRecords().then(() => {
-                this.creating.active = true
+                 this.creating.active = true
                 this.creating.form = {}
+                this.creating.form.Active = 1
+                this.creating.form.permission_id = 1
+                this.creating.form.unit_id = 1
+                this.creating.form.category_id = 1   
                 this.creating.errors = []
             })
-            if(response.data) {
-                console.log('saved successfully !')
-            } else {
-                alert ('unsucessfully save image! please contact Admin')
-            }
+            // if(response.data) {
+            //     console.log('saved successfully !')
+            // } else {
+            //     alert ('unsucessfully save image! please contact Admin')
+            // }
         }).catch((error) => {
             if (error.response.status === 422) {
                 this.creating.errors = error.response.data.errors                       
@@ -1029,6 +1135,9 @@ methods:
     openImageModal(goods_material_id){
         // alert(productId)
         this.clickThumbnailId = goods_material_id;
+    },
+    openSliderImageModal(record) {        
+    this.clickImgSliderModalId = record.id;
     },
 
     makeClickIdNull() {

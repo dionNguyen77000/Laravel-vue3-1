@@ -15,11 +15,13 @@ class CreateOrdersToSuppliersTable extends Migration
     {
         Schema::create('orders_to_suppliers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('supplier_id')->constrained();
-            $table->foreignId('invoices_from_supplier_id')->nullable()->constrained();
-            $table->datetime('ordered_date')->nullable();;
-            $table->integer('estimated_price')->nullable();
+            $table->string('user');
+            $table->string('supplier');
+            $table->string('invoice_number');
+            $table->datetime('ordered_date')->nullable();
+            $table->float('estimated_price')->nullable();
+            $table->string('excel_file')->nullable();
+            $table->string('Note')->nullable();
             $table->timestamps();
         });
     }

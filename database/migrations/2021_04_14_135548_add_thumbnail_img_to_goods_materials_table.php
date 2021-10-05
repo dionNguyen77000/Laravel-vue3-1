@@ -14,7 +14,7 @@ class AddThumbnailImgToGoodsMaterialsTable extends Migration
     public function up()
     {
         Schema::table('goods_materials', function (Blueprint $table) {
-            $table->string('thumbnail')->nullable();
+            $table->string('img_thumbnail')->nullable();
         });
     }
 

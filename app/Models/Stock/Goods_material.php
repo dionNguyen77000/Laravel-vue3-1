@@ -17,6 +17,10 @@ class Goods_material extends Model
     protected $fillable = [
         'name',
         'slug',
+        'img',
+        'img_two',
+        'img_three',
+        'img_thumbnail',
         'price',
         'unit_id',
         'supplier_id',
@@ -24,6 +28,7 @@ class Goods_material extends Model
         'description',
         'current_qty',
         'prepared_point',
+        'location',
         'coverage',
         'required_qty',
         'permission_id',
@@ -47,5 +52,13 @@ class Goods_material extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function orders_to_suppliers()
+    {
+        // return $this->belongsToMany(related: Orders_To_Supplier::class, table: 'order_to_supplier_lines', 
+        // foreignPivotKey:'goods_material_id', relatedPivotKey:'orders_to_supplier_id');
+        return $this->belongsToMany(Orders_To_Supplier::class,'order_to_supplier_lines', 
+        'goods_material_id','orders_to_supplier_id');
     }
 }

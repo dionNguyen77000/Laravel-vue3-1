@@ -14,7 +14,9 @@ class AddImageIconToGoodsMaterialsTable extends Migration
     public function up()
     {
         Schema::table('goods_materials', function (Blueprint $table) {
-            $table->string('image')->nullable();
+            $table->string('img')->nullable();
+            $table->string('img_two')->nullable();
+            $table->string('img_three')->nullable();
         });
     }
 

@@ -17,12 +17,15 @@ class CreateIntermediateProductsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
-            $table->decimal('price', 5, 2)->nullable();
+            $table->float('price')->default(0);
             // $table->unsignedBigInteger('unit_id');
             // $table->foreign('unit_id')->references('id')->on('units');
-            $table->foreignId('category_id')->nullable()->constrained();
-            $table->foreignId('unit_id')->nullable()->constrained();
+            $table->foreignId('category_id')->nullable()->constrained()->onUpdate('cascade')
+            ->onDelete('set null');
+            $table->foreignId('unit_id')->nullable()->constrained()->onUpdate('cascade')
+            ->onDelete('set null');
             $table->text('description')->nullable();
+            $table->string('location')->nullable();
             $table->timestamps();
         });
     }

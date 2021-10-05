@@ -21,6 +21,9 @@ use App\Http\Controllers\DataTable\Daily_Emp_WorkController;
 use App\Http\Controllers\DataTable\Goods_MaterialController;
 use App\Http\Controllers\DataTable\Orders_To_SupplierController;
 use App\Http\Controllers\DataTable\Intermediate_ProductController;
+use App\Http\Controllers\DataTable\Invoices_From_SupplierController;
+use App\Http\Controllers\DataTable\Order_To_Supplier_LineController;
+use App\Http\Controllers\DataTable\Invoice_From_Supplier_LineController;
 
 
 
@@ -61,6 +64,14 @@ Route::resource('datatable/units', UnitController::class);
 
 Route::get('datatable/goods_material/fileExport/{supplier_id}', [Goods_MaterialController::class, 'fileExport']);
 
+
+Route::get('datatable/goods_material/supplierSelection/{supplier_id}', [Goods_MaterialController::class, 'getSupplierDetails']);
+Route::get('datatable/goods_material/checkExcelFileIfGenerated/{supplier_id}', [Goods_MaterialController::class, 'checkExcelFileIfGenerated']);
+Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController::class, 'saveImage']);
+Route::post('datatable/goods_material/orderAndEmail/{supplier_id}', [Goods_MaterialController::class, 'orderAndEmailSupplier']);
+Route::post('datatable/goods_material/createOrderToSupplier/{supplier_id}', [Goods_MaterialController::class, 'createOrderToSupplier']);
+Route::post('datatable/goods_material/emailOrderToSupplier/{supplier_id}', [Goods_MaterialController::class, 'emailOrderToSupplier']);
+
 Route::resource('datatable/goods_material', Goods_MaterialController::class);
 Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController::class, 'saveImage']);
 
@@ -73,9 +84,20 @@ Route::get('datatable/intermediate_product/sendMail', [Intermediate_ProductContr
 
 Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
 Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
+Route::post('datatable/daily_emp_work/updateNote/{order_id}', [Daily_Emp_WorkController::class,'updateNote']);
+
 Route::post('datatable/intermediate_product/saveImage/{id}', [Intermediate_ProductController::class, 'saveImage']);
 
 Route::resource('datatable/orders_to_supplier', Orders_To_SupplierController::class);
+Route::post('datatable/orders_to_supplier/updateNote/{order_id}', [Orders_To_SupplierController::class,'updateNote']);
+Route::resource('datatable/order_to_supplier_line', Order_To_Supplier_LineController::class);
+
+Route::post('datatable/invoices_from_supplier/saveImage/{id}', [Invoices_From_SupplierController::class, 'saveImage']);
+Route::resource('datatable/invoices_from_supplier', Invoices_From_SupplierController::class);
+Route::post('datatable/invoices_to_supplier/updateNote/{order_id}', [Invoices_From_SupplierController::class,'updateNote']);
+
+
+Route::resource('datatable/invoice_from_supplier_line', Invoice_From_Supplier_LineController::class);
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');

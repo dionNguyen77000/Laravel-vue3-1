@@ -14,8 +14,10 @@ class AddThumbnailImgToIntermediateProductTable extends Migration
     public function up()
     {
         Schema::table('intermediate_products', function (Blueprint $table) {
-            $table->string('image')->nullable();
-            $table->string('thumbnail')->nullable();
+            $table->string('img')->nullable();
+            $table->string('img_two')->nullable();
+            $table->string('img_three')->nullable();
+            $table->string('img_thumbnail')->nullable();
         });
     }
 

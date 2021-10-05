@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Reminder;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+// use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class PostResource extends ResourceCollection

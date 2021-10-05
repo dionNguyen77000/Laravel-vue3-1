@@ -21,9 +21,12 @@ class CreateGoodsMaterialsTable extends Migration
             $table->integer('price')->nullable();
             $table->unsignedBigInteger('unit_id');
             $table->foreign('unit_id')->references('id')->on('units');
-            $table->foreignId('supplier_id')->nullable()->constrained();
-            $table->foreignId('category_id')->nullable()->constrained();
+            $table->foreignId('supplier_id')->nullable()->constrained()->onUpdate('cascade')
+            ->onDelete('set null');
+            $table->foreignId('category_id')->nullable()->constrained()->onUpdate('cascade')
+            ->onDelete('set null');
             $table->text('description')->nullable();
+            $table->string('location')->nullable();
             $table->timestamps();
         });
     }

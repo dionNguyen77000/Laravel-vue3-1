@@ -22,7 +22,7 @@ export default {
         },
 
         SET_USER (state, authenticatedUser) {
-            console.log("🚀 ~ file: auth.js ~ line 18 ~ SET_USER ~ authenticatedUser", authenticatedUser)
+            // console.log("🚀 ~ file: auth.js ~ line 18 ~ SET_USER ~ authenticatedUser", authenticatedUser)
             state.auth.user = authenticatedUser
         },
 

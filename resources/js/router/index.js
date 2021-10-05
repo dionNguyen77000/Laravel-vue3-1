@@ -23,7 +23,8 @@ import Intermediate_Product from "../Pages/stock/intermediate_product.vue";
 import Daily_Emp_Work from "../Pages/stock/daily_emp_work.vue";
 
 //router component Order Setup
-import Orders_To_Suppliers from "../Pages/stock/Orders_To_Suppliers.vue";
+import Orders_To_Suppliers from "../Pages/stock/orders_to_suppliers.vue";
+import Invoices_From_Suppliers from "../Pages/stock/invoices_from_suppliers.vue";
 
 
 //Midelware 
@@ -125,6 +126,11 @@ const routes = [
         path: "/orders_to_suppliers",
         name: "Orders_To_Suppliers",
         component: Orders_To_Suppliers,
+      },
+      {
+        path: "/invoices_from_suppliers",
+        name: "Invoices_From_Suppliers",
+        component: Invoices_From_Suppliers,
       },
     ],
 

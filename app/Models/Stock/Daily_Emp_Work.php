@@ -3,9 +3,9 @@
 namespace App\Models\Stock;
 
 use App\Models\User;
+use App\Models\Stock\Intermediate_product;
 use App\Models\Traits\HasPrice;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Stock\Intermediate_product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Daily_emp_work extends Model

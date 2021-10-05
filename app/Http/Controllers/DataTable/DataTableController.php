@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Arr;
 
 abstract class DataTableController extends Controller
 { /**
@@ -222,6 +223,10 @@ abstract class DataTableController extends Controller
     {
         return count(array_filter($request->only(['column', 'operator', 'value']))) === 3;
     }
+    protected function hasSearchQuery_1(Request $request)
+    {
+        return count(array_filter($request->only(['column_1', 'operator_1', 'value_1']))) === 3;
+    }
 
     /**
      * Resolve the given operator to perform a query.
@@ -231,7 +236,7 @@ abstract class DataTableController extends Controller
      */
     protected function resolveQueryParts($operator, $value)
     {
-        return array_get([
+        return Arr::get([
             'equals' => [
                 'operator' => '=',
                 'value' => $value
@@ -281,6 +286,16 @@ abstract class DataTableController extends Controller
 
         return $builder->where(
             $request->column,
+            $queryParts['operator'],
+            $queryParts['value']
+        );
+    }
+    protected function buildSearch_1(Builder $builder, Request $request)
+    {
+        $queryParts = $this->resolveQueryParts($request->operator_1, $request->value_1);
+
+        return $builder->where(
+            $request->column_1,
             $queryParts['operator'],
             $queryParts['value']
         );
