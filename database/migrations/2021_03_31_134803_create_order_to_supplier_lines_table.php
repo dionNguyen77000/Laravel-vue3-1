@@ -15,10 +15,20 @@ class CreateOrderToSupplierLinesTable extends Migration
     {
         Schema::create('order_to_supplier_lines', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('orders_to_supplier_id')->constrained()->onDelete('cascade');
-            $table->foreignId('goods_material_id')->constrained();
-            $table->string('unit_quantity');
-            $table->integer('line_price');
+            $table->foreignId('orders_to_supplier_id')->nullable()->constrained()->onUpdate('cascade');
+            $table->foreignId('invoices_from_supplier_id')->nullable()->constrained()->onUpdate('cascade')
+            ->onDelete('set null');
+            $table->string('goods_material')->nullable();
+            $table->string('unit')->nullable(); 
+            // $table->foreignId('goods_material_id')->nullable()->constrained()->onUpdate('no action')
+            // ->onDelete('no action');
+            $table->float('o_unit_quantity')->nullable();
+            $table->float('o_unit_price')->nullable();
+            $table->float('o_line_price')->nullable();
+            $table->float('i_unit_quantity')->nullable();
+            $table->float('i_unit_price')->nullable();
+            $table->float('i_line_price')->nullable();
+            $table->string('category');
             $table->timestamps();
         });
     }

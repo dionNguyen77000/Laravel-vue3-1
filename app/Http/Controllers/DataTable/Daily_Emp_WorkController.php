@@ -59,11 +59,11 @@ class Daily_Emp_WorkController extends DataTableController
     public function getCustomColumnsNames()
     {
         return [
-            'user_id' => 'Employee',
+            'user_id' => 'Staff',
             'intermediate_product_id' => 'Pre_Product',
-        
             'current_prepared_qty' => 'Current_Prep',
-            'required_qty' => 'Required_Qty',
+            'required_qty' => 'Required',
+            'done_qty' => 'Done'
         ];
     }
 
@@ -184,11 +184,11 @@ class Daily_Emp_WorkController extends DataTableController
         // $updated_intermediate = $this->builder->find($id);
 
         // dd($updated_intermediate);
-        $inter_p = Daily_Emp_Work::where('date',$theDate)
+        $the_daily_emp_work = Daily_Emp_Work::where('date',$theDate)
                                 -> where('user_id',$theEmpId)
                                 -> where('intermediate_product_id',$thePreProductId);
-        // dd($inter_p);
-        $updatedSuccess =  $inter_p ->update(
+        // dd($the_daily_emp_work);
+        $updatedSuccess =  $the_daily_emp_work ->update(
             $request->only($this->getUpdatableColumns())
         );
 
@@ -203,6 +203,34 @@ class Daily_Emp_WorkController extends DataTableController
         // }
 
         return $updatedSuccess;
+    }
+
+    public function updateNote($id, Request $request){
+
+       
+        $dateEmpProduct = explode(' ',$id);
+        $theDate = $dateEmpProduct[0];
+        $theEmpId = $dateEmpProduct[1];
+        $thePreProductId = $dateEmpProduct[2];
+
+        // dd($theDate.$theEmpId.$thePreProductId);
+
+        // dd($request->current_qty);
+        // $updated_intermediate = $this->builder->find($id);
+
+        // dd($updated_intermediate);
+        $the_daily_emp_work = Daily_Emp_Work::where('date',$theDate)
+                                -> where('user_id',$theEmpId)
+                                -> where('intermediate_product_id',$thePreProductId)
+                                ->update(['Note'=> $request->note]);
+       
+        // // dd($the_daily_emp_work);
+        // $the_daily_emp_work->Note = 'wow -w work';
+
+        // $the_daily_emp_work->save();
+
+        return   $the_daily_emp_work;   
+
     }
 
     
@@ -360,11 +388,13 @@ class Daily_Emp_WorkController extends DataTableController
         // return "successfully saved";
     }
 
-
+    
 
     protected function getRecords(Request $request)
     {
         $builder = $this->builder;
+        // $builder->truncate();
+        // dd('ok');
 
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);

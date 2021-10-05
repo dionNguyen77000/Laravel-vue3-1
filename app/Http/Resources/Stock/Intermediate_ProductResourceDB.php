@@ -18,7 +18,7 @@ class Intermediate_ProductResourceDB extends JsonResource
             'id'=>$this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'thumbnail' => $this->thumbnail,
+            'img_thumbnail' => $this->img_thumbnail,
             'price' => $this->price,
             'unit_id' => $this->unit_id,
             // 'unit_name' => is_null($this->unit) ? '' : $this->unit['name'],
@@ -32,7 +32,10 @@ class Intermediate_ProductResourceDB extends JsonResource
             'permission_id'=> $this->permission_id,
             'Preparation'=> $this->Preparation,
             'Active'=> $this->Active,
-            'image' => $this->image,
+            'img' => $this->img,
+            'img_two' => $this->img_two,
+            'img_three' => $this->img_three,
+            'location' => $this->location,
           
         ];
     }

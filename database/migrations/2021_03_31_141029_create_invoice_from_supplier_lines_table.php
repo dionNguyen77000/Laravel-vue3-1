@@ -17,8 +17,8 @@ class CreateInvoiceFromSupplierLinesTable extends Migration
             $table->id();
             $table->foreignId('invoices_from_supplier_id')->constrained()->onDelete('cascade');
             $table->foreignId('goods_material_id')->constrained();
-            $table->string('unit_quantity');
-            $table->integer('line_price');
+            $table->float('unit_quantity')->nullable();
+            $table->float('line_price')->default(0);
             $table->timestamps();
         });
     }

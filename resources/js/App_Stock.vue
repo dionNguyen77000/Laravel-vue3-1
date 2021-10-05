@@ -16,9 +16,24 @@
 <script>
 
 export default {
+    data() {
+        return {
+            ourApp: {
+                    name: 'GL',
+                },
+        }
+    },
+       
+    computed: {
+    
+    },
+
     // data() {
-        // thecurrentpath = this.$route.path
-        // this.$route.path ==='/dashboard' ? this.showSidebarHamburger = true : this.showSidebarHamburger = false
+    //     return {
+
+    //     }
+    //     // thecurrentpath = this.$route.path
+    //     // this.$route.path ==='/dashboard' ? this.showSidebarHamburger = true : this.showSidebarHamburger = false
     // },
 
      mounted() {

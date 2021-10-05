@@ -63,16 +63,20 @@ class Intermediate_ProductController extends DataTableController
             'unit_id' => 'Unit',
             'category_id' => 'Category',
             'permission_id' => 'Permission',
+            'img_thumbnail'=>'image',
+            'current_qty' => 'cur_qty',
+            'prepared_point'=>'Prep_Point',
+            'Preparation' => 'Prep',
+            'required_qty'=> 'Required',
         ];
     }
 
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'thumbnail','slug', 'price', 'unit_id',
+            'id','name', 'img_thumbnail','slug', 'price', 'unit_id',
             'category_id',
-            'description',
-            'image',
+            'img',
             'current_qty',
             'prepared_point',
             'coverage',
@@ -80,38 +84,69 @@ class Intermediate_ProductController extends DataTableController
             'permission_id',
             'Preparation',
             'Active',
+            'location'
         ];
     }
-    public function getUpdatableColumns()
+
+    
+    public function getRetrievedColumns()
     {
         return [
-            'name', 'slug', 'thumbnail','price','unit_id',
-            'category_id', 
-            'description',  
-            'image',
+
+            'id',
+            'name', 
+            'img',
+            'img_three',
+            'img_two',
+            'img_thumbnail',
+            'slug', 
+            'price',
+            'unit_id',
+            'category_id',
             'current_qty',
             'prepared_point',
             'coverage',
             'required_qty',
             'permission_id',
             'Preparation',
-            'Active'
+            'Active',
+            'location'
+        ];
+    }
+
+    public function getUpdatableColumns()
+    {
+        return [
+            'name', 'slug', 'img_thumbnail','price','unit_id',
+            'category_id', 
+            'img',
+            'current_qty',
+            'prepared_point',
+            'coverage',
+            'required_qty',
+            'permission_id',
+            'Preparation',
+            'Active',
+            'location'
         ];
     }
 
     public function getCreatedColumns()
     {
         return [
-            'name', 'slug', 'price','unit_id',
+            'name', 
+            'slug', 
+            'price',
+            'unit_id',
             'category_id', 
-            'description',
             'current_qty',
             'prepared_point',
             'required_qty',
             'coverage',
             'permission_id',
             'Preparation',
-            'Active'
+            'Active',
+            'location',
         ];
     }
     
@@ -129,18 +164,19 @@ class Intermediate_ProductController extends DataTableController
         ]);
 
         $newI =  $this->builder->create($request->only($this->getCreatedColumns()));
+
         if($request->Preparation != 'OnGoing') {
+
             if ($request->current_qty <= $request->prepared_point){
                 $newI->required_qty = $request->coverage - $request->current_qty;
                 $newI->Preparation = 'Yes';
                 $newI->save();
-            } else{
+            } elseif ($request->current_qty > $request->prepared_point || $request->current_qty > $request->coverage) {
                 $newI->required_qty = 0;
                 $newI->Preparation = 'No';
                 $newI->save();
             }
-        }
-      
+        }     
        return $newI;
     }
 
@@ -166,13 +202,18 @@ class Intermediate_ProductController extends DataTableController
 
         if ($updatedSuccess == 1 & $intermediate->current_qty <= $intermediate->prepared_point){
             $intermediate->Preparation = 'Yes';
-            $intermediate->required_qty = $intermediate->coverage -   $intermediate->current_qty;  
+            $intermediate->required_qty = $intermediate->coverage -  $intermediate->current_qty;  
             $intermediate->save();
         } elseif ($updatedSuccess == 1 & $intermediate->current_qty > $intermediate->prepared_point){
             $intermediate->Preparation = 'No';
             $intermediate->required_qty = 0;
             $intermediate->save();
-        }
+        } 
+        elseif ($updatedSuccess == 1 & $intermediate->current_qty > $intermediate->coverage){
+            $intermediate->Preparation = 'No';
+            $intermediate->required_qty = 0;
+            $intermediate->save();
+        } 
 
         return $updatedSuccess;
     }
@@ -205,9 +246,11 @@ class Intermediate_ProductController extends DataTableController
         }
     }
 
-    public function saveImage($id, Request $request)
+    public function saveImage_origin($id, Request $request)
     {
    
+        $silderImageidArray = explode('-',$silderImageids);
+
         $this->validate($request, [
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg'
         ]);
@@ -215,7 +258,7 @@ class Intermediate_ProductController extends DataTableController
         $image = request()->file('image');
 
         $imageNameResize = Image::make($image)
-        ->resize(700, null, function ($constraint) {
+        ->resize(700, 600, function ($constraint) {
             $constraint->aspectRatio();
         })
         ->encode('jpg');
@@ -223,38 +266,194 @@ class Intermediate_ProductController extends DataTableController
         $thumbnailNameResize =  Image::make($image)
         ->fit(200,250)
         ->encode('jpg');
-
+     
         $originName = $image->getClientOriginalName();
+        // dd($originName);
         // $thumbnailWithoutExtension = pathinfo($originName,PATHINFO_FILENAME);
-        $imageName = time().'_'.$originName;
-        $thumbnailName = time().'_thumbnail_'.$originName;
-        Storage::put('public/intermediate_product_images/'. $imageName, $imageNameResize->__toString());
-        Storage::put('public/intermediate_product_images/'. $thumbnailName, $thumbnailNameResize->__toString());
+        // $imageName = time().'_'.$originName;
+        // $imageName = time().'.jpg';
+        // $thumbnailName = time().'_thumbnail_'.$originName;
+        // $thumbnailName = time().'_thumbnail_'.'.jpg';
+        // Storage::put("public/intermediate_product_images/". $imageName, $imageNameResize->__toString());
+        // Storage::put("public/intermediate_product_images/". $thumbnailName, $thumbnailNameResize->__toString());
 
-        $the_intermediate_product = $this->builder->find($id);
+        $dateInBrisbane= Carbon::now('Australia/Brisbane');
+        $receivedDate=$dateInBrisbane->isoFormat('MMMDoYY'); 
 
-        if ($the_intermediate_product->thumbnail){
-            $result_thumbnail_array = explode('/',$the_intermediate_product->thumbnail);
-            $old_thumbnail_name = $result_thumbnail_array[count($result_thumbnail_array)-1];
-            Storage::delete([
-            'public/intermediate_product_images/'. $old_thumbnail_name,
-            ]);
+        $the_inter= $this->builder->find($silderImageidArray[0]);
+
+        // deal with second or third invoice image
+        if(count($silderImageidArray)>1){
+            $img_number = $silderImageidArray[1];
+            $imageName = $the_g_m->name.'_'.$img_number.'.jpg';
+
+
+            //delete old image
+            if ($img_number == 2) {
+                if ($the_g_m->img_two){
+                    $result_image_array = explode('/',$the_g_m->img_two);
+                    $old_image_name = $result_image_array[count($result_image_array)-1];
+                    Storage::delete([
+                    "public/intermediate_product_images/$the_g_m->name/". $old_image_name,
+                    ]);
+                }
+                Storage::put("public/intermediate_product_images/$the_g_m->name/". $imageName, $imageNameResize->__toString());
+                // save new image path to database
+                $the_g_m -> img_two = "/storage/intermediate_product_images/$the_g_m->name/".$imageName;
+                $the_g_m -> save();
+            } else if ($img_number == 3) {
+                if ($the_g_m->img_three){
+                    $result_image_array = explode('/',$the_g_m->img_three);
+                    $old_image_name = $result_image_array[count($result_image_array)-1];
+                    Storage::delete([
+                    "public/intermediate_product_images/$the_g_m->name/". $old_image_name,
+                    ]);
+                }
+                Storage::put("public/intermediate_product_images/$the_g_m->name/". $imageName, $imageNameResize->__toString());
+                $the_g_m -> img_three = "/storage/intermediate_product_images/$the_g_m->name/".$imageName;
+                $the_g_m -> save();
+            }
+          
+        }        
+        // deal with first image 
+        else {
+           
+            //delete old image in folder
+            if ($the_g_m->img_thumbnail){
+                $result_thumbnail_array = explode('/',$the_g_m->img_thumbnail);
+                $old_thumbnail_name = $result_thumbnail_array[count($result_thumbnail_array)-1];
+                Storage::delete([
+                "public/intermediate_product_images/$the_g_m->name/". $old_thumbnail_name,
+                ]);
+            }
+            if ($the_g_m->img){
+                $result_image_array = explode('/',$the_g_m->img);
+                $old_image_name = $result_image_array[count($result_image_array)-1];
+                Storage::delete([
+                "public/intermediate_product_images/$the_g_m->name/". $old_image_name,
+                ]);
+            }
+
+            
+            $imageName = $the_g_m->name.'.jpg';
+            $thumbnailName = $the_g_m->name.'_thumbnail_'.'.jpg';
+
+            Storage::put("public/intermediate_product_images/$the_g_m->name/". $imageName, $imageNameResize->__toString());
+            Storage::put("public/intermediate_product_images/$the_g_m->name/". $thumbnailName, $thumbnailNameResize->__toString());
+
+            // save new image
+            $the_g_m -> img_thumbnail = "/storage/intermediate_product_images/$the_g_m->name/".$thumbnailName;
+            $the_g_m -> img = "/storage/intermediate_product_images/$the_g_m->name/".$imageName;
+            $the_g_m -> save();
         }
-        if ($the_intermediate_product->image){
-            $result_image_array = explode('/',$the_intermediate_product->image);
-            $old_image_name = $result_image_array[count($result_image_array)-1];
-            Storage::delete([
-            'public/intermediate_product_images/'. $old_image_name,
-            ]);
-        }
-        // save new image
-        $the_intermediate_product -> thumbnail = "/storage/intermediate_product_images/".$thumbnailName;
-        $the_intermediate_product -> image = "/storage/intermediate_product_images/".$imageName;
-        $the_intermediate_product -> save();
-
-        return $the_intermediate_product;
-        // return "successfully saved";
+        return $the_g_m;
     }
+
+    public function saveImage($silderImageids, Request $request)
+    {
+        $silderImageidArray = explode('-',$silderImageids);
+
+        // dd($silderImageidArray);
+       
+        
+        $this->validate($request, [
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg'
+        ]);
+        
+        $image = request()->file('image');
+
+        $imageNameResize = Image::make($image)
+        ->resize(700, 600, function ($constraint) {
+            $constraint->aspectRatio();
+        })
+        ->encode('jpg');
+
+        $thumbnailNameResize =  Image::make($image)
+        ->fit(200,250)
+        ->encode('jpg');
+     
+        $originName = $image->getClientOriginalName();
+        // dd($originName);
+        // $thumbnailWithoutExtension = pathinfo($originName,PATHINFO_FILENAME);
+        // $imageName = time().'_'.$originName;
+        // $imageName = time().'.jpg';
+        // $thumbnailName = time().'_thumbnail_'.$originName;
+        // $thumbnailName = time().'_thumbnail_'.'.jpg';
+        // Storage::put("public/intermediate_product_images/". $imageName, $imageNameResize->__toString());
+        // Storage::put("public/intermediate_product_images/". $thumbnailName, $thumbnailNameResize->__toString());
+
+        $dateInBrisbane= Carbon::now('Australia/Brisbane');
+        $receivedDate=$dateInBrisbane->isoFormat('MMMDoYY'); 
+
+        $the_inter= $this->builder->find($silderImageidArray[0]);
+
+        // deal with second or third invoice image
+        if(count($silderImageidArray)>1){
+            $img_number = $silderImageidArray[1];
+            $imageName = $the_inter->name.'_'.$img_number.'.jpg';
+
+
+            //delete old image
+            if ($img_number == 2) {
+                if ($the_inter->img_two){
+                    $result_image_array = explode('/',$the_inter->img_two);
+                    $old_image_name = $result_image_array[count($result_image_array)-1];
+                    Storage::delete([
+                    "public/intermediate_product_images/$the_inter->name/". $old_image_name,
+                    ]);
+                }
+                Storage::put("public/intermediate_product_images/$the_inter->name/". $imageName, $imageNameResize->__toString());
+                // save new image path to database
+                $the_inter -> img_two = "/storage/intermediate_product_images/$the_inter->name/".$imageName;
+                $the_inter -> save();
+            } else if ($img_number == 3) {
+                if ($the_inter->img_three){
+                    $result_image_array = explode('/',$the_inter->img_three);
+                    $old_image_name = $result_image_array[count($result_image_array)-1];
+                    Storage::delete([
+                    "public/intermediate_product_images/$the_inter->name/". $old_image_name,
+                    ]);
+                }
+                Storage::put("public/intermediate_product_images/$the_inter->name/". $imageName, $imageNameResize->__toString());
+                $the_inter -> img_three = "/storage/intermediate_product_images/$the_inter->name/".$imageName;
+                $the_inter -> save();
+            }
+          
+        }        
+        // deal with first image 
+        else {
+           
+            //delete old image in folder
+            if ($the_inter->img_thumbnail){
+                $result_thumbnail_array = explode('/',$the_inter->img_thumbnail);
+                $old_thumbnail_name = $result_thumbnail_array[count($result_thumbnail_array)-1];
+                Storage::delete([
+                "public/intermediate_product_images/$the_inter->name/". $old_thumbnail_name,
+                ]);
+            }
+            if ($the_inter->img){
+                $result_image_array = explode('/',$the_inter->img);
+                $old_image_name = $result_image_array[count($result_image_array)-1];
+                Storage::delete([
+                "public/intermediate_product_images/$the_inter->name/". $old_image_name,
+                ]);
+            }
+
+            
+            $imageName = $the_inter->name.'.jpg';
+            $thumbnailName = $the_inter->name.'_thumbnail_'.'.jpg';
+
+            Storage::put("public/intermediate_product_images/$the_inter->name/". $imageName, $imageNameResize->__toString());
+            Storage::put("public/intermediate_product_images/$the_inter->name/". $thumbnailName, $thumbnailNameResize->__toString());
+
+            // save new image
+            $the_inter -> img_thumbnail = "/storage/intermediate_product_images/$the_inter->name/".$thumbnailName;
+            $the_inter -> img = "/storage/intermediate_product_images/$the_inter->name/".$imageName;
+            $the_inter -> save();
+        }
+        return $the_inter;
+    }
+
 
         /**
     * Get all values from specific key in a multidimensional array
@@ -291,47 +490,35 @@ class Intermediate_ProductController extends DataTableController
                 array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
                     if($k == $key) array_push($userPermissionIds, $v);
                 });
-                // dd($userPermissionIds);
                 $builder =   $builder->whereIn('permission_id',$userPermissionIds);
 
             } else {
-                // dd($request->permission_id);
                 $builder =   $builder->where('permission_id','=',$request->permission_id);
             }
         }
 
         if (isset($request->Preparation)) {
-            // dd($request->Preparation);
             if( strpos($request->Preparation,',' ) !== false ) {
                 
                 $arrayPreps = explode(',',$request->Preparation);
-                // dd( $arrayPreps[0]);
-                // dd( $arrayPreps[1]);
                 $builder =  $builder->whereIn('Preparation',$arrayPreps);
                                    
            } else 
             $builder =   $builder->where('Preparation','=',$request->Preparation);
         }
-
         if (isset($request->Active)) {
             $builder =   $builder->where('Active','=',$request->Active);
         }
-
         try {
             return Intermediate_ProductResourceDB::collection(
                 $builder->limit($request->limit)
                 ->orderBy('id', 'asc')
-                ->get($this->getDisplayableColumns())
-            );
-            
-          
+                ->get($this->getRetrievedColumns())
+            );         
         } catch (QueryException $e) {
             return [];
         }    
     }
-
-  
-    
 
     public function getUnitOptions()
     {
@@ -378,35 +565,6 @@ class Intermediate_ProductController extends DataTableController
     {
         $returnArr = ['Yes'];
         return $returnArr;
-    }
-
-    
-    public function sendMail()
-    {   
-        return 'not work';
-        dd(storage_path('img/logo_backend.png'));
-        $data = [
-            'email' => 'anhduc.nguyen77000@gmail.co',
-            'title' => 'Mail from Golden Lor Yarrabilba',
-            'body' => 'This is for testing mail with attachment using gmail'
-        ];
-
-        $files = [
-            storage_path('img/logo_backend.png')
-        ];
-        Mail::send('emails.myTestMail', $data, function($message)use($data, $files) {
-            $message->to($data["email"], $data["email"])
-                    ->subject($data["title"]);
- 
-            foreach ($files as $file){
-                $message->attach($file);
-            }
-            
-        });
-        // Mail::to('anhduc.nguyen77000@gmail.com')->send(new MyTestMail($details));
-
-        dd("Email is Sent ok ok.");
-    }
-   
+    }   
 
 }

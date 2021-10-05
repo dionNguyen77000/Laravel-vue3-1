@@ -7,7 +7,7 @@ use Image;
 use App\Mail\TestMail;
 use App\Mail\MyTestMail;
 
-
+use App\Models\User;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use App\Models\Stock\Supplier;
@@ -25,6 +25,7 @@ use App\Imports\Goods_MaterialImport;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Stock\Orders_To_Supplier;
 use App\Http\Resources\Stock\Orders_To_SupplierResourceDB;
+use App\Models\Stock\Invoices_From_Supplier;
 
 class Orders_To_SupplierController extends DataTableController
 
@@ -46,6 +47,7 @@ class Orders_To_SupplierController extends DataTableController
           'records' => $this->getRecords($request),
           'custom_columns' => $this->getCustomColumnsNames(),
           'supplierOptions'=> $this->getSupplierOptions(),
+          'userOptions'=> $this->getUserOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
               'deletion' => $this->allowDeletion,
@@ -64,7 +66,8 @@ class Orders_To_SupplierController extends DataTableController
     public function getCustomColumnsNames()
     {
         return [
-            
+            'excel_file' => 'file',
+            'InvNumber' => ' Invoice',
         ];
     }
 
@@ -72,22 +75,26 @@ class Orders_To_SupplierController extends DataTableController
     {
         return [
             'id',
-            'user_id',
-            'supplier_id',
-            'invoices_from_supplier_id',
+            'user',
+            'supplier',
             'ordered_date',
             'estimated_price',
+            'excel_file',
+            'Note',
+            'InvNumber',
         ];
     }
+   
     public function getUpdatableColumns()
     {
         return [
-            'id',
-            'user_id',
-            'supplier_id',
-            'invoices_from_supplier_id',
+            'user',
+            'supplier',
             'ordered_date',
             'estimated_price',
+            'excel_file',
+            'Note',
+
         ];
     }
 
@@ -95,11 +102,26 @@ class Orders_To_SupplierController extends DataTableController
     {
         return [
             'id',
-            'user_id',
-            'supplier_id',
-            'invoices_from_supplier_id',
+            'user',
+            'supplier',
             'ordered_date',
             'estimated_price',
+            'excel_file',
+            'Note',
+        ];
+    }
+
+    public function getRetrievedColumns()
+    {
+        return [
+            'id',
+            'user',
+            'supplier',
+            'ordered_date',
+            'estimated_price',
+            'excel_file',    
+            'Note',
+     
         ];
     }
     
@@ -108,11 +130,12 @@ class Orders_To_SupplierController extends DataTableController
     {
         $this->validate($request, [
             'id',
-            'user_id',
-            'supplier_id',
-            'invoices_from_supplier_id',
+            'user',
+            'supplier',
             'ordered_date',
             'estimated_price',
+            'excel_file',
+            'Note',
         ]);
 
         
@@ -120,10 +143,7 @@ class Orders_To_SupplierController extends DataTableController
         (
             
             $request->only($this->getCreatedColumns())
-            // array_merge($request->only([  'name', 'slug', 'unit_id','supplier_id','category_id', 'description']), 
-            //[
-            //     'price' => $cart->subtotal()->amount()
-            // ])
+           
         );
 
         
@@ -142,9 +162,8 @@ class Orders_To_SupplierController extends DataTableController
     {
         $this->validate($request, [
             'id',
-            'user_id',
-            'supplier_id',
-            'invoices_from_supplier_id',
+            'user',
+            'supplier',
             'ordered_date',
             'estimated_price',
         ]);
@@ -168,57 +187,48 @@ class Orders_To_SupplierController extends DataTableController
             // )
         
         );
+
+        // if($updatedSuccess==1) {
+        //     $relatedInvoice =  $order->invoices_from_supplier;
+        //     // dd( $relatedInvoice);
+        //     $relatedInvoice->supplier = $order->supplier;
+        //     $relatedInvoice->save();
+        // }
         return $updatedSuccess;
     }
 
     
     public function show(){
-        // Store on default disk
-        // $path = 'public/image/goods.xlsx';
-        // return Excel::store(new Goods_MaterialExport(2018), $path);
-        // return Excel::download(new Goods_MaterialExport, 'goods.xlsx');
-        
-        // // dd(storage_path('img/logo_backend.png'));
-        $details = [
-            'email' => 'anhduc.nguyen77000@gmail.com',
-            'title' => 'Mail from Golden Lor Yarrabilba',
-            'body' => 'This is for testing mail with attachment using gmail'
-        ];
-
-        $files = [
-            public_path('/storage/image/goods.xlsx')
-        ];
-        Mail::send('emails.myTestMail', $details, function($message)use($details, $files) {
-            $message->to($details["email"], $details["email"])
-                    ->subject($details["title"]);
- 
-            foreach ($files as $file){
-                $message->attach($file);
-            }
-            
-        });
-        // Mail::to('anhduc.nguyen77000@gmail.com')->send(new MyTestMail($details));
-
-        dd("Email is Sent ok ok.");
+      
+    }
+    
+    public function updateNote($id, Request $request){
+        $order =  $this->builder->find($id);
+        $order->Note = $request->note;
+        $order->save();
+        return   $order;   
     }
 
     protected function getRecords(Request $request)
     {
-        $builder = $this->builder;
+        $builder = $this->builder->with(['invoices_from_supplier']);
         
-      
-
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
         }
      
-        
-
-        if (isset($request->user_id)) {
-            $builder =   $builder->where('user_id','=',$request->user_id);
+        if ($this->hasSearchQuery_1($request)) {
+            $builder = $this->buildSearch_1($builder, $request);
         }
-        if (isset($request->supplier_id)) {
-            $builder =   $builder->where('supplier_id','=',$request->supplier_id);
+
+        if (isset($request->user)) {
+            $builder =   $builder->where('user','=',$request->user);
+        }
+        if (isset($request->supplier)) {
+            $builder =   $builder->where('supplier','=',$request->supplier);
+        }
+        if (isset($request->orders_to_supplierId)) {
+            $builder =   $builder->where('id','=',$request->orders_to_supplierId);
         }
       
         // dd($builder);
@@ -226,9 +236,9 @@ class Orders_To_SupplierController extends DataTableController
         try {
             return Orders_To_SupplierResourceDB::collection(
                 $builder
-                // ->limit($request->limit)
+                ->limit($request->limit)
                 ->orderBy('id', 'asc')
-                ->get($this->getDisplayableColumns())
+                ->get($this->getRetrievedColumns())
             );
             
           
@@ -237,16 +247,29 @@ class Orders_To_SupplierController extends DataTableController
         }    
     }
 
+    public function getUserOptions()
+    {
+        $r = User::all('id','name');
+
+        $returnArr = [];
+        foreach ($r as  $sr) {
+            $returnArr[$sr['name']] = $sr['name'];
+        }
+        return $returnArr;
+    }
+
+
     public function getSupplierOptions()
     {
         $c = Supplier::all('id','name');
 
         $returnArr = [];
         foreach ($c as  $sc) {
-            $returnArr[$sc['id']] = $sc['name'];
+            $returnArr[$sc['name']] = $sc['name'];
         }
         return $returnArr;
     }
+
 
     
 
