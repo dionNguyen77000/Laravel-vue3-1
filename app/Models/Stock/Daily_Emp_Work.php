@@ -2,6 +2,7 @@
 
 namespace App\Models\Stock;
 
+use App\Models\Permission;
 use App\Models\User;
 use App\Models\Stock\Intermediate_product;
 use App\Models\Traits\HasPrice;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Daily_emp_work extends Model
 {
     use HasFactory;
+    protected $appends = ['permissions'];
     protected $fillable = [
         'date',
         'user_id',
@@ -21,8 +23,12 @@ class Daily_emp_work extends Model
         'Status',
         'Note'
     ];
-    
-    
+
+    public function getPermissionsAttribute()
+    {        
+       return $this->intermediate_product->permissions;
+    }
+
     public function intermediate_product()
     {
         return $this->belongsTo(Intermediate_product::class);

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Stock\Goods_material;
+use App\Models\Stock\Intermediate_product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,5 +22,14 @@ class Permission extends Model
     public function users()
     {
         return $this->belongsToMany(User::class,'users_permissions');
+    }
+
+    public function goods_materials()
+    {
+        return $this->belongsToMany(Goods_material::class);
+    }
+    public function intermediate_products()
+    {
+        return $this->belongsToMany(Intermediate_product::class);
     }
 }

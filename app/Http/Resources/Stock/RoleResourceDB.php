@@ -17,6 +17,7 @@ class RoleResourceDB extends JsonResource
         return [
             'id'=>$this->id,
             'name' => $this->name,
+            'duties' => $this->duties,
             'permissions'=>$this->permissions->pluck('name','id')
             // 'children' => CategoryResource::collection($this->whenLoaded('children')),
             // 'parent_id' => is_null($this->parentCat) ? '' : $this->parentCat,

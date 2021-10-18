@@ -1,7 +1,7 @@
 <template>
     <div id="daily_emp_work" class="p-6"> 
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
-            <loading v-model:active="isLoading"
+            <Loading v-model:active="isLoading"
             :can-cancel="true"
             :is-full-page="fullPage"/> 
             <div class="w-full p-1">
@@ -13,14 +13,14 @@
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
                     v-if="response.allow.creation"
-                    @click.prevent="creating.active = !creating.active">
+                    @click.prevent="showCreatingForm()">
                     {{ creating.active ? 'Hide' : 'Add Work' }}
                     </a>
                 </div>              
             </div>        
             <div class="flex justify-center" v-if="response.allow.creation && creating.active">
                 <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
-                <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
+                <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">Add Work</h3>
                     <form action="#" @submit.prevent="store" enctype="multipart/form-data">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >                            
@@ -35,15 +35,15 @@
 
                             <template v-else-if="column=='user_id'">
                                 <label :for="column" class="font-semibold">Employee : </label>
-                                <span > {{getAuth.user.name}} </span>
+                                <span > {{response.authenticatedUser.name}} </span>
                                 <br>
                                 <label for="" class="font-semibold">Role : </label>   
-                                <template v-for="role in getAuth.user.roles">
+                                <template v-for="role in response.authenticatedUser.roles">
                                     || {{role.name}} &nbsp;
                                 </template>
                                 <br>
                                 <label for="" class="font-semibold"> Permissions : </label>   
-                                <template v-for="permission in getAuth.user.permissions">
+                                <template v-for="permission in response.authenticatedUser.permissions">
                                     || {{permission.name}} &nbsp;
                                 </template>
                             </template> 
@@ -56,7 +56,7 @@
                             @change="updateRequiredQty(creating.form[column])"
                             >
                                 <option  value="" selected>Select </option>
-                                <option :value="option.id" v-for="option,index in getAuth.user.intermediateProducts" :key="index">
+                                <option :value="option.id" v-for="option,index in response.needPrepareIntermediate_ProductOptions" :key="index">
                                     {{option.name}}
                                 </option>
                             </select>
@@ -119,6 +119,8 @@
                 </div>
             </div>
             </div>   <!-- End New Redord Section -->
+
+
             <!-- show hide column section -->
             <div id="show_hide_section" class="text-center mx-4 space-y-2">
                 <p> <b> Hide Column </b></p>
@@ -162,7 +164,7 @@
                     <div class="relative">
                         <select v-model = "limit" @change="getRecords"
                             class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                            <option value="2">2</option>
+                            <option value="20">20</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
                             <option value="150">200</option>
@@ -176,24 +178,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-row mb-1 sm:mb-0">          
-                    <div class="relative">
-                        <select v-model="selected_category" @change="getRecords"
-                            class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                            <option  value= ''>Category</option>         
-                            <option v-for="option,index in response.categoryOptions" :value="index" :key="option">
-                                {{option}} 
-                            </option>
-                        </select>
-                        <div
-                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
-                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="flex flex-row mb-1 sm:mb-0">          
                     <div class="relative">
                         <select v-model="selected_user" @change="getRecords"
@@ -211,30 +195,28 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="flex flex-row mb-1 sm:mb-0">          
-                        <div class="relative">
-                        <select v-model="selected_role" @change="getRecords"
-                            class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                            <option   value= ''>Tasks</option>
-                            <template v-for="option,index in response.permissionOptions">
-                                <option v-if="getAuth.user.permissions.includes(option)"  :value="index" :key="option">
-                                    <!-- <template v-if="getAuth.user.permissions.includes(option)"> -->
-                                        {{option}}
-                                <!-- </template> -->
-                                    
+                <div class="relative">
+                    <select v-model="selected_permission" @change="getRecords"
+                        class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option   value= 'All'>Section - All</option>
+                         
+                        <template v-for="permission in response.userPermissionOptions" :key="permission.id">
+                        <!-- <template v-for="permission in response.authenticatedUser" :key="permission.id"> -->
+                            <option  :value="permission.id" >
+                             <!-- <template v-if="response.userPermissionOptions.includes(option)"> -->
+                                    {{permission.name}}
+                            <!-- </template> -->                            
                             </option>
-                            </template>   
-                            
-                        </select>
-                        <div
-                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
-                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                            </svg>
-                        </div>
+                        </template>                          
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
                     </div>
                 </div>
+
                 <div class="flex flex-row mb-1 sm:mb-0">          
                     <div class="relative">
                         <select v-model="selected_status" @change="getRecords"
@@ -271,7 +253,9 @@
                     <!-- Table Heading Section -->
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <th class="py-2" 
+                            v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"                          
+                            >
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -321,9 +305,11 @@
                     <tbody class="text-gray-600 text-sm font-light">
                     <!-- Loop Through each records getting from controller -->
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100" 
-                        :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Status==('Prepare' || 'OnGoing') }" 
-                        >                               
-                            <td v-if="canSelectItems" class=" text-center">
+                        :class="{ 'bg-green-500 text-white hover:bg-green-600' : record.Status=='OnGoing'}" 
+                        >               
+                            <td 
+                            v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
+                            class=" text-center">
                                 <input type="checkbox" :value="record.date+' '+record.user_id+' '+record.intermediate_product_id" v-model="selected">
                             </td>
                         <!-- Loop through each column-->
@@ -344,7 +330,11 @@
                                             <input type="date"  
                                             class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                             v-model="editing.form[column]"
-                                            :class="{ 'border-3 border-red-700': editing.errors[column], 'bg-pink-200' : !isFirstLevelUser}"         
+                                            :class="{ 
+                                            'border-3 border-red-700': editing.errors[column], 
+                                            'text-center': textCenterColumns.includes(column),
+                                            'bg-pink-200' : !isFirstLevelUser
+                                            }"         
                                             :disabled= "!isFirstLevelUser" 
                                             > 
                                             <br>
@@ -372,12 +362,11 @@
                                             
                                         </template>  
                                         <template v-else-if="column=='intermediate_product_id'">
-                                            <!-- {{record}} -->
                                             <select
                                             class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                             
                                             :name="column" :id="column" v-model="editing.form[column]">
-                                            <option :value="option.id" v-for="option,index in getAuth.user.intermediateProducts" :key="index">
+                                            <option :value="option.id" v-for="option,index in response.intermediate_ProductOptions" :key="index">
                                                 {{option.name}}
                                             </option>
                                                 
@@ -453,7 +442,8 @@
                                         </div>
                                     </template>
                                     <template v-else-if="column=='Note'">
-                                            <a  @click.prevent="clickNoteModalId = record.date+' '+record.user_id+' '+record.intermediate_product_id">
+                                            <a 
+                                            @click.prevent="clickNoteModalId = record.date+' '+record.user_id+' '+record.intermediate_product_id">
                                                 <svg v-if="columnValue" class="w-6 h-6 text-red-500 hover:text-red-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>                                     
                                                 <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>                                        
                                             </a>
@@ -508,6 +498,16 @@
                                                 <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>                                        
                                             </a>
                                     </template>
+                                    <!-- <template v-else-if="column=='permission'">
+                                            <div class="flex items-center">
+                                            <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+                                        </div>
+                                    </template> -->
+                                    <template v-else-if="column=='permission'">
+                                        <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                            {{ option.name }}
+                                        </div>      
+                                    </template> 
                                     <template v-else>
                                         <span  class="font-medium" >{{columnValue}}</span>
                                     </template>
@@ -518,24 +518,23 @@
                         <td>
                             
                             <div v-if="(record.user_id == getAuth.user.id  &&  today == record.date) || isFirstLevelUser">
-                            <a href="#" @click.prevent="edit(record)"  v-if="editing.id !==  record.date+' '+record.user_id+' '+record.intermediate_product_id"
-                            class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
-                            >
-                            Edit
-                            </a>   
+                                <a href="#" @click.prevent="edit(record)"  v-if="editing.id !==  record.date+' '+record.user_id+' '+record.intermediate_product_id"
+                                class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
+                                >
+                                Edit
+                                </a>   
 
-                            <a href="#" 
-                            @click.prevent="destroy( record.date+' '+record.user_id+' '+record.intermediate_product_id)" 
-                            v-if="response.allow.deletion && editing.id !==  record.date+' '+record.user_id+' '+record.intermediate_product_id
-                            && canSelectItems" 
-                            class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
-                            >
-                            Delete
-                            </a>  
+                                <a href="#" 
+                                @click.prevent="destroy( record.date+' '+record.user_id+' '+record.intermediate_product_id)" 
+                                v-if="response.allow.deletion && editing.id !==  record.date+' '+record.user_id+' '+record.intermediate_product_id
+                                && canSelectItems" 
+                                class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
+                                >
+                                Delete
+                                </a>  
                             </div>
-                            <div>
-                            <template v-if="editing.id ===  record.date+' '+record.user_id+' '+record.intermediate_product_id"> 
-                                <a href="#" @click.prevent="editing.id = null"  v-if="editing.id ===  record.date+' '+record.user_id+' '+record.intermediate_product_id"
+                            <div  v-if="editing.id ===  record.date+' '+record.user_id+' '+record.intermediate_product_id">
+                            <a href="#" @click.prevent="editing.id = null"  v-if="editing.id ===  record.date+' '+record.user_id+' '+record.intermediate_product_id"
                             class="p-1 bg-transparent border border-gray-600  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none"
                             >
                             Cancel
@@ -546,7 +545,6 @@
                             >
                             Save
                             </a>    
-                            </template>
                             </div>
                         </td> 
                             
@@ -554,6 +552,7 @@
                                 <Note_Modal  
                                     :note="record.Note"
                                     :id="record.date+' '+record.user_id+' '+record.intermediate_product_id" 
+                                    :theRecord="record" 
                                     :table_name="'daily_emp_work'"
                                     @close="clickNoteModalId=null" 
                                     @refreshRecords="getRecords" 
@@ -561,6 +560,7 @@
                             </div>
                         </tr>
                     </tbody>
+                    <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
                 </table>
             </div>
             <p v-else class="mt-2 text-red-600 text-center text-lg">No Data</p>
@@ -575,6 +575,7 @@
 <script>
 import Modal from  '../../components/modal.vue'
 import Note_Modal from  './stock_modal/note_modal.vue'
+import Loading from 'vue-loading-overlay';
 import { mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
@@ -582,14 +583,16 @@ export default {
         //   redirectIfNotCustomer
       ],
 
-    components: {Modal,Note_Modal},
+    components: {Modal,Note_Modal,Loading},
    data() {
             return {
                 response: {
                     table: '',
                     displayable: [],
                     records: [],
-                    allow: {},
+                    allow: {
+
+                    },
                 },
                 sort: {
                     key: 'id',
@@ -624,12 +627,13 @@ export default {
                 notAllowEditExceptPeopleInCharge: [],
                 textCenterColumns:['current_prepared_qty','required_qty','done_qty'],
                 // dollarsSymbolColumns:['price'],
-                limit:50,
+                limit:100,
                 quickSearchQuery: '',
-                selected_category: '',
                 selected_user: '',
                 selected_status: '',
                 selected_role: '',
+                selected_permission: 'All',
+
                 theDate: new Date().toISOString().substr(0, 10), // 05/09/2019
                 require_qty: 0,
 
@@ -645,9 +649,11 @@ export default {
 
                 
                 isLoading: false,
-                     // Level of Users
-                firstLevelUsers : ['Admin' , 'Manager'],
-                secondLevelUsers : [],
+                fullPage: true,                
+
+                //      // Level of Users
+                // firstLevelUsers : ['Admin' , 'Manager'],
+                // secondLevelUsers : [],
 
                 
                
@@ -658,8 +664,13 @@ export default {
 
     ...mapState(['sideBarOpen']),
     ...mapGetters({
-           getAuth: 'auth/getAuth'
-         }),
+            getAuth: 'auth/getAuth',
+            firstLevelUsers: 'firstLevelUsers' ,
+            secondLevelUsers: 'secondLevelUsers' ,
+            thirdLevelUsers: 'thirdLevelUsers' ,
+            fourthLevelUsers: 'fourthLevelUsers' ,
+
+        }),
       filteredRecords () {
                 // return this.response.records;
                 let data = this.response.records;
@@ -674,10 +685,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -710,15 +719,62 @@ export default {
                 return this.filteredRecords.length <= 500
             },
 
-             isFirstLevelUser() {
-                let firstLevelUser = false;
-                this.firstLevelUsers.forEach(element => {
-                    if(this.getRoleNames.includes(element)){
-                        firstLevelUser = true;
+             
+           getRoleNames(){
+                const rolNameArray = []
+                if (this.response.userRoleOptions){
+                    const allRoleNames = this.response.userRoleOptions
+                    allRoleNames.forEach(element => {
+                    rolNameArray.push(element.name)
+                    });                
+                }         
+            return rolNameArray;
+            },
+
+            isFirstLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.firstLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.firstLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
                     }
-                });
-                return firstLevelUser;
-            }
+                }
+                return isCorrect;
+            },
+            isSecondLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.secondLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.secondLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+                return isCorrect;
+            },
+            isThirdLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.thirdLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.thirdLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+                return isCorrect;
+            },
+            isFourthLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.fourthLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.fourthLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+                return isCorrect;
+            },
 
             
     },
@@ -729,7 +785,6 @@ methods:
     getRecords(){
         return axios.get(`/api/datatable/daily_emp_work?${this.getQueryParameters()}`).then((response)=> {
             this.response = response.data.data;
-            console.log('our records', this.response)
         })
     },
     getQueryParameters () {
@@ -739,7 +794,8 @@ methods:
             user_id: this.selected_user,
             Status: this.selected_status,
             role_id: this.selected_role,
-             permission_id: this.selected_role,
+            permission_id: this.selected_permission,
+
             // ...this.search
         }, 
         {
@@ -748,6 +804,11 @@ methods:
         )
             
     },
+
+    showCreatingForm(){
+         this.creating.active = !this.creating.active
+    },
+
     sortBy(column){
     this.sort.key = column
     this.sort.order = this.sort.order === 'asc' ? 'desc' : 'asc'
@@ -767,7 +828,6 @@ methods:
         }
 
         this.filteredRecords.forEach(element => {
-            console.log(element)
             if(!this.selected.includes(element.date + ' ' + element.user_id + ' ' + element.intermediate_product_id)){
                 this.selected.push( element.date + ' ' + element.user_id + ' ' + element.intermediate_product_id)
             }
@@ -775,20 +835,21 @@ methods:
     },
 
     update () {
+          if (this.editing.form.Status == 'Completed'){
+            const confirmed = window.confirm(" Your Preparation is completed. Remember to add the amount of "
+            + this.editing.form.current_prepared_qty + ' to your prepared product in Table Intermediate Product. ?');
+             if (!confirmed) {
+                 return
+            }
+        }
         axios.patch(`/api/datatable/daily_emp_work/${this.editing.id}`, this.editing.form).then((response) => {
             this.getRecords().then(() => {
                 this.editing.id = null
-                this.editing.form = null
-                if(response.data=='password updated') {
-                    alert('Password updated successfully !')
-                }
-                
+                this.editing.form = null          
             })
         }).catch((error) => {
             if (error.response.status === 422) {                        
                 this.editing.errors = error.response.data.errors
-                // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
             }
         })
     },
@@ -801,14 +862,14 @@ methods:
             this.creating.form.user_id = this.getAuth.user.id
         }              
         if (this.creating.form.Status == 'Completed'){
-            const confirmed = window.confirm(" You choose to complete your preparation. Please add "
-            + this.creating.form.current_prepared_qty + ' to your prepared product in table intermediate product. OK ?');
+            const confirmed = window.confirm(" You choose to complete your preparation. Remember to add the amount of "
+            + this.creating.form.current_prepared_qty + ' to your prepared product in Table Intermediate Product. ?');
              if (!confirmed) {
                  return
             }
         }
         axios.post(`/api/datatable/daily_emp_work`, this.creating.form).then((response) => {
-            alert ('Done !! Your preparation added to Daily Work below') 
+            alert ('Done !! Your preparation added in table below') 
             this.getRecords().then(() => {
                 this.creating.active = true
                 this.creating.form = {}
@@ -835,22 +896,12 @@ methods:
 
    
     updateRequiredQty(t){
-          
-        this.getAuth.user.intermediateProducts.forEach(element => {
-             console.log(element.id);
-             if(element.id == t){
-
-                 this.creating.form['required_qty'] = element.required_qty
-             }
-           
-        });
-        // for (let index = 0; index < this.getAuth.user.intermediateProducts.length; index++) {
-        //     const theIntermediate = this.getAuth.user.intermediateProducts[index];
-        //     if( theIntermediate.id = t) {
-        //         console.log(theIntermediate.require_qty)
-        //     }
-        // }
-    //    console.log(this.getAuth.user.intermediateProducts[0])
+        const  userIntermediate_ProductOptions = JSON.parse(JSON.stringify(this.response.needPrepareIntermediate_ProductOptions))
+        for (const key in userIntermediate_ProductOptions) {
+            if (userIntermediate_ProductOptions[key].id == t){
+                this.creating.form['required_qty'] = userIntermediate_ProductOptions[key].required_qty    
+            }
+        }
     }
 
     
@@ -858,6 +909,7 @@ methods:
 mounted() {
    
     this.getRecords()
+    // this.getAuth
 },
     
 }

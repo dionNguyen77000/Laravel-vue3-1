@@ -18,7 +18,6 @@ class AddCheckStockToIntermediateProductTable extends Migration
             $table->float('prepared_point')->default(0);
             $table->float('coverage')->default(0);
             $table->float('required_qty')->default(0);
-            $table->foreignId('permission_id')->nullable()->constrained();
             $table->string('Preparation')->nullable();
             $table->tinyInteger('Active')->nullable()->default(0);
         });

@@ -210,11 +210,13 @@
 
 import { mapState } from 'vuex'
 import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
-  middleware: [
-        //   redirectIfNotCustomer
-      ],
+   middleware: [
+     redirectIfNotFirstLevelUser,redirectIfNotSecondLevelUser
+  ],
    data() {
             return {
                 response: {
@@ -260,9 +262,6 @@ export default {
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
-                
-
                 // quick search query
                 data = data.filter((row) => {
                     return Object.keys(row).some((key) => {
@@ -273,10 +272,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -295,15 +292,12 @@ export default {
    methods: {
             
             getRecords(){
-                // console.log(this.getQueryParameters())
                 // return axios.get(`database/permissions?${this.getQueryParameters()}`).then((response)=> {
                 //     this.response = response.data.data;
                 // })
 
                  return axios.get(`/api/datatable/permissions?${this.getQueryParameters()}`).then((response)=> {
-                    this.response = response.data.data;
-                    // console.log("🚀 ~ file: UserMContent.vue ~ line 208 ~ returnaxios.get ~ response.data", response.data)
-                    
+                    this.response = response.data.data;                   
                 })
             },
             getQueryParameters () {
@@ -342,21 +336,15 @@ export default {
                 }).catch((error) => {
                     if (error.response.status === 422) {                        
                         this.editing.errors = error.response.data.errors
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                     }
                 })
             },
             store () {    
-                console.log(this.creating.form)
                 axios.post(`/api/datatable/permissions`, this.creating.form).then((response) => {
-                // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                     this.getRecords().then(() => {
                         this.creating.active = true
                         this.creating.form = {}
                         this.creating.errors = []
-                         if(response.data=='successfully created') {
-                            alert('Created successfully !')
-                        }
                     })
                 }).catch((error) => {
                     if (error.response.status === 422) {
@@ -367,8 +355,6 @@ export default {
             },
                
             destroy(record){
-            // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy    ~ record", record)
-
                 if(!window.confirm(`Are you sure?`)){
                     return
                 }

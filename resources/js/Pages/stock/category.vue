@@ -92,7 +92,7 @@
                 <div class="relative">
                     <select v-model = "limit" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option value="2">2</option>
+                        <option value="20">20</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                         <option value="150">200</option>
@@ -240,6 +240,7 @@
                             </td> 
                         </tr>
                     </tbody>
+                    <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
                 </table>
             </div>
             <p v-else class="text-center text-lg">No Data</p>
@@ -255,9 +256,12 @@
 
 import { mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
+import redirectIfNotThirdLevelUser from '../../router/middleware/redirectIfNotThirdLevelUser'
 export default {
   middleware: [
-        //   redirectIfNotCustomer
+        redirectIfNotFirstLevelUser,redirectIfNotSecondLevelUser,redirectIfNotThirdLevelUser
       ],
    data() {
             return {
@@ -304,10 +308,7 @@ export default {
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 // return this.response.records;
-                let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
-                
-
+                let data = this.response.records;                
                 // quick search query
                 data = data.filter((row) => {
                     return Object.keys(row).some((key) => {
@@ -318,10 +319,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -359,7 +358,6 @@ export default {
                 this.editing.errors = []
                 this.editing.id = record.id
                 this.editing.form = _.pick(record, this.response.updatable)
-                // console.log(this.editing.form)
             },
             isUpdatable (column) {
                 return this.response.updatable.includes(column)
@@ -385,23 +383,16 @@ export default {
                 }).catch((error) => {
                     if (error.response.status === 422) {                        
                         this.editing.errors = error.response.data.errors
-                        console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                        console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                     }
                 })
             },
             store () {    
                 axios.post(`/api/datatable/categories`, this.creating.form).then((response) => {
-                // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                     this.getRecords().then(() => {
                         this.creating.active = true
                         this.creating.form = {}
                         this.creating.errors = []
-                         if(response.data=='successfully created') {
-                            console.log('created successfully !')
-                        } else {
-                            alert ('unsucessfully created! please contact Dion')
-                        }
+                         
                     })
                 }).catch((error) => {
                     if (error.response.status === 422) {
@@ -412,7 +403,6 @@ export default {
             },
                
             destroy(record){
-            // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
                 if(!window.confirm(`Are you sure?`)){
                     return

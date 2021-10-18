@@ -209,6 +209,9 @@ class Orders_To_SupplierController extends DataTableController
         return   $order;   
     }
 
+
+   
+    
     protected function getRecords(Request $request)
     {
         $builder = $this->builder->with(['invoices_from_supplier']);
@@ -217,9 +220,9 @@ class Orders_To_SupplierController extends DataTableController
             $builder = $this->buildSearch($builder, $request);
         }
      
-        if ($this->hasSearchQuery_1($request)) {
-            $builder = $this->buildSearch_1($builder, $request);
-        }
+        // if ($this->hasSearchQuery_1($request)) {
+        //     $builder = $this->buildSearch_1($builder, $request);
+        // }
 
         if (isset($request->user)) {
             $builder =   $builder->where('user','=',$request->user);

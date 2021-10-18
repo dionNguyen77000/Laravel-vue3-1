@@ -13,20 +13,22 @@ use App\Models\Permission;
 use App\Models\Stock\Unit;
 use Illuminate\Http\Request;
 use App\Models\Stock\Category;
+use App\Models\Stock\Location;
 use App\Models\Stock\Supplier;
 use Illuminate\Support\Carbon;
 use Money\Parser\IntlMoneyParser;
+use Illuminate\Support\Collection;
 use Money\Currencies\ISOCurrencies;
 use App\Http\Controllers\Controller;
 use App\Models\Stock\Goods_material;
 use Illuminate\Support\Facades\File;
+
+
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
-
-
+// use Maatwebsite\Excel\Excel;
 use App\Exports\Goods_MaterialExport;
 use App\Imports\Goods_MaterialImport;
-// use Maatwebsite\Excel\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Stock\Orders_To_Supplier;
 use App\Models\Stock\Invoices_From_Supplier;
@@ -49,12 +51,16 @@ class Goods_MaterialController extends DataTableController
           'db_column_name' =>array_values($this->getDatabaseColumnNames()),
           'displayable' => array_values($this->getDisplayableColumns()),
           'updatable' => array_values($this->getUpdatableColumns()),
+          'created' => array_values($this->getCreatedColumns()),
           'records' => $this->getRecords($request),
           'custom_columns' => $this->getCustomColumnsNames(),
           'unitOptions'=> $this->getUnitOptions(),
           'supplierOptions'=> $this->getSupplierOptions(),
           'categoryOptions'=> $this->getCategoryOptions(),
+          'locationOptions'=> $this->getLocationOptions(),
           'permissionOptions'=> $this->getPermissionOptions(),
+          'userPermissionOptions'=> $this->getUserPermissionOptions(),
+          'userRoleOptions'=> $this->getUserRoleOptions(),
           'PreparationOptions'=> $this->getPreparationOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
@@ -77,10 +83,10 @@ class Goods_MaterialController extends DataTableController
             'unit_id' => 'Unit',
             'supplier_id' => 'Supplier',
             'category_id' => 'Category',
-            'permission_id' => 'Permission',
             'img_thumbnail'=>'image',
             'current_qty' => 'cur_qty',
-            'prepared_point'=>'Prep_Point',
+            'prepared_point'=>'Ordered_Point',
+            'location_id'=>'Location',
             'Preparation' => 'Prep',
             'required_qty'=> 'Required',
         ];
@@ -89,7 +95,9 @@ class Goods_MaterialController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'img_thumbnail','slug', 'price',
+            'id','name', 'img_thumbnail',
+            // 'slug', 
+            'price',
             'unit_id',
             'supplier_id',
             'category_id',
@@ -97,10 +105,10 @@ class Goods_MaterialController extends DataTableController
             'prepared_point',
             'coverage',
             'required_qty',
-            'permission_id',
             'Preparation',
             'Active',
-            'location'
+            'location_id',
+            'permissions',
         ];
     }
 
@@ -113,7 +121,7 @@ class Goods_MaterialController extends DataTableController
             'img_three',
             'img_two',
             'img_thumbnail',
-            'slug', 
+            // 'slug', 
             'price',
             'unit_id',
             'supplier_id',
@@ -122,10 +130,9 @@ class Goods_MaterialController extends DataTableController
             'prepared_point',
             'coverage',
             'required_qty',
-            'permission_id',
             'Preparation',
             'Active',
-            'location'
+            'location_id'
         ];
     }
     public function getUpdatableColumns()
@@ -133,7 +140,7 @@ class Goods_MaterialController extends DataTableController
         return [
             'name', 
             'img_thumbnail',
-            'slug', 
+            // 'slug', 
             'price',
             'unit_id',
             'supplier_id',
@@ -143,17 +150,19 @@ class Goods_MaterialController extends DataTableController
             'prepared_point',
             'coverage',
             'required_qty',
-            'permission_id',
             'Preparation',
             'Active',
-            'location',
+            'location_id',
+            'permissions',
         ];
     }
 
     public function getCreatedColumns()
     {
         return [
-            'name', 'img_thumbnail','slug', 'price',
+            'name', 
+            'img_thumbnail',
+            'price',
             'unit_id',
             'supplier_id',
             'category_id',
@@ -161,11 +170,8 @@ class Goods_MaterialController extends DataTableController
             'current_qty',
             'prepared_point',
             'coverage',
-            'required_qty',
-            'permission_id',
-            'Preparation',
             'Active',
-            'location'
+            'location_id'
         ];
     }
     
@@ -174,44 +180,44 @@ class Goods_MaterialController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:goods_materials,name',
-            'slug' => 'required|unique:goods_materials,slug',
-            'price' => 'numeric',
+            // 'slug' => 'required|unique:goods_materials,slug',
+            'price' => 'numeric|nullable',
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
-            'coverage' => 'required|numeric'
+            'coverage' => 'required|numeric',
+            'assignedPermissionIds' => 'required'
             // 'img' => 'image|mimes:jpeg,png,jpg,gif,svg'
         ]);
+        $good_material = new Goods_material();
+        $good_material->name = $request->name;
+        $good_material->img_thumbnail = $request->img_thumbnail;
+        $good_material->price = $request->price;
+        $good_material->unit_id = $request->unit_id;
+        $good_material->supplier_id = $request->supplier_id;
+        $good_material->category_id = $request->category_id;
+        $good_material->img = $request->img;
+        $good_material->current_qty = $request->current_qty;
+        $good_material->prepared_point = $request->prepared_point;
+        $good_material->coverage = $request->coverage;
+        $good_material->Active = $request->Active;
+        $good_material->location_id = $request->location_id;
+        
 
-        // if($request->file('image')){
-
-        //     $image = request()->file('image');
-
-        //     $imageName = $image->getClientOriginalName();
-    
-        //     $imageName = time().'_'.$imageName;
-    
-        //     $image->move(public_path('/products'),$imageName);
-    
-        //     $product = $this->builder->find($id);
-            
-        //     $product -> image = '/good_material_images/' .  $imageName;
-            
-        //     $product -> save();
-        // }
-        // else {
-        $good_material = $this->builder->create
-        (
-            $request->only($this->getCreatedColumns())
-        );
+        // $good_material = $this->builder->create
+        // (
+        //     $request->only($this->getCreatedColumns())
+        // );
         
         if ($good_material->current_qty <= $good_material->prepared_point){
             $good_material->Preparation = 'Yes';
             $good_material->required_qty = $good_material->coverage -   $good_material->current_qty;  
-            $good_material->save();
-        } elseif ($good_material->current_qty > $good_material->prepared_point || $good_material->current_qty > $good_material->coverage){
+        } else{
             $good_material->Preparation = 'No';
             $good_material->required_qty = 0;
-            $good_material->save();
+        }
+        $good_material->save();
+        if($request->assignedPermissionIds && count($request->assignedPermissionIds) > 0 ) {
+            $good_material->permissions()->attach($request->assignedPermissionIds);
         }
         return $good_material;
        
@@ -221,10 +227,12 @@ class Goods_MaterialController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:goods_materials,name,' . $id,
-            'price' => 'numeric',
+            'price' => 'numeric|nullable',
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
-            'coverage' => 'required|numeric'
+            'coverage' => 'required|numeric',
+            'assignedPermissionIds' => 'required'
+
         ]);
 
         // $currencies = new ISOCurrencies();
@@ -235,34 +243,37 @@ class Goods_MaterialController extends DataTableController
         // dd ($money->getAmount()); // outputs 100
 
         $GM =  $this->builder->find($id);
-        
-        $updatedSuccess = $GM->update(
-        
-            $request->only($this->getUpdatableColumns())
-            // array_merge(
-            // $request->only([  'name', 'slug', 'unit_id','supplier_id','category_id', 'description'])
-            // , 
-            // ['price' => $money->getAmount()]
-            // )
-        
-        );
+        // dd($request);
 
-        if ($updatedSuccess == 1 & $GM->current_qty <= $GM->prepared_point){
+        $GM->name = $request->name;
+        $GM->price = $request->price;
+        $GM->unit_id = $request->unit_id;
+        $GM->supplier_id = $request->supplier_id;
+        $GM->category_id = $request->category_id;
+        $GM->current_qty = $request->current_qty;
+        $GM->prepared_point = $request->prepared_point;
+        $GM->coverage = $request->coverage;
+        $GM->required_qty = $request->required_qty;
+        $GM->Active = $request->Active;
+        $GM->location_id = $request->location_id;
+        // $updatedSuccess = $GM->update(
+        //     $request->only($this->getUpdatableColumns())
+        // );
+        //update the permissions of the good_material
+        $GM->permissions()->sync($request->assignedPermissionIds);
+
+        //update Preparation according to current_qty, Prepared_Point And Coverage
+        if ($GM->current_qty <= $GM->prepared_point){
             $GM->Preparation = 'Yes';
             $GM->required_qty = $GM->coverage -   $GM->current_qty;  
-            $GM->save();
-        } elseif ($updatedSuccess == 1 & $GM->current_qty > $GM->prepared_point){
+           
+        } else{
             $GM->Preparation = 'No';
-            $GM->required_qty = 0;
-            $GM->save();
+            $GM->required_qty = 0;        
+        } 
+        $GM->save();       
         
-        } elseif ($updatedSuccess == 1 & $GM->current_qty > $GM->coverage){
-            $GM->Preparation = 'No';
-            $GM->required_qty = 0;
-            $GM->save();
-        }
-
-        return $updatedSuccess;
+        return $GM;
     }
 
     public function saveLocationImage($id, Request $request)
@@ -410,23 +421,23 @@ class Goods_MaterialController extends DataTableController
                     $result_image_array = explode('/',$the_g_m->img_two);
                     $old_image_name = $result_image_array[count($result_image_array)-1];
                     Storage::delete([
-                    "public/good_material_images/$the_g_m->name/". $old_image_name,
+                    "public/good_material_images/". $old_image_name,
                     ]);
                 }
-                Storage::put("public/good_material_images/$the_g_m->name/". $imageName, $imageNameResize->__toString());
+                Storage::put("public/good_material_images/". $imageName, $imageNameResize->__toString());
                 // save new image path to database
-                $the_g_m -> img_two = "/storage/good_material_images/$the_g_m->name/".$imageName;
+                $the_g_m -> img_two = "/storage/good_material_images/".$imageName;
                 $the_g_m -> save();
             } else if ($img_number == 3) {
                 if ($the_g_m->img_three){
                     $result_image_array = explode('/',$the_g_m->img_three);
                     $old_image_name = $result_image_array[count($result_image_array)-1];
                     Storage::delete([
-                    "public/good_material_images/$the_g_m->name/". $old_image_name,
+                    "public/good_material_images/". $old_image_name,
                     ]);
                 }
-                Storage::put("public/good_material_images/$the_g_m->name/". $imageName, $imageNameResize->__toString());
-                $the_g_m -> img_three = "/storage/good_material_images/$the_g_m->name/".$imageName;
+                Storage::put("public/good_material_images/". $imageName, $imageNameResize->__toString());
+                $the_g_m -> img_three = "/storage/good_material_images/".$imageName;
                 $the_g_m -> save();
             }
           
@@ -439,14 +450,14 @@ class Goods_MaterialController extends DataTableController
                 $result_thumbnail_array = explode('/',$the_g_m->img_thumbnail);
                 $old_thumbnail_name = $result_thumbnail_array[count($result_thumbnail_array)-1];
                 Storage::delete([
-                "public/good_material_images/$the_g_m->name/". $old_thumbnail_name,
+                "public/good_material_images/". $old_thumbnail_name,
                 ]);
             }
             if ($the_g_m->img){
                 $result_image_array = explode('/',$the_g_m->img);
                 $old_image_name = $result_image_array[count($result_image_array)-1];
                 Storage::delete([
-                "public/good_material_images/$the_g_m->name/". $old_image_name,
+                "public/good_material_images/". $old_image_name,
                 ]);
             }
 
@@ -454,12 +465,12 @@ class Goods_MaterialController extends DataTableController
             $imageName = $the_g_m->name.'.jpg';
             $thumbnailName = $the_g_m->name.'_thumbnail_'.'.jpg';
 
-            Storage::put("public/good_material_images/$the_g_m->name/". $imageName, $imageNameResize->__toString());
-            Storage::put("public/good_material_images/$the_g_m->name/". $thumbnailName, $thumbnailNameResize->__toString());
+            Storage::put("public/good_material_images/". $imageName, $imageNameResize->__toString());
+            Storage::put("public/good_material_images/". $thumbnailName, $thumbnailNameResize->__toString());
 
             // save new image
-            $the_g_m -> img_thumbnail = "/storage/good_material_images/$the_g_m->name/".$thumbnailName;
-            $the_g_m -> img = "/storage/good_material_images/$the_g_m->name/".$imageName;
+            $the_g_m -> img_thumbnail = "/storage/good_material_images/".$thumbnailName;
+            $the_g_m -> img = "/storage/good_material_images/".$imageName;
             $the_g_m -> save();
         }
         return $the_g_m;
@@ -484,37 +495,43 @@ class Goods_MaterialController extends DataTableController
     protected function getRecords(Request $request)
     {
         $builder = $this->builder;
+        // $builder =   $builder->where('Active','=',1)->get();
+        // dd($builder);
 
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
         }
      
 
-        if (isset($request->supplier_id)) {
+        if (isset($request->supplier_id) && $request->supplier_id != 'All' ) {
             $builder =   $builder->where('supplier_id','=',$request->supplier_id);
         }
 
-        if (isset($request->category_id)) {
+        if (isset($request->category_id) && $request->category_id != 'All') {
             $builder =   $builder->where('category_id','=',$request->category_id);
         }
 
-        if (isset($request->permission_id)) {
-            if($request->permission_id == 'All'){
-                $user = auth()->user();
-                $userPermissions = $user->getPermissions();
-                $userPermissionIds = array();
-                $key = 'id';
-                array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
-                    if($k == $key) array_push($userPermissionIds, $v);
-                });
-                // dd($userPermissionIds);
-                $builder =   $builder->whereIn('permission_id',$userPermissionIds);
+        if (isset($request->location_id) && $request->location_id != 'All') {
+            $builder =   $builder->where('location_id','=',$request->location_id);
+        }        // if (isset($request->permission_id)) {
+        //     if($request->permission_id == 'All'){
+        //         $user = auth()->user();
+        //         $userPermissions = $user->getPermissions();
+        //         // $gmPermissions = $builder->permissions->map->only(['id', 'name']);
+        //         // dd($gmPermissions);
+        //         $userPermissionIds = array();
+        //         $key = 'id';
+        //         array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
+        //             if($k == $key) array_push($userPermissionIds, $v);
+        //         });
+        //         // dd($userPermissionIds);
+        //         $builder =   $builder->whereIn('permission_id',$userPermissionIds);
 
-            } else {
-                // dd($request->permission_id);
-                $builder =   $builder->where('permission_id','=',$request->permission_id);
-            }
-        }
+        //     } else {
+        //         // dd($request->permission_id);
+        //         $builder =   $builder->where('permission_id','=',$request->permission_id);
+        //     }
+        // }
 
         if (isset($request->Preparation)) {
             // dd($request->Preparation);
@@ -525,8 +542,9 @@ class Goods_MaterialController extends DataTableController
                 // dd( $arrayPreps[1]);
                 $builder =  $builder->whereIn('Preparation',$arrayPreps);
                                    
-           } else 
-            $builder =   $builder->where('Preparation','=',$request->Preparation);
+           } else if ($request->Preparation != 'All') {
+                $builder =   $builder->where('Preparation','=',$request->Preparation);
+            }
         }
 
         if (isset($request->Active)) {
@@ -536,20 +554,67 @@ class Goods_MaterialController extends DataTableController
         // $gs =Goods_material::latest()->with(['user'])->paginate(20);
 
         try {
-            $goods_materials_builder = $builder
+            $goods_materials = $builder
                             ->limit($request->limit)
                             ->orderBy('id', 'asc')
-                            ->get($this->getRetrievedColumns());
+                            ->get($this->getRetrievedColumns())
+                            ->load(['permissions']);
                             // ->paginate(2);
+           
+            // $gmPermissions = $builder->permissions->map->only(['id', 'name']);
+            // dd($gmPermissions);
+        
+            
+            $gm_filtered_permission_array = [];
+            if (isset($request->permission_id)) {
+                if($request->permission_id == 'All'){
+                     //filter by permission  
+                    // get permissions of the authenticated user  
+                    $user = auth()->user();
+                    $userPermissions = $user->getPermissions();
+                    $userPermissionIds = array();
+                    $key = 'id';
+                    array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
+                        if($k == $key) array_push($userPermissionIds, $v);
+                    }); 
+                    // lopp to all goods and materials
+                    foreach ($goods_materials as $good_material){
+                        $theGM_Permissions = $good_material->permissions;
+                        //loop through all the assigened permission of the gm
+                        foreach($theGM_Permissions as $theGM_Permission){
+                            // if the permission of gm is one included in the user permissions
+                            if(in_array($theGM_Permission->id,$userPermissionIds)) {
+                                array_push($gm_filtered_permission_array,$good_material);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // lopp to all goods and materials
+                    foreach ($goods_materials as $good_material){
+                        $theGM_Permissions = $good_material->permissions;
+                        //loop through all the assigened permission of the gm
+                        foreach($theGM_Permissions as $theGM_Permission){
+                            // if the permission of gm is the user permissions
+                            if($theGM_Permission->id == $request->permission_id) {
+                                // dd($request->permission_id);
 
-            // dd($goods_materials_builder);
+                                array_push($gm_filtered_permission_array,$good_material);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
-            // $pr =  new Goods_MaterialResourceDB(
-            //     // Post::latest()->with(['user','likes'])->paginate(20)  //all Post::where or Post::find(1) - return collection
-            //     $goods_materials_builder
-            // );
+            // refresh gms with filtered permissions
+            // if(!empty($gm_filtered_permission_array)){
+                $goods_materials = collect($gm_filtered_permission_array);
+            // }
+
+
             $pr =  Goods_MaterialResourceDB::collection(
-                $goods_materials_builder
+                $goods_materials
                 // ->get($this->getDisplayableColumns())
             );
             // dd($pr);
@@ -593,9 +658,19 @@ class Goods_MaterialController extends DataTableController
         }
         return $returnArr;
     }
+    public function getLocationOptions()
+    {
+        $c = Location::all('id','name');
 
+        $returnArr = [];
+        foreach ($c as  $sc) {
+            $returnArr[$sc['id']] = $sc['name'];
+        }
+        return $returnArr;
+    }
     public function getPermissionOptions()
     {
+        
         $r = Permission::all('id','name');
 
         $returnArr = [];
@@ -604,6 +679,21 @@ class Goods_MaterialController extends DataTableController
         }
         return $returnArr;
     }
+    public function getUserPermissionOptions()
+    {
+        $user = auth()->user();
+        
+        return $user->getPermissions();
+
+    }
+   
+    public function getUserRoleOptions()
+    {
+        $user = auth()->user();       
+        return $user->roles->map->only(['id', 'name']);
+    }
+
+
     public function getPreparationOptions()
     {
         $returnArr = ['Yes'];
@@ -826,12 +916,13 @@ class Goods_MaterialController extends DataTableController
             $order_to_supplier_line->orders_to_supplier_id = $order_to_supplier->id;
             // $order_to_supplier_line->goods_material_id = $good_material->id;
             $order_to_supplier_line->goods_material = $good_material->name;
-            $order_to_supplier_line->unit = $good_material->unit->name;
+            $order_to_supplier_line->o_unit = $good_material->unit->name;
             $order_to_supplier_line->o_unit_quantity = $good_material->required_qty;
             $order_to_supplier_line->o_unit_price = $good_material->price;
             $order_to_supplier_line->o_line_price = $good_material->required_qty * $good_material->price;
             $order_to_supplier_line->category = $good_material->category->name;
-
+            
+            $order_to_supplier_line->i_unit = $good_material->unit->name;
             $order_to_supplier_line->i_unit_quantity = $good_material->required_qty;
             $order_to_supplier_line->i_unit_price = $good_material->price;
             $order_to_supplier_line->i_line_price = $good_material->required_qty * $good_material->price;

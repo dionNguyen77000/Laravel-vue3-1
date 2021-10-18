@@ -15,13 +15,14 @@ class Orders_To_Supplier extends Model
 {
     protected $table = 'orders_to_suppliers';
     use HasFactory,  LogsActivity;
-    // protected static $logAttributes = ['user_id', 'supplier_id','estimated_price','ordered_date'];
+    protected static $logAttributes = ['user', 'supplier','estimated_price','ordered_date','Note'];
     
-   
+    protected $appends = ['InvNumber'];
+
     protected $fillable = [
         'user',
         'supplier',
-        'invoice_number',
+        // 'invoice_number',
         'ordered_date',
         'estimated_price',
         'excel_file',
@@ -30,16 +31,11 @@ class Orders_To_Supplier extends Model
 
      
 
-    // public function getInvNumberAttribute()
-    // {
-    //     return $this->invoices_from_supplier;
-                   
-    // }
-
     public function getInvNumberAttribute()
     {
         return $this->invoices_from_supplier->supplier_invoice_number;
     }
+   
     
      public function getRouteKeyName()
      {

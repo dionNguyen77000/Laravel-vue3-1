@@ -20,10 +20,11 @@ class PrivateUserResource extends JsonResource
             'username' => $this->username,
             'email' =>$this -> email,
             // 'roles' => $this->roles->pluck('name','id'),
+            'Active' =>  $this->Active,
             'roles' => $this->roles->map->only(['id', 'name']),
             // 'roles' => $this->getRoleNames(),
             'permissions' =>  $this->getPermissions(),
-            'intermediateProducts' =>  $this->getIntermediateProducts(),
+            // 'intermediateProducts' =>  $this->getIntermediateProducts(),
         ];
     }
 }

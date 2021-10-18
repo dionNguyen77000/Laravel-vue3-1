@@ -29,22 +29,26 @@ class Daily_Emp_WorkController extends DataTableController
     {
     //   return $this->builder->get();
       return response()->json([
-        'data' => [
-          'table' => $this->builder->getModel()->getTable(),
-          'db_column_name' =>array_values($this->getDatabaseColumnNames()),
-          'displayable' => array_values($this->getDisplayableColumns()),
-          'updatable' => array_values($this->getUpdatableColumns()),
-          'records' => $this->getRecords($request),
-          'custom_columns' => $this->getCustomColumnsNames(),
-          'intermediate_ProductOptions'=> $this->getIntermediate_ProductOptions(),
-         'permissionOptions'=> $this->getPermissionOptions(),
-          'userOptions'=> $this->getUserOptions(),
-          'roleOptions'=> $this->getRoleOptions(),
-          'statusOptions'=> $this->getStatusOptions(),
-          'allow' => [
-              'creation' => $this->allowCreation,
-              'deletion' => $this->allowDeletion,
-          ]
+            'data' => [
+            'table' => $this->builder->getModel()->getTable(),
+            'db_column_name' =>array_values($this->getDatabaseColumnNames()),
+            'displayable' => array_values($this->getDisplayableColumns()),
+            'updatable' => array_values($this->getUpdatableColumns()),
+            'records' => $this->getRecords($request),
+            'custom_columns' => $this->getCustomColumnsNames(),
+            'intermediate_ProductOptions'=> $this->getIntermediate_ProductOptions(),
+            'needPrepareIntermediate_ProductOptions'=> $this->getNeedPrepareIntermediate_ProductOptions(),
+            'permissionOptions'=> $this->getPermissionOptions(),
+            'userPermissionOptions'=> $this->getUserPermissionOptions(),
+            'authenticatedUser' =>$this->getAuthenticateduser(),
+            'userRoleOptions'=> $this->getUserRoleOptions(),
+            'userOptions'=> $this->getUserOptions(),
+            'roleOptions'=> $this->getRoleOptions(),
+            'statusOptions'=> $this->getStatusOptions(),
+            'allow' => [
+                'creation' => $this->allowCreation,
+                'deletion' => $this->allowDeletion,
+            ]
         ]
 
       ]);
@@ -61,7 +65,7 @@ class Daily_Emp_WorkController extends DataTableController
         return [
             'user_id' => 'Staff',
             'intermediate_product_id' => 'Pre_Product',
-            'current_prepared_qty' => 'Current_Prep',
+            'current_prepared_qty' => 'Current',
             'required_qty' => 'Required',
             'done_qty' => 'Done'
         ];
@@ -78,7 +82,23 @@ class Daily_Emp_WorkController extends DataTableController
             'required_qty',
             // 'role_id',
             'Status',
-            'Note'
+            'Note',
+            'permission',
+        ];
+    }
+    public function getRetrievedColumns()
+    {
+        return [
+            'date',
+            'user_id',
+            'intermediate_product_id',
+            'done_qty',
+            'current_prepared_qty',
+            'required_qty',
+            // 'role_id',
+            'Status',
+            'Note',
+            // 'permission',
         ];
     }
     public function getUpdatableColumns()
@@ -130,6 +150,15 @@ class Daily_Emp_WorkController extends DataTableController
         );
 
         $newD =  $this->builder->create($request->only($this->getCreatedColumns()));
+        // dd($newD->intermediate_product_id);
+        
+        $theRelatedIP =  $newD->intermediate_product;
+        // dd($theRelatedIP);
+        // dd($newD->Status);
+        if($newD->Status == 'OnGoing'){
+            $theRelatedIP->Preparation = 'OnGoing';
+            $theRelatedIP->save();
+        }
 
         return $newD;
         // if($request->Status == 'Completed'){
@@ -184,13 +213,40 @@ class Daily_Emp_WorkController extends DataTableController
         // $updated_intermediate = $this->builder->find($id);
 
         // dd($updated_intermediate);
-        $the_daily_emp_work = Daily_Emp_Work::where('date',$theDate)
+        $the_daily_emp_work_builder = Daily_Emp_Work::where('date',$theDate)
                                 -> where('user_id',$theEmpId)
                                 -> where('intermediate_product_id',$thePreProductId);
-        // dd($the_daily_emp_work);
-        $updatedSuccess =  $the_daily_emp_work ->update(
+        $updatedSuccess =  $the_daily_emp_work_builder ->update(
             $request->only($this->getUpdatableColumns())
         );
+
+        $the_daily_emp_work = $the_daily_emp_work_builder->first();
+
+        // update status of table Intermediate Product according to status of daily_emp_work
+        $theIP =  $the_daily_emp_work->intermediate_product; 
+        if ($updatedSuccess == 1) {
+            if($the_daily_emp_work->Status == "OnGoing") {
+                $theIP->Preparation = "OnGoing";
+                $theIP->save();
+            }
+            else {
+                if($theIP->current_qty <= $theIP->prepared_point){
+                    $theIP->Preparation = 'Yes';
+                    $theIP->required_qty = $theIP->coverage -  $theIP->current_qty;  
+                    $theIP->save();
+                } elseif ($theIP->current_qty > $theIP->prepared_point){
+                    $theIP->Preparation = 'No';
+                    $theIP->required_qty = 0;
+                    $theIP->save();
+                } 
+                elseif ($theIP->current_qty > $theIP->coverage){
+                    $theIP->Preparation = 'No';
+                    $theIP->required_qty = 0;
+                    $theIP->save();
+                } 
+            } 
+        }
+        
 
         // if ($updatedSuccess == 1 & $intermediate->current_qty <= $intermediate->prepared_point){
         //     $intermediate->Status = 'Prepare';
@@ -394,7 +450,6 @@ class Daily_Emp_WorkController extends DataTableController
     {
         $builder = $this->builder;
         // $builder->truncate();
-        // dd('ok');
 
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
@@ -410,12 +465,65 @@ class Daily_Emp_WorkController extends DataTableController
             $builder =   $builder->where('Status','=',$request->Status);
         }
 
+      
+
         try {
-            return Daily_Emp_WorkResourceDB::collection(
-                $builder->limit($request->limit)
+
+            $dews = $builder->limit($request->limit)
                 ->orderBy('created_at', 'desc')
-                ->get($this->getDisplayableColumns())
-            );
+                ->get($this->getRetrievedColumns())
+                ->load(['intermediate_product','intermediate_product.permissions']);
+          
+
+            $dews_filtered_permission_array = [];
+            if (isset($request->permission_id)) {
+                if($request->permission_id == 'All'){
+                     //filter by permission  
+                    // get permissions of the authenticated user  
+                    $user = auth()->user();
+                    $userPermissions = $user->getPermissions();
+                    $userPermissionIds = array();
+                    $key = 'id';
+                    array_walk_recursive($userPermissions, function($v, $k) use($key, &$userPermissionIds){
+                        if($k == $key) array_push($userPermissionIds, $v);
+                    }); 
+                    // dd($userPermissionIds);
+                    // lopp to all daily employee works
+                    foreach ($dews as $dew){
+                        $theDew_Permissions = $dew->intermediate_product->permissions;
+                        
+                        //loop through all the assigened permission of the dew
+                        foreach($theDew_Permissions as $theDew_Permission){
+                            // if the permission of dew is one in the user permissions
+                            if(in_array($theDew_Permission->id,$userPermissionIds)) {
+                                array_push($dews_filtered_permission_array,$dew);
+                                break;
+                            }
+                        }
+                    }
+                    // dd($dews_filtered_permission_array);
+                } else {
+                    // lopp to all goods and materials
+                    foreach ($dews as $dew){
+                        $theDew_Permissions = $dew->permissions;
+                        //loop through all the assigened permission of the gm
+                        foreach($theDew_Permissions as $theDew_Permission){
+                            // if the permission of gm is the user permissions
+                            if($theDew_Permission->id == $request->permission_id) {
+                                array_push($dews_filtered_permission_array,$dew);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            // refresh gms with filtered permissions
+            if(!empty($dews_filtered_permission_array)){
+                $dews = collect($dews_filtered_permission_array);
+            }
+            
+            
+            return Daily_Emp_WorkResourceDB::collection($dews);
             
           
         } catch (QueryException $e) {
@@ -432,6 +540,12 @@ class Daily_Emp_WorkController extends DataTableController
             $returnArr[$sr['id']] = $sr['name'];
         }
         return $returnArr;
+    }
+
+    public function getUserRoleOptions()
+    {
+        $user = auth()->user();       
+        return $user->roles->map->only(['id', 'name']);
     }
 
     public function getIntermediate_ProductOptions()
@@ -503,11 +617,40 @@ class Daily_Emp_WorkController extends DataTableController
         }
         return $returnArr;
     }
+
+    public function getUserPermissionOptions()
+    {
+        $user = auth()->user();
+        
+        return $user->getPermissions();
+
+    }
+
+    public function getAuthenticateduser()
+    {
+        $user = auth()->user();
+        
+        $authenticatedUser = [];
+
+        $authenticatedUser['roles'] = $user->roles;
+        $authenticatedUser['name'] = $user->name;
+        $authenticatedUser['username'] = $user->username;
+        $authenticatedUser['email'] = $user->email;
+        $authenticatedUser['permissions'] = $user->getPermissions();
+        
+        return $authenticatedUser;
+    }
     
     public function getStatusOptions()
     {
         $returnArr = ['OnGoing','Completed'];
         return $returnArr;
+    }
+
+    public function getNeedPrepareIntermediate_ProductOptions()
+    {
+        $user = auth()->user();        
+        return $user->getIntermediateProducts();
     }
    
 

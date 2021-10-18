@@ -1,23 +1,25 @@
 import { createWebHistory, createRouter } from "vue-router";
 import store from '../store'
 
-//router components
+//router components on Top NavBar
 import Home from "../Pages/Home.vue";
-import DashboardHome from "../Pages/Home.vue";
+import DashboardHome from "../Pages/DashboardHome.vue";
 import Dashboard from "../Pages/Dashboard.vue";
 import Reminder from "../Pages/Reminder.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
+
+
+
+
+//router component Stock Setup on Sidebar
 import User_Management from "../Pages/Admin/User_Management.vue";
 import Role from "../Pages/Admin/Role.vue";
 import Permission from "../Pages/Admin/Permission.vue";
-
-
-
-//router component Stock Setup
 import Category from "../Pages/stock/category.vue";
 import Supplier from "../Pages/stock/supplier.vue";
 import Unit from "../Pages/stock/unit.vue";
+import Location from "../Pages/stock/location.vue";
 import Goods_Material from "../Pages/stock/goods_material.vue";
 import Intermediate_Product from "../Pages/stock/intermediate_product.vue";
 import Daily_Emp_Work from "../Pages/stock/daily_emp_work.vue";
@@ -31,6 +33,10 @@ import Invoices_From_Suppliers from "../Pages/stock/invoices_from_suppliers.vue"
 import auth from './middleware/auth'
 import guest from './middleware/guest'
 import redirectIfNotCustomer from './middleware/redirectIfNotCustomer'
+import redirectIfNotFirstLevelUser from './middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from './middleware/redirectIfNotSecondLevelUser'
+import redirectIfNotThirdLevelUser from './middleware/redirectIfNotThirdLevelUser'
+import redirectIfNotFourthLevelUser from './middleware/redirectIfNotFourthLevelUser'
 import middlewarePipeline from "./kernel/middlewarePipeline";
 
 const routes = [
@@ -66,13 +72,17 @@ const routes = [
     children: [
       { 
         path: '', 
-        component: Home 
+        name: "DashboardHome",
+        component: DashboardHome 
       },
 
       {
         path: "/user_management",
         name: "User_Management",
         component: User_Management,
+        children: [
+        
+        ]
         // meta: {
         //   middleware: [
         //     auth, redirectIfNotCustomer
@@ -106,6 +116,11 @@ const routes = [
         path: "/unit",
         name: "Unit",
         component: Unit,
+      },
+      {
+        path: "/location",
+        name: "Location",
+        component: Location,
       },
       {
         path: "/goods_material",

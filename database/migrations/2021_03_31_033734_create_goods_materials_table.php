@@ -17,7 +17,7 @@ class CreateGoodsMaterialsTable extends Migration
             $table->id();
 
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug')->nullable()->unique();
             $table->integer('price')->nullable();
             $table->unsignedBigInteger('unit_id');
             $table->foreign('unit_id')->references('id')->on('units');

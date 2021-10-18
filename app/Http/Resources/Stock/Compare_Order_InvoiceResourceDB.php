@@ -17,7 +17,8 @@ class Compare_Order_InvoiceResourceDB extends JsonResource
         return [
                 'id' => $this->id,
                 'goods_material'=> $this->goods_material,
-                'unit'=> $this->unit,
+                'o_unit'=> $this->o_unit,
+                'i_unit'=> $this->i_unit,
                 'o_unit_quantity' => $this->o_unit_quantity,
                 'i_unit_quantity'=> $this->i_unit_quantity,
                 'o_unit_price'=> $this->o_unit_price,

@@ -37,6 +37,11 @@ export default {
         closeModal(){
             this.$emit('close')
         },
+
+        refreshRecords(){
+            this.$emit('refreshRecords')
+        },
+
         
     },
     mounted() {

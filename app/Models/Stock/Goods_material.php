@@ -2,6 +2,7 @@
 
 namespace App\Models\Stock;
 
+use App\Models\Permission;
 use Money\Money;
 use Money\Currency;
 use App\Models\Stock\Unit;
@@ -9,11 +10,14 @@ use App\Models\Stock\Category;
 use App\Models\Stock\Supplier;
 use App\Models\Traits\HasPrice;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Goods_material extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+    protected static $logAttributes = ['current_qty','prepared_point','coverage'];
+    
     protected $fillable = [
         'name',
         'slug',
@@ -28,7 +32,7 @@ class Goods_material extends Model
         'description',
         'current_qty',
         'prepared_point',
-        'location',
+        'location_id',
         'coverage',
         'required_qty',
         'permission_id',
@@ -60,5 +64,9 @@ class Goods_material extends Model
         // foreignPivotKey:'goods_material_id', relatedPivotKey:'orders_to_supplier_id');
         return $this->belongsToMany(Orders_To_Supplier::class,'order_to_supplier_lines', 
         'goods_material_id','orders_to_supplier_id');
+    }
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
     }
 }

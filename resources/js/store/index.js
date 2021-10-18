@@ -4,15 +4,31 @@ import auth from './auth'
 
 export default createStore({
   state: {
-    sideBarOpen: true,
-    posts:[],
-    meta: {}
+     // Level of Users
+     firstLevelUsers : ['Admin' ],
+     secondLevelUsers : ['Admin' , 'Manager'],
+     thirdLevelUsers : ['Admin' , 'Manager', 'Assistant Manager','Supervisor', 
+                          'Shif_Supervisor','Chef'],
+     fourthLevelUsers : [
+       'Admin' , 'Manager', 'Assistant Manager','Supervisor', 'Shif_Supervisor', 'Chef',
+       'Stir_Frier','Deep_Frier','Rice_Frier','Veg_Picker','Runner','Server',
+       'Driver'
+      ],
+      sideBarOpen: true,
+      posts:[],
+      meta: {}
   },
+
   getters: {
-  
+    
+    
     sideBarOpen: state => {
       return state.sideBarOpen
     },
+    firstLevelUsers: (state) => state.firstLevelUsers,
+    secondLevelUsers: (state) => state.secondLevelUsers,
+    thirdLevelUsers: (state) => state.thirdLevelUsers,
+    fourthLevelUsers: (state) => state.fourthLevelUsers,
     allPosts: (state) => state.posts,
     allPaginationMeta: (state) => state.meta,
    

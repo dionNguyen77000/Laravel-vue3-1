@@ -1,5 +1,4 @@
 <template>
-
   <div id="orders_to_suppliers" class="p-6">     
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
              <loading v-model:active="isLoading"
@@ -11,7 +10,7 @@
                 <div>
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                    v-if="response.allow.creation && isFirstLevelUser"
+                    v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && response.allow.creation"
                     @click.prevent="clickGoodsMaterialId=true">
                         New Order
                     </a>
@@ -23,7 +22,9 @@
             <p> <b>Hide Column </b></p>
             <ul id="hide_show_column_section" class="width-3/4 flex flex-wrap justify-center">
                 <li  class="mr-3" v-for="column in response.displayable" :key="column"
-                :class="{ 'hidden': hiddenSelectedColumns.includes(column)}"
+                :class="{ 
+                    'hidden': unshownColumns.includes(column) ||  columnsNotAllowToShowAccordingToUserLevel.includes(column),
+                    }"
                 >
                     <input type="checkbox" 
                     :value="column" 
@@ -38,8 +39,7 @@
         <!-- advanced filter section -->
         <div class="mt-2 mb-2 p-2 shadow bg-gray-100 border border-gray-200">
         <a href="#" 
-        class="p-2 m-1 inline-block text-blue-300 transition duration-300  hover:text-blue-500 focus:outline-none"
-        v-if="response.allow.creation && isFirstLevelUser"
+        class="p-2 m-1 inline-block text-blue-500 transition duration-300  hover:text-blue-700 focus:outline-none"
         @click.prevent="filter.active = !filter.active">
         {{ filter.active ? 'Hide Filter' : 'Advanced Filter' }}
         </a>      
@@ -187,7 +187,7 @@
                 <div class="relative">
                     <select v-model = "limit" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option value="2">2</option>
+                        <option value="20">20</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                         <option value="150">200</option>
@@ -266,7 +266,7 @@
                 <thead>
                     <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
-                        v-if="isFirstLevelUser && canSelectItems"
+                        v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && canSelectItems"
                         class="py-2"
                         >
                                 <input type="checkbox" 
@@ -274,9 +274,17 @@
                                 :checked="filteredRecords.length === selected.length"
                                 >
                         </th>
+
+                        <!--  Loop through column in response.displayable  -->
                         <template v-for="column in response.displayable" :key="column">
+                           <!-- Table Heading - Columns not allow to show in any mode-->
+                            <template v-if="unshownColumns.includes(column)">
+                            </template>
+                            <!-- Table Heading - Columns not allow to show according to the level of user-->
+                            <template v-else-if="columnsNotAllowToShowAccordingToUserLevel.includes(column)">
+                            </template>
                             <!-- Table Heading - Edit Mode-->
-                             <template v-if="editing.id">
+                            <template v-else-if="editing.id">
                                 <!-- Table heading not shown in Edit Mode-->
                                 <template v-if="unshownColumnsInEditMode.includes(column)
                                     || hideColumns.includes(column) ||!isUpdatable(column)">
@@ -299,7 +307,8 @@
                             <template v-else>
                                 <th  
                                 class="text-left" 
-                                :class="{ 'text-center': textCenterColumns.includes(column) }"
+                                :class="{ 'text-center': textCenterColumns.includes(column) 
+                                }"
                                 v-if="!hideColumns.includes(column)"
                                 >
                                     <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -321,13 +330,21 @@
                     <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100"
                     :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Preparation==('Yes')}" 
                     >                      
-                        <td v-if="isFirstLevelUser && canSelectItems" class=" text-center">
+                        <td v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && canSelectItems" class=" text-center">
                             <input type="checkbox" :value="record.id" v-model="selected">
                         </td>
+
                         <!-- Loop through each column-->
                         <template v-for="columnValue,column in record" :key="column">
+                              <!-- Columns not allow to show in any mode-->
+                            <template v-if="unshownColumns.includes(column)">
+                            </template>
+                            <!-- Columns not allow to show in according to level of user-->                           
+                            <template v-else-if="columnsNotAllowToShowAccordingToUserLevel.includes(column)">
+                            </template>
+
                         <!-- Edit Mode-->
-                        <template v-if="editing.id">
+                        <template v-else-if="editing.id">
                             <!-- Edit Mode - column not show -->
                             <template v-if="unshownColumnsInEditMode.includes(column)
                                     || hideColumns.includes(column) || !isUpdatable(column)">
@@ -335,14 +352,15 @@
                             <!-- if the record currently edit --> 
                             <template v-else-if="editing.id === record.id">
                                 <td class="py-2 text-left"  
+                                :class="{ 'text-center': textCenterColumns.includes(column)}" 
                                 v-if="response.displayable.includes(column)">   
                                 <template v-if="column=='supplier'">                                  
                                 <select 
                                 class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                 :class="{
-                                    'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                 }"
-                                :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                 :name="column" :id="column" 
                                 v-model="editing.form[column]">                                    >
                                     <template v-for="option,index in response.supplierOptions" >   
@@ -359,12 +377,12 @@
                                     <select
                                     class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                     :class="{
-                                        'bg-pink-200' : !isFirstLevelUser
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
                                     :name="column" :id="column" 
                                     v-model="editing.form[column]"
                                     
-                                    :disabled= "!isFirstLevelUser" 
+                                    :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     > 
                                             <!-- <template v-if=" record.date+' '+record.user_id+' '+record.intermediate_product_id != option.id">                   -->
                                             <option v-for="option,index in response.userOptions"  :value="index" :key="option">
@@ -373,20 +391,17 @@
                                             <!-- </template> -->
                                     </select>                                  
                                 </template> 
-                                <template v-else-if="column=='estimated_price'">
-                                    $<input type="text"  
-                                    class='w-3/4 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
-                                    v-model="editing.form[column]"                              
-                                    disabled>                                   
-                                </template>                               
+                                                           
                                 <template v-else>
                                 <input type="text"  
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    :class="{ 
+                                    'border-3 border-red-700': editing.errors[column] ,
+                                    'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column),
+                                    'text-center': textCenterColumns.includes(column)
+                                    }"
                                 v-model="editing.form[column]"
-                                :class="{ 
-                                'border-3 border-red-700': editing.errors[column] ,
-                                    'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)}"
-                                :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                 > 
                                 <br>
                                 <span v-if="editing.errors[column]" class="text-white font-bold">
@@ -497,8 +512,6 @@
                                                 </a>
 
                                     </template>
-
-
                                     <template v-else>
                                         <span  class="font-medium" >
                                         {{(dollarsSymbolColumns.includes(column) && columnValue != null) ?'$' : '' }}{{columnValue}}
@@ -512,13 +525,16 @@
                     <!-- Last Column - Actions -->
                     <td>
                     <div>
-                        <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
+                        <a href="#" @click.prevent="edit(record)"  
+                        v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser) && response.allow.deletion && editing.id !== record.id" 
                         class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
                         >
                         Edit
                         </a>   
 
-                        <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
+                        <a 
+                        href="#" @click.prevent="destroy(record.id)" 
+                        v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser) && response.allow.deletion && editing.id !== record.id" 
                         class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
                         >
                         Delete
@@ -550,6 +566,7 @@
                         <Note_Modal  
                             :note="record.Note"
                             :id="record.id" 
+                            :theRecord="record" 
                             :table_name="'orders_to_supplier'"
                             @close="clickNoteModalId=null" 
                             @refreshRecords="getRecords" 
@@ -565,6 +582,7 @@
                     </div>
                     </tr>
                 </tbody>
+                 <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
             </table>
         </div>
         <p v-else class="mt-2 text-red-600 text-center text-lg">No Data</p>
@@ -574,6 +592,7 @@
      <div v-if="clickGoodsMaterialId==true">
         <Goods_Material_Modal  
         @close="clickGoodsMaterialId=null" 
+        @refreshRecords="getRecords" 
         />
     </div>
 
@@ -586,6 +605,7 @@
 
 <script>
 import Modal from  '../../components/modal.vue'
+import Loading from 'vue-loading-overlay';
 import Note_Modal from  './stock_modal/note_modal.vue'
 import Orders_To_Suppliers_Line_Modal from './stock_modal/orders_to_suppliers_line_modal.vue'
 import Goods_Material_Modal from './stock_modal/goods_material_modal.vue'
@@ -597,7 +617,7 @@ export default {
         //   redirectIfNotCustomer
       ],
 
-    components: {Modal,Note_Modal,Orders_To_Suppliers_Line_Modal,Goods_Material_Modal},
+    components: {Loading,Modal,Note_Modal,Orders_To_Suppliers_Line_Modal,Goods_Material_Modal},
     props: ['orders_to_supplierId'],    
    data() {
             return {
@@ -641,34 +661,65 @@ export default {
                 
                 
                 selected: [],
-                // hideColumns:['slug','description','image'],
-                hideColumns:['invoices_from_supplier'],
-                hiddenSelectedColumns:['invoices_from_supplier'],
-                textCenterColumns:['estimated_price'],
+
+                isLoading: false,
+                fullPage: true,
+
+
+                
+                /****
+                 General Setting
+                ******/
+                // Hide Column Section : checkbox of columns that completely disappear
+                unshownColumns:[],                
+                
+                // columns hidden - can be show by unclick the radio buttons
+                hideColumns:[],
+
+                // columns unshown in edit mode
                 unshownColumnsInEditMode: ['excel_file','Note'],
                 notAllowEditExceptPeopleInCharge: [],
-                dollarsSymbolColumns:['estimated_price'],
                 advancedFilterColumns:['id','user','ordered_date','estimated_price'],
-                
 
+                   // columns unshown according to user levels
+                secondLevel_ColumnNotAllowsToShow: [                                    
+                ],
+                thirdLevel_ColumnNotAllowsToShow: [
+                ],     
+                           
+                fourthLevel_ColumnNotAllowsToShow: [
+                ],
+
+                // columns does not allow to edit according to user levels
+                secondLevel_ColumnNotAllowsToEdit: [
+                
+                ],                
+
+                thirdLevel_ColumnNotAllowsToEdit: [
+                     
+                ],     
+                            
+                fourthLevel_ColumnNotAllowsToEdit: [      
+                    'user','supplier','ordered_date', 'estimated_price'          
+                ],
+                
+                textCenterColumns:['estimated_price'],
+                dollarsSymbolColumns:['estimated_price'],
+
+                selected_dropdown_active: false,
+
+                // Filter Section Settings
                 limit:50,
                 quickSearchQuery: '',
                 selected_supplier: '',
                 selected_user: '',
 
-                selected_dropdown_active: false,
                  // showModal: false,
                 clickThumbnailId : null,
                 // showGoodsMaterialsModal: false
                 clickGoodsMaterialId : null,
                 // show Notes Modal: false
                 clickNoteModalId : null,
-
-                isLoading: false,
-
-                // Level of Users
-                firstLevelUsers : ['Admin' , 'Manager'],
-                secondLevelUsers : [],
 
                 order_to_supplier_line_estimated_price: null,
                 
@@ -679,7 +730,7 @@ export default {
  computed: {
     ...mapGetters({
             getAuth: 'auth/getAuth'
-            }),
+        }),
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 // return this.response.records;
@@ -695,10 +746,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -713,40 +762,58 @@ export default {
             canSelectItems() {
                 return this.filteredRecords.length <= 500
             },
-             getRoleNames(){
-                const rolNameArray = [];
-                const allRoleNames = this.getAuth.user.roles;
-                allRoleNames.forEach(element => {
-                    rolNameArray.push(element.name)
-                });
-              
-                return rolNameArray;
 
+            columnsNotAllowToShowAccordingToUserLevel(){
+                if(this.getAuth.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.getAuth.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.getAuth.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToShow ;
+                } 
+                else if (this.getAuth.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToShow ;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToShow;
             },
-             notAllowToEditExceptPeopleInCharge(){
-                if(this.getRoleNames.includes('Admin') || this.getRoleNames.includes('Manager')) {
-                    this.notAllowEditExceptPeopleInCharge = []
-                }
-                return this.notAllowEditExceptPeopleInCharge
+
+            columnsNotAllowToEditAccordingToUserLevel(){
+                if(this.getAuth.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.getAuth.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToEdit;
+                } 
+                else if (this.getAuth.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToEdit ;
+                } 
+                else if (this.getAuth.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToEdit ;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToEdit;
             },
-             isFirstLevelUser() {
-                let firstLevelUser = false;
-                this.firstLevelUsers.forEach(element => {
-                    if(this.getRoleNames.includes(element)){
-                        firstLevelUser = true;
-                    }
-                });
-                return firstLevelUser;
-            }
+
+            columnsNotAllowToShowAccordingToUserLevel(){
+                if(this.getAuth.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.getAuth.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.getAuth.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.getAuth.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToShow;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToShow;
+            },           
     },
 
 methods: 
-{
-            
+{          
     getRecords(){
         return axios.get(`/api/datatable/orders_to_supplier?${this.getQueryParameters()}`).then((response)=> {
             this.response = response.data.data;
-            console.log("🚀 ~ file: orders_to_suppliers.vue ~ line 336 ~ returnaxios.get ~  this.response",  this.response)
         })
     },
     getQueryParameters () {
@@ -773,8 +840,7 @@ methods:
         this.editing.id = record.id
         this.editing.form = _.pick(record, this.response.updatable)
     },
-     editCurrentQty(record){
-        
+    editCurrentQty(record){        
         this.editing.errors = []
         this.editing.currentQtyId = record.id
         this.editing.form = _.pick(record, this.response.updatable)
@@ -796,16 +862,11 @@ methods:
                 this.getRecords().then(() => {
                     this.editing.id = null
                     this.editing.form = null
-                    if(response.data=='password updated') {
-                        alert('Password updated successfully !')
-                    }
                     
                 })
             }).catch((error) => {
                 if (error.response.status === 422) {                        
                     this.editing.errors = error.response.data.errors
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                 }
             })
     },
@@ -815,17 +876,14 @@ methods:
             data.append('image', this.image)
             this.creating.form.image = data
         }  
-        // console.log('submiss form is : ', this.creating.form)
 
         axios.post(`/api/datatable/orders_to_suppliers`, this.creating.form).then((response) => {
-        // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
            if(response.data.id && this.image) {
                 let data = new FormData;
                 data.append('image', this.image)
             
             axios.post(`/api/datatable/orders_to_suppliers/saveImage/${response.data.id}`, data).then((response1)=>{
                 this.getRecords().then(() => {
-                    console.log('save Image sucessfully')
                     this.imagePreview = null;
                     this.image =null;
                 })
@@ -834,20 +892,14 @@ methods:
                     this.creating.errors = error.response.data.errors                       
                 }
             })
-            } else {
-                alert ('unsucessfully save recores')
-            }
+            } 
 
             this.getRecords().then(() => {
                 this.creating.active = true
                 this.creating.form = {}
                 this.creating.errors = []
             })
-            if(response.data) {
-                console.log('saved successfully !')
-            } else {
-                alert ('unsucessfully save image! please contact Admin')
-            }
+           
         }).catch((error) => {
             if (error.response.status === 422) {
                 this.creating.errors = error.response.data.errors                       
@@ -856,7 +908,6 @@ methods:
     },
         
     destroy(record){
-    // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
         if(!window.confirm(`Are you sure?`)){
             return
@@ -884,13 +935,11 @@ methods:
         let reader = new FileReader();
         // reader.readAsDataURL( this.creating.form.imageIcon);
         reader.readAsDataURL(this.image);
-
         reader.onload = e => {
             this.imagePreview = e.target.result;
         }
     },
     imageChanged(e,id) {
-        console.log('hei, id of the record is', id);
         // this.creating.form.imageIcon = e.target.files[0];
         this.image = e.target.files[0];
         let reader = new FileReader();
@@ -907,12 +956,9 @@ methods:
         if(this.image){
             let data = new FormData
             data.append('image', this.image)
-        
-        console.log(data)
 
         axios.post(`/api/datatable/orders_to_suppliers/saveImage/${productId}`, data).then((response1)=>{
             this.getRecords().then(() => {
-                console.log('save Image sucessfully')
                 this.currentPreviewUpdateId = null;
                 this.imagePreviewUpdate = null;
                 this.image =null;
@@ -926,15 +972,9 @@ methods:
         }  
     },
 
-
-  
-
-  
     importExcel(){
-        axios.post(`/api/datatable/orders_to_suppliers/fileImport`).then(()=>{
-            
+        axios.post(`/api/datatable/orders_to_suppliers/fileImport`).then(()=>{           
         })
-        
     },
     exportExcel(){
         axios.get(`/api/datatable/orders_to_suppliers/fileExport`).then(()=>{

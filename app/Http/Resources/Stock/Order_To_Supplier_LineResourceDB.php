@@ -20,7 +20,7 @@ class Order_To_Supplier_LineResourceDB extends JsonResource
                 // 'user_role'=>$this->user->roles,
                 // 'goods_material_id'=> $this->goods_material_id,
                 'goods_material'=> $this->goods_material,
-                'unit'=> $this->unit,
+                'o_unit'=> $this->o_unit,
                 'o_unit_quantity'=> $this->o_unit_quantity,
                 'o_unit_price'=> $this->o_unit_price  ,
                 'o_line_price'=> $this->o_line_price , 

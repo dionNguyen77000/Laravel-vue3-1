@@ -54,14 +54,14 @@ class UserController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'username', 'email'
+            'id','name', 'username', 'email', 'Active'
             // , 'created_at','updated_at'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-           'name', 'username','email'
+           'id','name', 'username','email', 'Active'
         //    ,'created_at','updated_at'
         ];
     }
@@ -73,6 +73,7 @@ class UserController extends DataTableController
             'username' => 'required|unique:users,username',
             'email' => 'required|unique:users,email',
             'password' => 'required|confirmed',
+            'Active' => 'required',
         ]);
 
         // return $request->password;
@@ -87,6 +88,7 @@ class UserController extends DataTableController
                 'name' => $request->name,
                 'username' => $request->username,
                 'email' => $request->email,
+                'Active' => $request->Active,
                 // 'password' =>$request->password,
                 'password' => Hash::make($request->password),
                 // 'created_at' => $request->created_at,
@@ -114,10 +116,10 @@ class UserController extends DataTableController
             'name' => 'required',
             'username' => 'required',
             'email' => 'required|unique:users,email,' . $id . '|email',
+            'Active' => 'required',
             // 'created_at' => 'date'
         ]);
 
-        $user = null;
         $theUser = $this->builder->find($id);
         if($request->password_new){
             $theUser->update(
@@ -126,6 +128,7 @@ class UserController extends DataTableController
                     'name' => $request->name,
                     'username' => $request->username,
                     'email' => $request->email,
+                    'Active' => $request->Active,
                     // 'password' =>$request->password,
                     'password' => Hash::make($request->password_new),
 
@@ -158,12 +161,18 @@ class UserController extends DataTableController
             $builder =   $builder->where('supplier_id','=',$request->supplier_id);
         }
 
+        if (isset($request->Active)) {
+            $builder =   $builder->where('Active','=',$request->Active);
+        }
+
 
         try {
             return PrivateUserResource::collection(
                 $builder->limit($request->limit)
                 ->orderBy('id', 'asc')
                 ->get($this->getDisplayableColumns())
+                ->load(['roles','roles.permissions'])
+                
             );
             
           

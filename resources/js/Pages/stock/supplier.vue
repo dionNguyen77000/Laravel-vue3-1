@@ -7,7 +7,7 @@
                 <div>
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                    v-if="response.allow.creation"
+                    v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && response.allow.creation"
                     @click.prevent="creating.active = !creating.active">
                     {{ creating.active ? 'Hide' : 'New record' }}
                     </a>
@@ -77,7 +77,7 @@
                 <div class="relative">
                     <select v-model = "limit" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option value="2">2</option>
+                        <option value="20">20</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                         <option value="150">200</option>
@@ -199,6 +199,7 @@
                             </td> 
                         </tr>
                     </tbody>
+                <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
                 </table>
             </div>
                 <p v-else>No results</p>
@@ -212,12 +213,15 @@
 
 <script>
 
-import { mapState } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
+import redirectIfNotThirdLevelUser from '../../router/middleware/redirectIfNotThirdLevelUser'
 export default {
   middleware: [
-        //   redirectIfNotCustomer
-      ],
+      redirectIfNotFirstLevelUser, redirectIfNotSecondLevelUser, redirectIfNotThirdLevelUser
+],
    data() {
             return {
                 response: {
@@ -259,12 +263,14 @@ export default {
         },
        
  computed: {
+    ...mapGetters({
+        getAuth: 'auth/getAuth',
+    }),
 
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 // return this.response.records;
                 let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
                 
 
                 // quick search query
@@ -277,10 +283,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -300,10 +304,8 @@ export default {
    {
             
         getRecords(){
-            // console.log(this.getQueryParameters())
             return axios.get(`/api/datatable/suppliers?${this.getQueryParameters()}`).then((response)=> {
                 this.response = response.data.data;
-                console.log("🚀 ~ file: supplier.vue ~ line 305 ~ returnaxios.get ~  this.response",  this.response)
                 
             })
         },
@@ -347,23 +349,16 @@ export default {
             }).catch((error) => {
                 if (error.response.status === 422) {                        
                     this.editing.errors = error.response.data.errors
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                 }
             })
         },
         store () {    
             axios.post(`/api/datatable/suppliers`, this.creating.form).then((response) => {
-            // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                 this.getRecords().then(() => {
                     this.creating.active = true
                     this.creating.form = {}
                     this.creating.errors = []
-                        if(response.data=='successfully created') {
-                        console.log('created successfully !')
-                    } else {
-                        alert ('unsucessfully created! please contact Dion')
-                    }
+                       
                 })
             }).catch((error) => {
                 if (error.response.status === 422) {
@@ -374,7 +369,6 @@ export default {
         },
             
         destroy(record){
-        // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
             if(!window.confirm(`Are you sure?`)){
                 return

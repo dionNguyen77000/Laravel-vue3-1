@@ -89,7 +89,7 @@
 
             <div class="flex flex-row mb-1 sm:mb-0">
                <!-- delete with selected -->
-                <div class="dropdown inline-block relative z-10"  v-if="selected.length">
+                <!-- <div class="dropdown inline-block relative z-10"  v-if="selected.length">
                     <button 
                     class="border-blue-500 border horver:bg-blue-700 text-gray-700 font-semibold py-1 px-1 inline-flex items-center"
                     @click.prevent="selected_dropdown_active = !selected_dropdown_active"
@@ -100,9 +100,8 @@
                     <ul class="dropdown-menu absolute text-gray-700 pt-1"
                     :class="selected_dropdown_active ? 'block': 'hidden'"
                     >
-                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li>
                     </ul>
-                </div>
+                </div> -->
                 <div class="relative">
                     <select v-model = "limit" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
@@ -159,12 +158,12 @@
                 <table class="min-w-max w-full table-auto">
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <!-- <th class="py-2" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
                                     >
-                            </th>
+                            </th> -->
                             <template v-for="column in response.displayable" :key="column">
                             <th  
                             class="text-left"  
@@ -180,7 +179,7 @@
                                 </div> 
                             </th>
                             </template>
-                            <th class="text-left"  >Actions</th>
+                            <!-- <th class="text-left"  >Actions</th> -->
                             
                         </tr>
                     </thead>
@@ -188,9 +187,9 @@
                         
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100">
                                         
-                            <td v-if="canSelectItems" class=" text-center">
+                            <!-- <td v-if="canSelectItems" class=" text-center">
                                 <input type="checkbox" :value="record.id" v-model="selected">
-                            </td>
+                            </td> -->
                             <template v-for="columnValue,column in record" :key="column">
                             <td class="py-2 text-left"  v-if="!hideColumns.includes(column)">
 
@@ -198,7 +197,26 @@
                                 <template v-if="editing.id === record.id && isUpdatable(column)">
                                 <div >
                                     
-                                    <template v-if="column=='unit'">
+                                    <template v-if="column=='o_unit'">
+                                        <select 
+                                        class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                        :class="{
+                                            'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                        }"
+                                        :name="column" :id="column" 
+                                        :disabled= "notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                        v-model="editing.form[column]"
+                                        >
+                                            <template v-for="option in response.unitOptions" >   
+                                                <template v-if="record.id != option.id">                  
+                                                <option :value="option" :key="option">
+                                                    {{option}} 
+                                                </option>
+                                                </template>
+                                            </template>   
+                                        </select>
+                                    </template> 
+                                    <template v-else-if="column=='i_unit'">
                                         <select 
                                         class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                         :class="{
@@ -219,7 +237,6 @@
                                     </template> 
 
                                     <template v-else-if="column=='category'">
-                                    <!-- {{record}} -->
                                     <select
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                      :class="{
@@ -263,7 +280,13 @@
                                 <!-- end edit mode -->
 
                                 <template v-else>
-                                     <template v-if="column=='i_unit_quantity'">
+                                     <template v-if="column=='i_unit'">
+                                        <div :class="{ 'text-center': textCenterColumns.includes(column), 
+                                        'bg-pink-500': record.o_unit!=record.i_unit }" >   
+                                            <span class="font-medium" >{{columnValue}}</span>
+                                        </div>
+                                    </template>
+                                     <template v-else-if="column=='i_unit_quantity'">
                                         <div :class="{ 'text-center': textCenterColumns.includes(column), 
                                         'bg-pink-500': record.o_unit_quantity!=record.i_unit_quantity }" >   
                                             <span class="font-medium" >{{columnValue}}</span>
@@ -292,7 +315,7 @@
                             </template>
                             
                             
-                            <td>
+                            <!-- <td>
                                     <div>
                                 <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
                                 class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
@@ -321,7 +344,7 @@
                                 </a>    
                                 </template>
                                 </div>
-                            </td> 
+                            </td>  -->
                         </tr>
                         <tr class="border-b border-gray-200 bg-gray-200 hover:bg-gray-10">
                             <td colspan="100%" class="p-2 text-center text-red-900 text-2xl">
@@ -366,7 +389,8 @@ export default {
                 creating: {
                     active: false,
                     form: {
-                        unit: 'NULL',
+                        o_unit: 'NULL',
+                        i_unit: 'NULL',
                         category: 'NULL',
                        
                     },
@@ -381,7 +405,7 @@ export default {
                 selected_category: '',
                 selected: [],
                 hideColumns:['id'],
-                textCenterColumns:['unit','i_unit_quantity','i_unit_price','i_line_price','o_unit_quantity','o_unit_price','o_line_price'],
+                textCenterColumns:['i_unit','o_unit','i_unit_quantity','i_unit_price','i_line_price','o_unit_quantity','o_unit_price','o_line_price'],
                 limit:50,
                 quickSearchQuery: '',
 
@@ -402,7 +426,6 @@ export default {
         filteredRecords () {
                 // return this.response.records;
                 let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
                 
 
                 // quick search query
@@ -415,10 +438,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -526,8 +547,6 @@ export default {
             }).catch((error) => {
                 if (error.response.status === 422) {                        
                     this.editing.errors = error.response.data.errors
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                 }
             })
         },
@@ -535,11 +554,11 @@ export default {
             this.creating.form['orders_to_supplier_id'] = this.orders_to_supplierId
              this.creating.form['i_line_price']= this.creating.form['i_unit_price'] * this.creating.form['i_unit_quantity']
             axios.post(`/api/datatable/invoice_from_supplier_line`, this.creating.form).then((response) => {
-            // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                 this.getRecords().then(() => {
                     this.creating.active = true
                     this.creating.form = {}
-                    this.creating.form['unit'] = 'NULL'
+                    this.creating.form['o_unit'] = 'NULL'
+                    this.creating.form['i_unit'] = 'NULL'
                     this.creating.form['category'] = 'NULL'
                     this.creating.errors = []
                 })
@@ -552,7 +571,6 @@ export default {
         },
             
         destroy(record){
-        // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
             if(!window.confirm(`Are you sure?`)){
                 return

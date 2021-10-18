@@ -7,9 +7,9 @@
     </button>
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
             <div class="w-full p-1">
-            <div class="flex justify-between pt-4">
+            <!-- <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Order Detail</div>
-                <div>
+                <div  v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser)">
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
                     v-if="response.allow.creation"
@@ -18,13 +18,12 @@
                     </a>
                 </div>
                 
-            </div>
+            </div> -->
 
-            <div class="flex justify-center" v-if="response.allow.creation && creating.active">
+            <!-- <div class="flex justify-center" v-if="response.allow.creation && creating.active">
                 <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
                 <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
                     <form action="#" @submit.prevent="store">
-                        <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >
                             <label :for="column" class="sr-only"> </label>
                             <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
@@ -33,20 +32,18 @@
                             <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
                                     <strong>{{ creating.errors[column][0] }}</strong>
                             </div>
-                        </div>
-                        
+                        </div>                       
                         <div class="text-center">
                             <button type="submit" class="bg-indigo-500 hover:bg-indigo-800 text-white px-4 py-2 rounded">Create</button>
                         </div>
-                    
                     </form>
 
                 </div>
-        </div>
+            </div> -->
         
         <!-- show hide column section -->
-        <div id="show_hide_section" class="text-center mx-4 space-y-2">
-            <p> <b>Show Hide Column </b></p>
+        <div id="show_hide_section" class="text-center mx-4 mt-4 space-y-2">
+            <h2> <b>Show Hide Column </b></h2>
             <ul id="hide_show_column_section" class="width-3/4 flex flex-wrap justify-center">
                 <li  class="mr-2" v-for="column in response.displayable" :key="column">
                     <input type="checkbox" 
@@ -65,7 +62,7 @@
 
             <div class="flex flex-row mb-1 sm:mb-0">
                <!-- delete with selected -->
-                <div class="dropdown inline-block relative z-10"  v-if="selected.length">
+                <!-- <div class="dropdown inline-block relative z-10"  v-if="selected.length">
                     <button 
                     class="border-blue-500 border horver:bg-blue-700 text-gray-700 font-semibold py-1 px-1 inline-flex items-center"
                     @click.prevent="selected_dropdown_active = !selected_dropdown_active"
@@ -78,7 +75,7 @@
                     >
                     <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li>
                     </ul>
-                </div>
+                </div> -->
                 <div class="relative">
                     <select v-model = "limit" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
@@ -135,12 +132,12 @@
                 <table class="min-w-max w-full table-auto">
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <!-- <th class="py-2" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
                                     >
-                            </th>
+                            </th> -->
                             <template v-for="column in response.displayable" :key="column">
                             <th  
                             class="text-left"  
@@ -163,14 +160,14 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100">
-                            <td v-if="canSelectItems" class=" text-center">
+                            <!-- <td v-if="canSelectItems" class=" text-center">
                                 <input type="checkbox" :value="record.id" v-model="selected">
-                            </td>
+                            </td> -->
                             <template v-for="columnValue,column in record" :key="column">
                             <td class="py-2 text-left"  v-if="!hideColumns.includes(column)">
                                 <template v-if="editing.id === record.id && isUpdatable(column)">
                                 <div >
-                                   <template v-if="column=='unit'">
+                                   <template v-if="column=='o_unit'">
                                         <!-- {{record}} -->
                                         <select 
                                         class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
@@ -192,7 +189,6 @@
                                     </template> 
 
                                     <template v-else-if="column=='category'">
-                                    <!-- {{record}} -->
                                     <select
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                      :class="{
@@ -215,25 +211,20 @@
                                 <template v-else-if="column=='o_line_price'">
                                      <input disabled type="text"  
                                         class="disabled:opacity-50  text-center  rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700"
-                                        v-model="editing.form[column]"
-                                        
+                                        v-model="editing.form[column]"                                      
                                         >                           
-                                </template>
-                                
-                                    <template v-else>
-                                    
+                                </template>                               
+                                    <template v-else>                                  
                                         <input type="text"  
                                         class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                         v-model="editing.form[column]"
                                         :class="{ 'border-3 border-red-700': editing.errors[column] , 'text-center': textCenterColumns.includes(column)}"
-
                                         > 
                                         <br>
                                         <span v-if="editing.errors[column]" class="text-red-700 font-bold">
                                             <strong>{{ editing.errors[column][0] }}</strong>
                                         </span>
-                                    </template>  
-                                    
+                                    </template>                                     
                                 </div>
                                 </template>
                                 <template v-else>
@@ -345,9 +336,7 @@ export default {
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 // return this.response.records;
-                let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
-                
+                let data = this.response.records;                
 
                 // quick search query
                 data = data.filter((row) => {
@@ -359,10 +348,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -407,11 +394,8 @@ export default {
    {
             
         getRecords(){
-            // console.log(this.getQueryParameters())
             return axios.get(`/api/datatable/order_to_supplier_line?${this.getQueryParameters()}`).then((response)=> {
                 this.response = response.data.data;
-                console.log("🚀 ~ file: supplier.vue ~ line 305 ~ returnaxios.get ~  this.response",  this.response)
-                console.log("record id is: " + this.order_to_supplierId);
             })
         },
         getQueryParameters () {
@@ -456,25 +440,18 @@ export default {
             }).catch((error) => {
                 if (error.response.status === 422) {                        
                     this.editing.errors = error.response.data.errors
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                 }
             })
         },
         store () {    
             axios.post(`/api/datatable/order_to_supplier_line`, this.creating.form).then((response) => {
-            // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                 this.getRecords().then(() => {
                     this.creating.active = true
                     this.creating.form = {
 
                     }
                     this.creating.errors = []
-                        if(response.data=='successfully created') {
-                        console.log('created successfully !')
-                    } else {
-                        alert ('unsucessfully created! please contact Dion')
-                    }
+                        
                 })
             }).catch((error) => {
                 if (error.response.status === 422) {
@@ -485,7 +462,6 @@ export default {
         },
             
         destroy(record){
-        // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
             if(!window.confirm(`Are you sure?`)){
                 return

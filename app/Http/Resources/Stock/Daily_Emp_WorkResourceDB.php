@@ -26,6 +26,7 @@ class Daily_Emp_WorkResourceDB extends JsonResource
                 'role_id'=> $this->intermediate_product->role_id,
                 'Status'=> $this->Status,
                 'Note'=> $this->Note,
+                'permission'=> $this->permissions->map->only(['id', 'name']),
                
     //         'id'=>$this->id,
     //         'name' => $this->name,

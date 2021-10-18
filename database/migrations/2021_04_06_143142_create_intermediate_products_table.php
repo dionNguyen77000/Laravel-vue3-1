@@ -16,7 +16,7 @@ class CreateIntermediateProductsTable extends Migration
         Schema::create('intermediate_products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('slug')->nullable()->unique();
             $table->float('price')->default(0);
             // $table->unsignedBigInteger('unit_id');
             // $table->foreign('unit_id')->references('id')->on('units');
@@ -26,6 +26,8 @@ class CreateIntermediateProductsTable extends Migration
             ->onDelete('set null');
             $table->text('description')->nullable();
             $table->string('location')->nullable();
+            $table->foreignId('location_id')->nullable()->constrained()->onUpdate('cascade')
+            ->onDelete('set null');
             $table->timestamps();
         });
     }

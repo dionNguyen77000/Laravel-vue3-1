@@ -26,22 +26,24 @@
                 </div>             
             </div>
         </template>   
-      	<div class="px-5 py-4 flex justify-end">
-            <button @click.prevent="edit()" v-if="editing.id !== id"
-            class="bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
-                Edit
-            </button>
-            <template v-if="editing.id === id"> 
-                <button @click.prevent="editing.id = null"
-                class="bg-transparent border border-gray-700 text-sm hover:text-white hover:bg-green-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
-                    Cancel
-                </button>
-                <button @click.prevent="update()"
-                class="bg-blue-500 text-white text-sm hover:bg-blue-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
-                    Save
-                </button>              
-            </template>
-      	   
+      	<div  class="px-5 py-4 flex justify-end">
+              <template v-if="(theRecord.user_id == getAuth.user.id) || isFirstLevelUser">
+                    <button @click.prevent="edit()" 
+                    v-if="editing.id !== id"
+                    class="bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
+                        Edit
+                    </button>
+                    <template v-if="editing.id === id"> 
+                        <button @click.prevent="editing.id = null"
+                        class="bg-transparent border border-gray-700 text-sm hover:text-white hover:bg-green-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
+                            Cancel
+                        </button>
+                        <button @click.prevent="update()"
+                        class="bg-blue-500 text-white text-sm hover:bg-blue-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
+                            Save
+                        </button>              
+                    </template>
+              </template>
 
           </div>
         </div>
@@ -54,8 +56,9 @@
 
 
 <script>
+import {mapGetters } from 'vuex'
 export default {
-    props: ['id','note','table_name'],
+    props: ['id','note','table_name','theRecord'],
    data() {
             return {
               editing: {
@@ -67,7 +70,14 @@ export default {
         },
        
  computed: {
-   
+    ...mapGetters({
+        getAuth: 'auth/getAuth',
+        firstLevelUsers: 'firstLevelUsers' ,
+        secondLevelUsers: 'secondLevelUsers' ,
+        thirdLevelUsers: 'thirdLevelUsers' ,
+        fourthLevelUsers: 'fourthLevelUsers' ,
+
+    }),
     filteredRecords () {
               
     },
@@ -81,12 +91,7 @@ export default {
         
         return rolNameArray;
     },
-    notAllowToEditExceptPeopleInCharge(){
-        if(this.getRoleNames.includes('Admin') || this.getRoleNames.includes('Manager')) {
-            this.notAllowEditExceptPeopleInCharge = []
-        }
-        return this.notAllowEditExceptPeopleInCharge
-    },
+   
     isFirstLevelUser() {
         let firstLevelUser = false;
         this.firstLevelUsers.forEach(element => {
@@ -116,7 +121,6 @@ export default {
         update() {
         this.editing.form.note = this.note
          axios.post(`/api/datatable/${this.table_name}/updateNote/${this.id}`, this.editing.form).then((response) => {
-                console.log(this.refreshRecords);
                 this.refreshRecords()
                  this.editing.id = null
                 this.editing.form.note = null     

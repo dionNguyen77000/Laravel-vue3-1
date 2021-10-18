@@ -1,4 +1,5 @@
 <template>
+
 <div class="backdrop overflow-y-auto" @click.self="closeModal">
   <div class="modal p-6" id="supplier" > 
       <button @click="closeModal" type="button" 
@@ -35,13 +36,16 @@
                                         </option>
                                     </select>         
                             </template>    
-                             <template v-else-if="column=='unit'">
+                             <template v-else-if="column=='i_unit'">
                                    <label :for="column">Unit : </label> 
                                     <select :name="column" :id="column" v-model="creating.form[column]">
                                         <option :value="option" v-for="option in response.unitOptions" :key="option">
                                             {{option}}
                                         </option>
-                                    </select>                            
+                                    </select>   
+                                     <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
+                                        <strong>{{ creating.errors[column][0] }}</strong>
+                                    </div>                         
                             </template>    
                              <template v-else-if="column=='i_line_price'">
                                   <label :for="column" class="sr-only"> </label>
@@ -67,7 +71,7 @@
 
                 </div>
         </div>
-        
+
         <!-- show hide column section -->
         <div id="show_hide_section" class="text-center mx-4 space-y-2">
             <p> <b>Show Hide Column </b></p>
@@ -100,7 +104,9 @@
                     <ul class="dropdown-menu absolute text-gray-700 pt-1"
                     :class="selected_dropdown_active ? 'block': 'hidden'"
                     >
-                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li>
+                    <!-- <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li> -->
+                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "addAmountFromInvoiceToStock(selected)">Add To Stock</a></li>
+                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "removeAmountFromInvoiceToStock(selected)">Remove From Stock</a></li>
                     </ul>
                 </div>
                 <div class="relative">
@@ -159,7 +165,9 @@
                 <table class="min-w-max w-full table-auto">
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <th class="py-2"
+                                v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && canSelectItems"
+                            >
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -187,7 +195,9 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100">
-                            <td v-if="canSelectItems" class=" text-center">
+                            <td  class="text-center"
+                            v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && canSelectItems"
+                            >
                                 <input type="checkbox" :value="record.id" v-model="selected">
                             </td>
                             <template v-for="columnValue,column in record" :key="column">
@@ -196,16 +206,14 @@
                                 <!-- Edit mode -->
                                 <template v-if="editing.id === record.id && isUpdatable(column)">
                                 <div >
-                                    
-                                    <template v-if="column=='unit'">
-                                        <!-- {{record}} -->
+                                    <template v-if="column=='i_unit'">
                                         <select 
                                         class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                         :class="{
-                                            'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                            'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                         }"
                                         :name="column" :id="column" 
-                                        :disabled= "notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                        :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                         v-model="editing.form[column]"
                                         >
                                             <template v-for="option in response.unitOptions" >   
@@ -216,18 +224,21 @@
                                                 </template>
                                             </template>   
                                         </select>
+                                         <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                            <strong>{{ editing.errors[column][0] }}</strong>
+                                        </span>
                                     </template> 
 
                                     <template v-else-if="column=='category'">
                                     <!-- {{record}} -->
                                     <select
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
-                                     :class="{
-                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                    :class="{
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
                                     :name="column" :id="column" 
                                     v-model="editing.form[column]"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     >
                                         <template v-for="option in response.allCategoryOptions" >
                 
@@ -238,22 +249,18 @@
                                             </template>
                                         </template>                                       
                                     </select>                                   
-                                </template> 
-                                <template v-else-if="column=='i_line_price'">
-                                     <input disabled type="text"  
-                                        class="disabled:opacity-50  text-center  rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700"
-                                        v-model="editing.form[column]"
-                                        
-                                        >                           
-                                </template>
+                                    </template>                               
                                 
-                                    <template v-else>
-                                    
+                                    <template v-else>                                  
                                         <input type="text"  
                                         class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                         v-model="editing.form[column]"
-                                        :class="{ 'border-3 border-red-700': editing.errors[column] , 'text-center': textCenterColumns.includes(column)}"
-
+                                        :class="{ 
+                                            'border-3 border-red-700': editing.errors[column] , 
+                                            'text-center': textCenterColumns.includes(column),
+                                            'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
+                                        }"
+                                        :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)"                                  
                                         > 
                                         <br>
                                         <span v-if="editing.errors[column]" class="text-red-700 font-bold">
@@ -275,7 +282,7 @@
                             
                             
                             <td>
-                                    <div>
+                                <div>
                                 <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
                                 class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
                                 >
@@ -287,7 +294,7 @@
                                 >
                                 Delete
                                 </a>  
-                                    </div>
+                                </div>
                                 <div>
                                 <template v-if="editing.id === record.id"> 
                                     <a href="#" @click.prevent="editing.id = null"  v-if="editing.id === record.id"
@@ -343,7 +350,7 @@ export default {
                 creating: {
                     active: false,
                     form: {
-                        unit: 'NULL',
+                        i_unit: 'NULL',
                         category: 'NULL',
                        
                     },
@@ -357,15 +364,48 @@ export default {
                 
                 selected_category: '',
                 selected: [],
+
+                    
+                // Hide Column Section : checkbox of columns that completely disappear
+                unshownColumns:['img'],
+
+                // columns hidden - can be show by unclick the radio buttons
                 hideColumns:['id'],
-                textCenterColumns:['unit','i_unit_quantity','i_unit_price','i_line_price'],
+
+
+                // columns unshown in edit mode
+                unshownColumnsInEditMode:['img_thumbnail'],
+
+                // columns unshown according to user levels
+                secondLevel_ColumnNotAllowsToShow: [
+                                    
+                ],
+                
+                thirdLevel_ColumnNotAllowsToShow: [
+                ],     
+                            
+                fourthLevel_ColumnNotAllowsToShow: [
+                    
+                ],
+
+                // columns does not allow to edit according to user levels
+                secondLevel_ColumnNotAllowsToEdit: [
+                
+                ],                
+
+                thirdLevel_ColumnNotAllowsToEdit: [
+                     
+                ],     
+                            
+                fourthLevel_ColumnNotAllowsToEdit: [
+                   'goods_material','i_line_price','category'
+                ],
+                
+                textCenterColumns:['i_unit','i_unit_quantity','i_unit_price','i_line_price'],
                 dollarsSymbolColumns:['i_unit_price','i_line_price'],
 
                 limit:50,
                 quickSearchQuery: '',
-
-                notAllowEditExceptPeopleInCharge: [],
-
 
                 selected_dropdown_active: false,
                 
@@ -374,14 +414,13 @@ export default {
         },
        
  computed: {
-    ...mapGetters({
-        getAuth: 'auth/getAuth'
+      ...mapGetters({
+            getAuth: 'auth/getAuth',
         }),
     ...mapState(['sideBarOpen']),
         filteredRecords () {
                 // return this.response.records;
                 let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
                 
 
                 // quick search query
@@ -394,10 +433,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -411,36 +448,57 @@ export default {
         canSelectItems() {
             return this.filteredRecords.length <= 500
         },
-        getRoleNames(){
-            const rolNameArray = [];
-            const allRoleNames = this.getAuth.user.roles;
-            allRoleNames.forEach(element => {
-                rolNameArray.push(element.name)
-            });
-            
-            return rolNameArray;
 
-        },
-        notAllowToEditExceptPeopleInCharge(){
-            if(this.getRoleNames.includes('Admin') || this.getRoleNames.includes('Manager')) {
-                this.notAllowEditExceptPeopleInCharge = []
-            }
-            return this.notAllowEditExceptPeopleInCharge
-        },
-        isFirstLevelUser() {
-            let firstLevelUser = false;
-            this.firstLevelUsers.forEach(element => {
-                if(this.getRoleNames.includes(element)){
-                    firstLevelUser = true;
-                }
-            });
-            return firstLevelUser;
-        },
+       
         estimated_invoice_total_price(){
             return this.response.records.reduce((sum, record) => {
             return sum += record.i_line_price;
         }, 0);
-        }
+        },
+         columnsNotAllowToShowAccordingToUserLevel(){
+                if(this.getAuth.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.getAuth.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.getAuth.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToShow ;
+                } 
+                else if (this.getAuth.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToShow ;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToShow;
+            },
+
+            columnsNotAllowToEditAccordingToUserLevel(){
+                if(this.getAuth.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.getAuth.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToEdit;
+                } 
+                else if (this.getAuth.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToEdit ;
+                } 
+                else if (this.getAuth.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToEdit ;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToEdit;
+            },
+
+            columnsNotAllowToShowAccordingToUserLevel(){
+                if(this.getAuth.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.getAuth.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.getAuth.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.getAuth.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToShow;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToShow;
+            },      
   },
 
    methods: 
@@ -499,20 +557,18 @@ export default {
             }).catch((error) => {
                 if (error.response.status === 422) {                        
                     this.editing.errors = error.response.data.errors
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                    console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
+                
                 }
             })
         },
         store () {    
             this.creating.form['orders_to_supplier_id'] = this.orders_to_supplierId
-             this.creating.form['i_line_price']= this.creating.form['i_unit_price'] * this.creating.form['i_unit_quantity']
+            this.creating.form['i_line_price']= this.creating.form['i_unit_price'] * this.creating.form['i_unit_quantity']
             axios.post(`/api/datatable/invoice_from_supplier_line`, this.creating.form).then((response) => {
-            // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                 this.getRecords().then(() => {
                     this.creating.active = true
                     this.creating.form = {}
-                    this.creating.form['unit'] = 'NULL'
+                    this.creating.form['i_unit'] = 'NULL'
                     this.creating.form['category'] = 'NULL'
                     this.creating.errors = []
                 })
@@ -525,22 +581,65 @@ export default {
         },
             
         destroy(record){
-        // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
             if(!window.confirm(`Are you sure?`)){
                 return
             }
 
-            axios.delete(`/api/datatable/order_to_supplier_line/${record}`).then(()=>{
+            axios.post(`/api/datatable/invoice_from_supplier_line/${record}`).then((response)=>{
+                if(response.data = "cannot delete - invoice items existing in order to supplier"){
+                    alert('Cannot delete this item. Please set Quantity to 0 instead.')
+                }
                 this.selected= [],
                 this.selected_dropdown_active = false,
                 this.getRecords()
             })
             
         },
+        addAmountFromInvoiceToStock(record){
+        //   return;
+            axios.post(`/api/datatable/invoice_from_supplier_line/addAmountFromInvoiceToStock/${record}`).then((response)=>{
+              
+              if (response.data == 'Added Successfully'){
+                  window.alert('Added Update sucessfully to your stock !')
+              } else {
+                let nameOfGM_CannotBeUpdated = [];
+                response.data.forEach(element => {
+                   nameOfGM_CannotBeUpdated.push('\n ***' + element.goods_material)
+                });
+
+                alert('To be added or deducted the quantity, name and unit of products in your system must be exactly the same as in invoices. \n Some Goods Materials below can not be added due to the different name or different unit between invoice and your stock. \n Please re-check the name or unit of your products and added manually. \n' 
+                + nameOfGM_CannotBeUpdated.toString() )
+
+
+              }
+                this.getRecords()
+            })
+            
+        },
+        removeAmountFromInvoiceToStock(record){
+        //   return;
+            axios.post(`/api/datatable/invoice_from_supplier_line/removeAmountFromInvoiceToStock/${record}`).then((response)=>{
+            if (response.data == 'Removed Successfully'){
+                  window.alert('Removed Update sucessfully to your stock !')
+              } else {
+                let nameOfGM_CannotBeUpdated = [];
+                response.data.forEach(element => {
+                   nameOfGM_CannotBeUpdated.push('\n ***' + element.goods_material)
+                });
+
+                alert('To be added or deducted the quantity, name and unit of products in your system must be exactly the same as in invoices. \n Some Goods Materials below can not be removed due to the different name or different unit between invoice and your stock. \n Please re-check the name or unit of your products and added manually. \n' 
+                + nameOfGM_CannotBeUpdated.toString() )
+              }
+                this.getRecords()               
+            })
+            
+        },
          closeModal(){
             this.$emit('close')
-        }
+        },
+
+             
             
     },
     mounted() {

@@ -29,13 +29,15 @@ class Intermediate_ProductResourceDB extends JsonResource
             'prepared_point'=> $this->prepared_point,
             'coverage'=> $this->coverage,
             'required_qty'=> $this->required_qty,
-            'permission_id'=> $this->permission_id,
+            // 'permission_id'=> $this->permission_id,
             'Preparation'=> $this->Preparation,
             'Active'=> $this->Active,
             'img' => $this->img,
             'img_two' => $this->img_two,
             'img_three' => $this->img_three,
-            'location' => $this->location,
+            'location_id' => $this->location_id,
+            'permissions' =>  $this->permissions->map->only(['id', 'name']),   
+
           
         ];
     }

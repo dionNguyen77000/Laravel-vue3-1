@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Reminder\PostController;
 use App\Http\Controllers\DataTable\RoleController;
 use App\Http\Controllers\DataTable\UnitController;
+use App\Http\Controllers\DataTable\LocationController;
 use App\Http\Controllers\DataTable\UserController;
 use App\Http\Controllers\DataTable\CategoryController;
 use App\Http\Controllers\DataTable\SupplierController;
@@ -62,6 +63,9 @@ Route::resource('datatable/categories', CategoryController::class);
 Route::resource('datatable/suppliers', SupplierController::class);
 Route::resource('datatable/units', UnitController::class);
 
+Route::post('datatable/locations/saveImage/{id}', [LocationController::class, 'saveImage']);
+Route::resource('datatable/locations', LocationController::class);
+
 Route::get('datatable/goods_material/fileExport/{supplier_id}', [Goods_MaterialController::class, 'fileExport']);
 
 
@@ -88,6 +92,7 @@ Route::post('datatable/daily_emp_work/updateNote/{order_id}', [Daily_Emp_WorkCon
 
 Route::post('datatable/intermediate_product/saveImage/{id}', [Intermediate_ProductController::class, 'saveImage']);
 
+
 Route::resource('datatable/orders_to_supplier', Orders_To_SupplierController::class);
 Route::post('datatable/orders_to_supplier/updateNote/{order_id}', [Orders_To_SupplierController::class,'updateNote']);
 Route::resource('datatable/order_to_supplier_line', Order_To_Supplier_LineController::class);
@@ -98,6 +103,8 @@ Route::post('datatable/invoices_to_supplier/updateNote/{order_id}', [Invoices_Fr
 
 
 Route::resource('datatable/invoice_from_supplier_line', Invoice_From_Supplier_LineController::class);
+Route::post('datatable/invoice_from_supplier_line/addAmountFromInvoiceToStock/{ids}', [Invoice_From_Supplier_LineController::class, 'addAmountFromInvoiceToStock']);
+Route::post('datatable/invoice_from_supplier_line/removeAmountFromInvoiceToStock/{ids}', [Invoice_From_Supplier_LineController::class, 'removeAmountFromInvoiceToStock']);
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');

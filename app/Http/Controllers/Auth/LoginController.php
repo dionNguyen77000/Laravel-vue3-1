@@ -22,8 +22,6 @@ class LoginController extends Controller
 
     public function store(Request $request)
     {   
-        // dd($request->remember);
-         //validation
        
         $this->validate($request,[
             'username' => 'required|max:255',
@@ -37,7 +35,6 @@ class LoginController extends Controller
         }
         return redirect()->route('dashboard');
     
-        // dd('ok');
     }
 
     public function action(Request $request)

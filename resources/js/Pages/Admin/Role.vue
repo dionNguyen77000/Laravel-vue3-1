@@ -172,7 +172,7 @@
                                         </span>
                                     </template>
                                     <template v-else-if="column=='permissions'">
-                                        <ul id="permissions" class="width-3/4 flex flex-wrap">
+                                        <ul id="permissions" class="w-40 flex flex-wrap">
                                             <li  class="mr-2 w-full" v-for="option,index in response.permissionOptions" :key="index">
                                                 <input type="checkbox"
                                                 :value="index" 
@@ -251,11 +251,13 @@
 
 import { mapState } from 'vuex'
 import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
   middleware: [
-        //   redirectIfNotCustomer
-      ],
+     redirectIfNotFirstLevelUser,redirectIfNotSecondLevelUser
+  ],
    data() {
             return {
                 response: {
@@ -292,7 +294,7 @@ export default {
                 
                 
                 selected: [],
-                hideColumns:[],
+                hideColumns:['duties'],
                 limit:50,
                 quickSearchQuery: '',
 
@@ -307,7 +309,6 @@ export default {
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
                 
 
                 // quick search query
@@ -320,10 +321,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -348,11 +347,7 @@ export default {
                 // })
 
                  return axios.get(`/api/datatable/roles?${this.getQueryParameters()}`).then((response)=> {
-                    this.response = response.data.data;
-                    // console.log('our records', this.response)
-
-                    console.log("🚀 ~ file: UserMContent.vue ~ line 208 ~ returnaxios.get ~ response.data", response.data)
-                    
+                    this.response = response.data.data;                   
                 })
             },
             getQueryParameters () {
@@ -371,11 +366,7 @@ export default {
                 this.editing.id = record.id
                 this.editing.form = _.pick(record, this.response.updatable)
                 this.editing.form.assignedPermissionIds = [];
-                
-                // this.editing.form.permissionIds = 
-                console.log('record is: ' + record.id)
-                console.log('record is: ' + record.name)
-               
+                               
                 for (const permissionId in record.permissions) {
                     this.editing.form.assignedPermissionIds.push(permissionId)
                 }
@@ -403,13 +394,11 @@ export default {
                 }).catch((error) => {
                     if (error.response.status === 422) {                        
                         this.editing.errors = error.response.data.errors
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                     }
                 })
             },
             store () {    
                 axios.post(`/api/datatable/roles`, this.creating.form).then((response) => {
-                // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                     this.getRecords().then(() => {
                         this.creating.active = true
                         this.creating.form = {
@@ -426,8 +415,6 @@ export default {
             },
                
             destroy(record){
-            // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy    ~ record", record)
-
                 if(!window.confirm(`Are you sure?`)){
                     return
                 }

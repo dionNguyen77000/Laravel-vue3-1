@@ -21,13 +21,26 @@
                             <form action="#" @submit.prevent="store">
                                 <!-- @csrf -->
                                 <div class="mb-2" v-for="column in response.updatable" :key="column" >
-                                    <label :for="column" class="sr-only"> </label>
-                                    <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
-                                    :class="{ 'border-red-500': creating.errors[column] }"
-                                    v-model="creating.form[column]">
-                                    <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
-                                         <strong>{{ creating.errors[column][0] }}</strong>
-                                    </div>
+                                     <template v-if="column=='Active'">
+                                        <label  class="font-semibold" :for="column">Active : </label>    
+                                        <select :name="column" :id="column" v-model="creating.form[column]">
+                                            <option  value="1">Yes</option>
+                                            <option  value="0">No</option>                              
+                                        </select>
+                                    </template>
+                                     <template v-else-if="column=='id'">
+                                       
+                                    </template>
+                                    <template v-else>
+                                        <label :for="column" class="sr-only"> </label>
+                                        <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
+                                        :class="{ 'border-red-500': creating.errors[column] }"
+                                        v-model="creating.form[column]">
+                                        <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
+                                            <strong>{{ creating.errors[column][0] }}</strong>
+                                        </div>
+                                    </template>
+                                   
                                 </div>
 
                                 <div class="mb-2">
@@ -47,9 +60,7 @@
                                     >
                                 </div>
                                 
-
-                                 Roles : 
-                                
+                                <label  class="font-semibold" for="Active">Roles : </label>    
                                 <ul id="roles" class="width-3/4 flex flex-wrap">
                                     <li  class="mr-2" v-for="option,index in response.roleOptions" :key="index">
                                         <input type="checkbox"
@@ -61,6 +72,8 @@
                                         {{ option }}
                                     </li>
                                 </ul>
+
+                              
                                  <!-- Permissions : 
                                 
                                 <ul id="permissions" class="width-3/4 flex flex-wrap">
@@ -120,18 +133,26 @@
                             </svg>
                         </div>
                     </div>
-                    <div class="relative">
-                        <select
-                            class="appearance-none h-full rounded-r border-t sm:rounded-r-none sm:border-r-0 border-r border-b block appearance-none w-full bg-white border-gray-400 text-gray-700 py-2 px-2  leading-tight focus:outline-none focus:border-l focus:border-r focus:bg-white focus:border-gray-500 text-sm">
-                            <option>All</option>
-                            <option>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                        <div
-                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                            </svg>
+                   <!-- Active And Inactive Filter -->
+                    <div class="flex flex-row mb-1 sm:mb-0">          
+                        <div class="relative">
+                            <select v-model="selected_active" @change="getRecords"
+                                class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                                <option  value= ''>Active&Inactive</option>         
+                                <option value="0">
+                                    Inactive
+                                </option>
+                                <option value="1" >
+                                    Active
+                                </option>
+                            
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -233,7 +254,46 @@
                                    <!-- If record is updated -->
                                     <template v-if="editing.id === record.id">
                                         <div>
-                                        <template v-if= "isUpdatable(column)">
+                                        <template v-if="column=='id'">
+                                            <input type="text"  
+                                            class="w-10 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                            v-model="editing.form[column]"
+                                            :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                            > 
+                                            <br>
+                                            <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                                <strong>{{ editing.errors[column][0] }}</strong>
+                                            </span>
+                                        </template>
+                                        <template v-else-if="column=='roles'">
+                                            <ul id="roles" class="ml-2 w-40 flex flex-wrap">
+                                                <li  class="w-full" v-for="option,index in response.roleOptions" :key="index">
+                                                    <input type="checkbox"
+                                                    :value="index" 
+                                                    :id="option" 
+                                                    v-model="editing.form.assignedRoleIds"
+                                                    >
+                                                    <label :for="option">{{ option }} ,</label>          
+                                                </li>
+                                            </ul>
+                                        </template>
+                                        <template v-else-if="column=='permissions'">
+                                            
+                                        </template>
+                                                  
+                                        <template v-else-if="column=='Active'">               
+                                            <select
+                                            class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                            :name="column" :id="column" 
+                                            v-model="editing.form[column]">
+                                            <option  value="1">Yes</option>
+                                            <option  value="0">No</option>
+                                        
+                                            </select>
+                                        </template> 
+
+                                        <template v-else>
+
                                             <input type="text"  
                                             class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                             v-model="editing.form[column]"
@@ -244,19 +304,6 @@
                                                 <strong>{{ editing.errors[column][0] }}</strong>
                                             </span>
                                         </template>
-
-                                        <template v-else-if="column=='roles'">
-                                            <ul id="roles" class="width-3/4 flex flex-wrap">
-                                                <li  class="mr-2 w-full" v-for="option,index in response.roleOptions" :key="index">
-                                                    <input type="checkbox"
-                                                    :value="index" 
-                                                    :id="option" 
-                                                    v-model="editing.form.assignedRoleIds"
-                                                    >
-                                                    <label :for="option">{{ option }} ,</label>          
-                                                </li>
-                                            </ul>
-                                        </template>
                                     
                                         </div>
                                     </template>
@@ -266,22 +313,18 @@
                                             <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
                                                   {{ option.name }}
                                             </div>
-                                            <!-- <ul id="roles" class="flex flex-wrap">
-                                                <li  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
-                                                    {{ option.name }} <br>
-                                                </li>
-                                            </ul>                                                             -->
                                         </template>  
                                       
                                         <template v-else-if="column=='permissions'">
                                             <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
                                                   {{ option.name }}
-                                            </div>
-                                            <!-- <ul id="permissions" class="flex flex-wrap">
-                                                <li  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
-                                                    {{ option.name }} ,
-                                                </li>
-                                            </ul>                                                             -->
+                                            </div>                                                                                             
+                                        </template>  
+
+                                        <template v-else-if="column=='email'">
+                                            <div class="w-40 flex items-center">
+                                                <span class="font-medium">{{columnValue}}</span>
+                                            </div>                                                
                                         </template>  
 
 
@@ -365,11 +408,13 @@
 
 import { mapState } from 'vuex'
 import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
   middleware: [
-        //   redirectIfNotCustomer
-      ],
+     redirectIfNotFirstLevelUser,redirectIfNotSecondLevelUser
+  ],
    data() {
             return {
                 response: {
@@ -385,11 +430,13 @@ export default {
                 creating: {
                     active: false,
                     form: {
+                        Active: 1,
                         assignedPermissionIds: [],
                         assignedRoleIds:[],
                     },
                     errors: [],
                 },
+                
                 editing: {
                     id: null,
                     form: {
@@ -406,10 +453,10 @@ export default {
                 
                 
                 selected: [],
-                hideColumns:['password','intermediateProducts'],
+                hideColumns:['password','Active','email','username'],
                 limit:50,
                 quickSearchQuery: '',
-
+                selected_active: '1',
                 selected_dropdown_active: false,
                 
                
@@ -422,7 +469,6 @@ export default {
         filteredRecords () {
                 // return this.response.records;
                 let data = this.response.records;
-                // console.log("🚀 ~ file: DataTable.vue ~ line 49 ~ filteredRecords ~ data", data)
                 
 
                 // quick search query
@@ -435,10 +481,8 @@ export default {
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
                     data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -472,13 +516,14 @@ export default {
 
                  return axios.get(`/api/datatable/users?${this.getQueryParameters()}`).then((response)=> {
                     this.response = response.data.data;
-                    console.log("🚀 ~ file: UserMContent.vue ~ line 208 ~ returnaxios.get ~ response.data", response.data)
                     
                 })
             },
             getQueryParameters () {
                 return queryString.stringify({
                     limit: this.limit,
+                    Active: this.selected_active,
+
                     // ...this.search
                 })
                     
@@ -500,12 +545,10 @@ export default {
                 const rolesOfUser = record.roles;
                 for (let index = 0; index < rolesOfUser.length; index++) {
                     const element = rolesOfUser[index];
-                    console.log('record id is: ' + element.id)
-                    console.log('record name is: ' + element.name)
+                  
                      this.editing.form.assignedRoleIds.push(element.id)
                     
                 }
-                //   console.log(this.editing.form.assignedRoleIds)
             },
             isUpdatable (column) {
                 return this.response.updatable.includes(column)
@@ -530,14 +573,11 @@ export default {
                 }).catch((error) => {
                     if (error.response.status === 422) {                        
                         this.editing.errors = error.response.data.errors
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
                     }
                 })
             },
             store () {    
-                console.log(this.creating.form)
                 axios.post(`/api/datatable/users`, this.creating.form).then((response) => {
-                // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
                     this.getRecords().then(() => {
 
                         this.creating.active = true
@@ -556,8 +596,6 @@ export default {
             },
                
             destroy(record){
-            // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
-
                 if(!window.confirm(`Are you sure?`)){
                     return
                 }

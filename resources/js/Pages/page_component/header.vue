@@ -9,14 +9,20 @@
     
 
     <nav class="w-full z-40 flex justify-between flex-wrap">
-        <!-- {{getAuth}} -->
         <ul class="flex items-center">
           <div id="logo">
             <img :src="'/img/logo_backend.png'" alt="Golden Lor Yarrabilba"
             class="hidden sm:block  text-center h-14 ">
           </div>
-            <router-link class="mr-4" to="/"> Home </router-link>
-            <router-link class="mr-4" :to="{name:'Dashboard'}">Dashboard</router-link>
+            <!-- <router-link class="mr-4" to="/"> Home </router-link> -->
+            <template v-if="
+              getAuth.isFirstLevelUser 
+              || getAuth.isSecondLevelUser 
+              || getAuth.isThirdLevelUser
+              || getAuth.isFourthLevelUser
+              ">
+            <router-link class="mr-4" :to="{name:'DashboardHome'}">Dashboard</router-link>
+            </template>
             <router-link class="mr-4" :to="{name:'Reminder'}">Reminder</router-link>
         </ul>
         <ul class="flex items-center">
@@ -50,7 +56,7 @@ import { mapState } from 'vuex'
 import {mapGetters, mapActions} from 'vuex'
 
 export default {
-    name: 'Navbar',
+    name: 'Header',
     
     data() {
     },

@@ -96,7 +96,6 @@ export default {
                         this.loginForm.fields.password = ''
                         this.loginForm.errors = []
 
-                        // console.log('our Data is', response.data);
                         this.setUpLoginedAuth(response.data.meta.token).then(()=>{
                             this.$router.replace({
                                 name: 'Dashboard'
@@ -114,7 +113,6 @@ export default {
                 .catch((error) => {
                 // console.log("🚀error", error)                   
                     if (error.response.status === 401) { 
-                        console.log('have error')
                         this.loginForm.errors.message= error.response.data.errors.message[0]
                         // commit('setTheFormError', error.response.data.errors)
                     } else if (error.response.status === 422) {

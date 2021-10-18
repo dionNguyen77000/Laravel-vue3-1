@@ -20,14 +20,14 @@ class SupplierController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'group', 'representative','phone','address','description',
+            'id','name', 'group', 'representative','phone','address',
             'email'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-            'name', 'group', 'representative','phone','address','description','email'
+            'name', 'group', 'representative','phone','address','email'
         ];
     }
     

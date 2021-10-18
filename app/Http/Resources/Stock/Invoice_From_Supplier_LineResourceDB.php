@@ -20,7 +20,7 @@ class Invoice_From_Supplier_LineResourceDB extends JsonResource
                 // 'user_role'=>$this->user->roles,
                 // 'goods_material_id'=> $this->goods_material_id,
                 'goods_material'=> $this->goods_material,
-                'unit'=> $this->unit,
+                'i_unit'=> $this->i_unit,
                 'i_unit_quantity'=> $this->i_unit_quantity,
                 'i_unit_price'=> $this->i_unit_price  ,
                 'i_line_price'=> $this->i_line_price , 

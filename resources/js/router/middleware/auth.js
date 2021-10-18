@@ -7,7 +7,5 @@ export default function auth({next,store}) {
         })
     }
 
-    console.log('user login', store.getters['auth/getAuth'].loggedIn);
-
     return next();
 }

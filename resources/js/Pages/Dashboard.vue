@@ -7,6 +7,7 @@
       </div>
       <!-- <div class="w-full bg-gray-100 pl-0 lg:pl-64 min-h-screen" :class="sideBarOpen ? 'overlay' : ''" id="main-content"> -->
 
+
         <!-- <Navbar /> -->
 
       <div :class="sideBarOpen ? 'flex-auto' : 'w-full'">
@@ -25,13 +26,19 @@
 
 <script>
 import auth from '../router/middleware/auth'
+// import redirectIfNotFirstLevelUser from '../router/middleware/redirectIfNotFirstLevelUser'
+// import redirectIfNotSecondLevelUser from '../router/middleware/redirectIfNotSecondLevelUser'
     // import redirectIfNotCustomer from '../router/middleware/redirectIfNotCustomer'
 
 import { mapState } from 'vuex'
+
 import Home from './Home.vue'
+
 export default {
   middleware: [
-    auth
+    auth, 
+    // redirectIfNotFirstLevelUser,
+    // redirectIfNotSecondLevelUser
   ],
  computed: {
     ...mapState(['sideBarOpen'])

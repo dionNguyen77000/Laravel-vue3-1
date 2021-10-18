@@ -31,20 +31,20 @@ class RoleController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name'
+            'id','name','duties'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-           'name'
+           'name' ,'duties'
         ];
     }
 
     public function getCreatedColumns()
     {
         return [
-            'name'
+            'name', 'duties'
         ];
     }
 

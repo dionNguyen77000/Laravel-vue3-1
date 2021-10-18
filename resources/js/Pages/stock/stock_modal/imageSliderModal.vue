@@ -1,5 +1,11 @@
 <template>
+
+
+
  <div  class="backdrop bg-black overflow-y-auto" @click.self="closeModal">
+<Loading v-model:active="isLoading"
+:can-cancel="true"
+:is-full-page="fullPage"/>
 <div class="modal">
      
 <!-- Container for the image gallery -->
@@ -48,7 +54,9 @@
             </template>                                      
         </div>
         <div class="mt-1 text-center">
-                <button  class=" px-1  m-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
+                <button  
+                 v-if="getAuth.isFirstLevelUser|| getAuth.isSecondLevelUser || getAuth.isThirdLevelUser" 
+                class=" px-1  m-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
                     <input type="file" @change="modalThumbnailImageChanged($event,record.id,1)"  
                     :data-index="record.id"
                     :id="'changeModalImage_' + record.id"
@@ -83,7 +91,9 @@
             </template>                                      
         </div>
         <div class="mt-1 text-center">
-                <button  class=" px-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
+                <button  
+                 v-if="getAuth.isFirstLevelUser|| getAuth.isSecondLevelUser" 
+                class=" px-1 m-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
                     <input type="file" @change="modalThumbnailImageChanged($event,record.id,2)"  
                     :data-index="record.id"
                     :id="'changeModalImage2_' + record.id"
@@ -91,11 +101,11 @@
                     class="hidden"/>
                     <label :for="'changeModalImage2_' + record.id">Change</label>
                 </button>
-                <button  v-if="record.id == secondCurrentPreviewUpdateId"  class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"> 
+                <button  v-if="record.id == secondCurrentPreviewUpdateId"  class="px-3 m-1 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"> 
                     <input type="submit" @click="saveModalImage(record.id,2)"  :id="'saveUpdateImage_' + record.id" class="hidden"/>
                 <label :for="'saveUpdateImage_' + record.id">Save</label>
                 </button>   
-                <button v-if="record.id == secondCurrentPreviewUpdateId"  class="px-3 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-blue-700  focus:outline-none"> 
+                <button v-if="record.id == secondCurrentPreviewUpdateId"  class="px-3 m-1 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-blue-700  focus:outline-none"> 
                     <input type="button" @click="secondImagePreviewUpdate = null; this.secondCurrentPreviewUpdateId= null;"  :id="'cancelUpdateImage_' + record.id" class="hidden"/>
                 <label :for="'cancelUpdateImage_' + record.id">Cancel</label>
                 </button>   
@@ -117,8 +127,11 @@
                 >
             </template>                                      
         </div>
+
         <div class="mt-1 text-center">
-                <button  class=" px-1 m-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
+                <button  
+                 v-if="getAuth.isFirstLevelUser|| getAuth.isSecondLevelUser" 
+                class=" px-1 m-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
                     <input type="file" @change="modalThumbnailImageChanged($event,record.id,3)"  
                     :data-index="record.id"
                     :id="'changeModalImage3_' + record.id"
@@ -147,8 +160,17 @@
 </template>
 
 <script>
+import Loading from 'vue-loading-overlay';
+import {mapGetters, mapActions} from 'vuex'
 export default {
     props: ['recordId', 'record','table_name'],
+    components: {Loading},
+    
+    computed: {
+        ...mapGetters({
+         getAuth: 'auth/getAuth'
+        }),
+    },
     data() {
         return {
              slideIndex :  1,
@@ -161,6 +183,10 @@ export default {
             firstCurrentPreviewUpdateId:null,
             secondCurrentPreviewUpdateId:null,
             thirdCurrentPreviewUpdateId:null,
+
+            //Loading Section
+            isLoading: false,
+            fullPage: true,  
         }
     },
     methods: {
@@ -240,7 +266,7 @@ export default {
         if(this.image){
             let data = new FormData
             data.append('image', this.image)
-        
+            this.isLoading = true
    
 
         axios.post(`/api/datatable/${this.table_name}/saveImage/${invoiceId}`, data).then((response)=>{
@@ -248,6 +274,7 @@ export default {
                 this.firstCurrentPreviewUpdateId = null;
                 this.imagePreviewUpdate = null;
                 this.image =null;
+                this.isLoading = false
             })
            
         }).catch((error) => {
@@ -262,17 +289,15 @@ export default {
             data.append('image', this.image)
         
         let invoiceIDsilderId = invoiceId + '-' + invoiceImgNumber
-
+        this.isLoading = true
         axios.post(`/api/datatable/${this.table_name}/saveImage/${invoiceIDsilderId}`, data).then((response)=>{
-            this.getRecordModal().then(() => {
+                this.getRecordModal()
                 this.firstCurrentPreviewUpdateId = null;
                 this.imagePreviewUpdate = null;
                 this.image =null;
+                this.isLoading = false
             })
            
-        }).catch((error) => {
-            console.log(error)
-        })
         }  
     },
 
@@ -300,7 +325,7 @@ export default {
 
 
 .modal {
-    width: 90%;
+    width: 100%;
     height:100%;
     margin: 30px auto;
     border-radius: 10px;

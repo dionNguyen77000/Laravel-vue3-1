@@ -80,7 +80,7 @@ class Order_To_Supplier_LineController extends DataTableController
             'id',
             'orders_to_supplier_id',
             'goods_material',
-            'unit',
+            'o_unit',
             'o_unit_quantity',
             'o_unit_price',
             'o_line_price',
@@ -90,10 +90,10 @@ class Order_To_Supplier_LineController extends DataTableController
     public function getUpdatableColumns()
     {
         return [
-            'id',
+            // 'id',
             'orders_to_supplier_id',
             'goods_material',
-            'unit',
+            'o_unit',
             'o_unit_quantity',
             'o_unit_price',
             'o_line_price',
@@ -107,7 +107,7 @@ class Order_To_Supplier_LineController extends DataTableController
             // 'id',
             'orders_to_supplier_id',
             'goods_material',
-            'unit',
+            'o_unit',
             'o_unit_quantity',
             'o_unit_price',
             'o_line_price',

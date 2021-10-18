@@ -1,4 +1,5 @@
 import axios from "axios"
+// import store from './index'
 
 export default {
     namespaced: true,
@@ -6,6 +7,10 @@ export default {
         auth: {
             token: null,
             loggedIn: false,
+            isFirstLevelUser: false,
+            isSecondLevelUser: false,
+            isThirdLevelUser: false,
+            isFourthLevelUser: false,
             user: {
                 token: null,
                 loggedIn: false,
@@ -26,19 +31,72 @@ export default {
             state.auth.user = authenticatedUser
         },
 
-        SET_LOGIN (state) {
+        SET_LOGIN (state, rootState) {
+            // console.log(rootState)
             if (state.auth.user && state.auth.token) {
                 state.auth.loggedIn = true
                 state.auth.isCustomer=false
+                console.log(state)
+
+                // const rolNameArray = [];
+                // const allRoleNames = state.auth.user.roles;
+                // allRoleNames.forEach(element => {
+                //     rolNameArray.push(element.name)
+                // });
+
+                const roleNameArray = _.map(state.auth.user.roles, 'name');
+
+                // console.log('role name is: ' + roleNameArray)
+              
+                // state.auth.isFirstLevelUser = true
+                //set firstLevelusers
+                for (var i = 0; i < rootState.firstLevelUsers.length; i++) {
+                    console.log(rootState.firstLevelUsers[i])
+                    if (roleNameArray.includes(rootState.firstLevelUsers[i])) 
+                    {
+                        state.auth.isFirstLevelUser = true
+                        break;
+                    }
+                }
+                //set secondLevelUsers
+                for (var i = 0; i < rootState.secondLevelUsers.length; i++) {
+                    console.log(rootState.secondLevelUsers[i])
+                    if (roleNameArray.includes(rootState.secondLevelUsers[i])) 
+                    {
+                        state.auth.isSecondLevelUser = true
+                        break;
+                    }
+                }
+                //set thirdLevelUsers
+                for (var i = 0; i < rootState.thirdLevelUsers.length; i++) {
+                    console.log(rootState.thirdLevelUsers[i])
+                    if (roleNameArray.includes(rootState.thirdLevelUsers[i])) 
+                    {
+                        state.auth.isThirdLevelUser = true
+                        break;
+                    }
+                }
+                //set fourthLevelUsers
+                for (var i = 0; i < rootState.fourthLevelUsers.length; i++) {
+                    console.log(rootState.fourthLevelUsers[i])
+                    if (roleNameArray.includes(rootState.fourthLevelUsers[i])) 
+                    {
+                        state.auth.isFourthLevelUser = true
+                        break;
+                    }
+                }
+
             } else {
                 state.auth.loggedIn = false
                 state.auth.isCustomer=false
             }
-        }
+        },
+      
     },
 
     actions: {
-        async setUpLoginedAuth({commit,state},token){
+        async setUpLoginedAuth({commit,state,rootState},token){
+            // console.log(rootState)
             if(token){
                 commit('SET_TOKEN', token)
             }
@@ -56,7 +114,7 @@ export default {
                 // }
                 )
                 commit('SET_USER', response.data.data)
-                commit('SET_LOGIN', state)
+                commit('SET_LOGIN', rootState)
 
             } catch (e) {
                 commit('SET_TOKEN', null)

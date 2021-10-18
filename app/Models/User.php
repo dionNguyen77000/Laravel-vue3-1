@@ -29,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'username',
         'email',
         'password',
+        'Active',
 
     ];
 
@@ -106,6 +107,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Role::class,'users_roles');
     }
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class,'users_permissions');
+    }
     public function getRoleNames()
     {
         $allRoleNameOfUser = [];
@@ -115,6 +120,7 @@ class User extends Authenticatable implements JWTSubject
         return $allRoleNameOfUser;
 
     }
+   
     public function getPermissions()
     {
         $allPermissionsOfUser = [];
@@ -144,6 +150,7 @@ class User extends Authenticatable implements JWTSubject
        
         // get all permissions from the the pivot table of user_permission
         $user_permissions = $this->permissions->map->only(['id', 'name']);
+   
         $included = true;
         foreach($user_permissions as $theConsideredPermission)
         {
@@ -212,16 +219,30 @@ class User extends Authenticatable implements JWTSubject
              array_push($userPermissionId,$permission->id);
          }
         
-         // foreach($user_roles as $role){
-             $r = Intermediate_Product::select('id','name','required_qty')
-             ->whereIn('Preparation',['Yes','OnGoing'])
-             ->where('active',1)
-             ->whereIn('permission_id',$userPermissionId)
-             ->get();           
+            $ips = Intermediate_Product::select('id','name','required_qty')
+            ->whereIn('Preparation',['Yes','OnGoing'])
+            ->where('active',1)
+            ->get();           
           
-             foreach ($r as  $sr) {
-                 $returnArr[$sr['id']] = $sr;
-             }
+        
+        
+            // lopp to all intermdeiateProducts
+            foreach ($ips as $ip){
+                $theIP_Permissions = $ip->permissions;
+                //loop through all the assigened permission of the im
+                foreach($theIP_Permissions as $theGM_Permission){
+                    // if the permission of intermediate product is one included in the user permissions
+                    if(in_array($theGM_Permission->id,$userPermissionId)) {
+                        $returnArr[$ip['id']] = $ip;
+                        break;
+                    }
+                }
+            }
+            // foreach ($ips as  $ip) {              
+            //     $returnArr[$ip['id']] = $ip;
+
+
+            // }
        
          // }
          // $r_array = json_decode(json_encode($r), true);

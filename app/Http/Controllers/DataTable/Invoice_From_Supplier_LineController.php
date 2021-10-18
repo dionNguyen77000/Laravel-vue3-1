@@ -122,7 +122,7 @@ class Invoice_From_Supplier_LineController extends DataTableController
             'id',
             // 'invoices_from_supplier_id',
             'goods_material',
-            'unit',
+            'i_unit',
             'i_unit_quantity',
             'i_unit_price',
             'i_line_price',
@@ -135,7 +135,8 @@ class Invoice_From_Supplier_LineController extends DataTableController
             'id',
             // 'invoices_from_supplier_id',
             'goods_material',
-            'unit',
+            'o_unit',
+            'i_unit',
             'o_unit_quantity',
             'i_unit_quantity',
             'o_unit_price',
@@ -151,7 +152,7 @@ class Invoice_From_Supplier_LineController extends DataTableController
             // 'id',
             // 'invoices_from_supplier_id',
             'goods_material',
-            'unit',
+            'i_unit',
             'i_unit_quantity',
             'i_unit_price',
             'i_line_price',
@@ -163,7 +164,8 @@ class Invoice_From_Supplier_LineController extends DataTableController
         return [
             // 'invoices_from_supplier_id',
             'goods_material',
-            'unit',
+            'i_unit',
+            'o_unit',
             'i_unit_quantity',
             'o_unit_quantity',
             'i_unit_price',
@@ -180,7 +182,7 @@ class Invoice_From_Supplier_LineController extends DataTableController
             'id',
             'orders_to_supplier_id',
             'goods_material',
-            'unit',
+            'i_unit',
             'i_unit_quantity',
             'i_unit_price',
             'i_line_price',
@@ -192,10 +194,12 @@ class Invoice_From_Supplier_LineController extends DataTableController
 
     {
         // dd($request);
+
+        // dd($request->i_unit);
         $this->validate($request, [
             'orders_to_supplier_id' => 'required',
             'goods_material' => 'required',
-            'unit' => 'required',
+            'i_unit' => 'required',
             'i_unit_quantity' => 'required|numeric',
             'i_unit_price' => 'required|numeric',
         ]);
@@ -211,7 +215,7 @@ class Invoice_From_Supplier_LineController extends DataTableController
         // dd($id);
         $this->validate($request, [
             'goods_material' => 'required',
-            'unit' => 'required',
+            'i_unit' => 'required',
             'i_unit_quantity' => 'required|numeric',
             'i_unit_price' => 'required|numeric',
         ]);
@@ -230,31 +234,28 @@ class Invoice_From_Supplier_LineController extends DataTableController
         return $updatedSuccess;
     }
 
-    
-    public function destroy($ids, Request $request)
+    public function destroy($id, Request $request)
     {
         if (!$this->allowDeletion) {
             return;
         }
 
 
-        $arrayIds = explode(',',$ids);
+     
+        $invoice_line =  $this->builder->find($id);
 
-        foreach ($arrayIds as $key => $value) {
-            $dateEmpProduct = explode(' ',$value);
-            $theDate = $dateEmpProduct[0];
-            $theEmpId = $dateEmpProduct[1];
-            $thePreProductId = $dateEmpProduct[2];
-            $inter_p = Order_To_Supplier_Line::where('date',$theDate)
-                -> where('user_id',$theEmpId)
-                -> where('intermediate_product_id',$thePreProductId);
-            if($inter_p) {
-                $inter_p->delete();
-            } else return 'record is undefined';
-        }
+        if(is_null($invoice_line->o_unit) || is_null($invoice_line->o_unit_quantity) || is_null($invoice_line->o_unit_price)) {
+            $invoice_line->delete();
+        // cannot delete the lines already inside order to supplier - instead set 0
+        } else return "cannot delete - invoice items existing in order to supplier";
+
+
+
+            // $this->builder->find($ids)->delete();
+        
     }
-    
 
+    
 
     protected function getRecords(Request $request)
     {
@@ -299,6 +300,72 @@ class Invoice_From_Supplier_LineController extends DataTableController
         } catch (QueryException $e) {
             return [];
         }    
+    }
+
+    public function addAmountFromInvoiceToStock($ids){
+        $arrayIds = explode(',',$ids);
+        
+        $GM_qty_cannot_be_added = [];
+        if (count($arrayIds) > 0 ) {
+            for ($i=0; $i < count($arrayIds); $i++) { 
+                // $invoice_line =  $this->builder->find($arrayIds[$i]);
+                $invoice_line = Order_To_Supplier_Line::find($arrayIds[$i]);
+                // dd($invoice_line->i_unit_quantity);
+               
+                $invoice_line_name =  $invoice_line->goods_material;
+               
+                $GM = Goods_material::where('name',$invoice_line_name)->first();              
+                
+                if($GM){
+                    $unitOfGM = $GM->unit->name;
+                    if($unitOfGM == $invoice_line->i_unit)  {
+                        $GM->current_qty = $GM->current_qty + $invoice_line->i_unit_quantity;
+                        $GM->save();
+                    }     
+                    else  {
+                        array_push($GM_qty_cannot_be_added,$invoice_line);
+                    }                           
+                } else {
+                    array_push($GM_qty_cannot_be_added,$invoice_line);
+                }           
+            }
+        } 
+        if(count($GM_qty_cannot_be_added)>0){
+            return $GM_qty_cannot_be_added;
+        }else return "Added Successfully";
+    }
+    public function removeAmountFromInvoiceToStock($ids){
+        $arrayIds = explode(',',$ids);
+        
+        $GM_qty_cannot_be_added = [];
+        if (count($arrayIds) > 0 ) {
+            for ($i=0; $i < count($arrayIds); $i++) { 
+                // $invoice_line =  $this->builder->find($arrayIds[$i]);
+                $invoice_line = Order_To_Supplier_Line::find($arrayIds[$i]);
+                // dd($invoice_line->i_unit_quantity);
+               
+                $invoice_line_name =  $invoice_line->goods_material;
+               
+                $GM = Goods_material::where('name',$invoice_line_name)->first();    
+
+              
+                if($GM){
+                    $unitOfGM = $GM->unit->name;
+                    if($unitOfGM == $invoice_line->i_unit)  {
+                        $GM->current_qty = $GM->current_qty - $invoice_line->i_unit_quantity;
+                        $GM->save();
+                    }     
+                    else  {
+                        array_push($GM_qty_cannot_be_added,$invoice_line);
+                    }                           
+                } else {
+                    array_push($GM_qty_cannot_be_added,$invoice_line);
+                }               
+            }
+        } 
+        if(count($GM_qty_cannot_be_added)>0){
+            return $GM_qty_cannot_be_added;
+        }else return "Removed Successfully";
     }
 
   

@@ -1,7 +1,7 @@
 <template>
   <div id="intermediate_product" class="p-6 ">    
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
-            <loading v-model:active="isLoading"
+            <Loading v-model:active="isLoading"
                 :can-cancel="true"
                 :is-full-page="fullPage"/>
             <div class="w-full p-1">
@@ -10,7 +10,7 @@
                 <div>
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                    v-if="response.allow.creation && isFirstLevelUser"
+                    v-if="(isFirstLevelUser || isSecondLevelUser || isThirdLevelUser) && response.allow.creation"
                     @click.prevent="creating.active = !creating.active">
                     {{ creating.active ? 'Hide' : 'New record' }}
                     </a>
@@ -39,7 +39,6 @@
                              <template v-else-if="column=='unit_id'">
                             <label  class="font-semibold" :for="column">Unit : </label>
                             <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value=""></option>
                                 <option :value="index" v-for="option,index in response.unitOptions" :key="option">
                                     {{option}}
                                 </option>
@@ -50,37 +49,24 @@
                             <label  class="font-semibold" :for="column">Category : </label>
        
                             <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value=""></option>
                                 <option :value="index" v-for="option,index in response.categoryOptions" :key="option">
                                     {{option}}
                                 </option>
                             </select>
-                            </template> 
-
-                            <template v-else-if="column=='permission_id'">
-                            <label  class="font-semibold" :for="column">Assign To : </label>
-       
-                            <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value=""></option>
-                                <option  :value="index" v-for="option,index in response.permissionOptions" :key="option">
-                                    <!-- <template v-if="getAuth.user.permissions.includes('edit_posts1')"> -->
-                                    {{option}}
-                                    <!-- </template> -->
-
-                                </option>
-                            </select>
-                            </template>    
+                            </template>                   
 
                              <template v-else-if="column=='img'">
                              <!-- <label class="text-gray-700 mb-1 " for="product_big_photo">
                                     Image<span class="text-red-600"> </span>
                                 </label>  -->
                             </template> 
-
+                          
                             <template v-else-if="column=='required_qty'">
                             <input type="text" :name="column" :id="column" :placeholder="column" class=" hidden bg-gray-100 border-2 w-full p-1 rounded-lg"
                             disabled>
                             </template>
+
+                            <!-- {{creating.form.assignedPermissionIds}}   -->
                             <template v-else-if="column=='Preparation'">
                             <input type="text" :name="column" :id="column" :placeholder="column" class=" hidden bg-gray-100 border-2 w-full p-1 rounded-lg"
                             disabled>
@@ -88,15 +74,38 @@
 
                             
                             <template v-else-if="column=='Active'">
-                            <label  class="font-semibold" :for="column">Active : </label>
-       
-                            <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value="1">Yes</option>
-                                <option  value="0">No</option>
-                               
-                            </select>
+                                <label  class="font-semibold" :for="column">Active : </label>
+        
+                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                    <option  value="1">Yes</option>
+                                    <option  value="0">No</option>
+                                
+                                </select>
                             </template> 
-
+                            
+                            <template v-else-if="column=='location_id'">
+                                <label  class="font-semibold" :for="column">Location : </label>                           
+                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                    <option :value="index" v-for="option,index in response.locationOptions" :key="option">
+                                        {{option}}
+                                    </option>
+                                </select>
+                            </template> 
+                            <template v-else-if="column=='permissions'">
+                            <label  class="font-semibold" for="Active">Permissions : </label>    
+                            <ul id="roles" class="width-3/4 flex flex-wrap">
+                                <li  class="mr-2" v-for="option,index in response.permissionOptions" :key="index">
+                                    <input type="checkbox"                               
+                                    :value="index" 
+                                    :id="option" 
+                                    :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                    v-model="creating.form.assignedPermissionIds"
+                                    >
+                                    {{ option }}
+                                </li>
+                            </ul>         
+                           
+                            </template> 
                             <template v-else>
                             <label :for="column" class="sr-only"> </label>
                             <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
@@ -107,7 +116,7 @@
                             </div>
                             </template>
                         </div>
-                        
+         
                         <div class="text-center">
                             <button type="submit" class="bg-indigo-500 hover:bg-indigo-800 text-white px-4 py-2 rounded">Create</button>
                         </div>
@@ -118,12 +127,15 @@
         </div>
         
           <!-- hide column section -->
+        
         <div id="show_hide_section" class="text-center mx-4 space-y-2">
             <p> <b> Hide Column </b></p>
             <ul id="hide_show_column_section" class="width-3/4 flex flex-wrap justify-center">
                 <li  class="mr-3" 
                     v-for="column in response.displayable" :key="column"
-                   :class="{ 'hidden': hiddenSelectedColumns.includes(column)}"
+                   :class="{ 
+                    'hidden': unshownColumns.includes(column) ||  columnsNotAllowToShowAccordingToUserLevel.includes(column),
+                    }"
                 >
                     <input type="checkbox" 
                     :value="column" 
@@ -165,7 +177,7 @@
                 <div class="relative">
                     <select v-model = "limit" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option value="2">2</option>
+                        <option value="20">20</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                         <option value="150">200</option>
@@ -183,7 +195,7 @@
                 <div class="relative">
                     <select v-model="selected_category" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option  value= ''>Category</option>         
+                        <option  value= 'All'>Category</option>         
                         <option v-for="option,index in response.categoryOptions" :value="index" :key="option">
                             {{option}} 
                         </option>
@@ -196,12 +208,13 @@
                     </div>
                 </div>
             </div>
+          
             <div class="flex flex-row mb-1 sm:mb-0">          
                 <div class="relative">
                     <select v-model="selected_permission" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option   value= 'All'>Check All</option>
-                        <template v-for="permission in getAuth.user.permissions" :key="permission.id">
+                        <option   value= 'All'>Section - All</option>
+                        <template v-for="permission in response.userPermissionOptions" :key="permission.id">
                             <option  :value="permission.id" >
                              <!-- <template v-if="getAuth.user.permissions.includes(option)"> -->
                                     {{permission.name}}
@@ -219,11 +232,30 @@
                     </div>
                 </div>
             </div>
+
+            <div class="flex flex-row mb-1 sm:mb-0">          
+                <div class="relative">
+                    <select v-model="selected_location" @change="getRecords"
+                        class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option  value= 'All'>Location</option>         
+                        <option v-for="option,index in response.locationOptions" :value="index" :key="option">
+                            {{option}} 
+                        </option>
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex flex-row mb-1 sm:mb-0">          
                 <div class="relative">
                     <select v-model="selected_preparation" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option  value= ''>Prep - All</option>
+                        <option  value= 'All'>Prep - All</option>
 
                          <option value="Yes,OnGoing">
                             Prep-Yes&OnG
@@ -247,7 +279,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex flex-row mb-1 sm:mb-0">          
+            <div v-if="isFirstLevelUser || isSecondLevelUser" class="flex flex-row mb-1 sm:mb-0">          
                 <div class="relative">
                     <select v-model="selected_active" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
@@ -288,9 +320,9 @@
             <table class="min-w-max w-full table-auto">
                 <!-- Table Heading Section -->
                 <thead>
-                    <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr class="collapse py-2 bg-blue-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
-                        v-if="isFirstLevelUser && canSelectItems"
+                        v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
                         class="py-2"
                         >
                                 <input type="checkbox" 
@@ -299,8 +331,14 @@
                                 >
                         </th>
                         <template v-for="column in response.displayable" :key="column">
+                             <!-- Table Heading - Columns not allow to show in any mode-->
+                            <template v-if="unshownColumns.includes(column)">
+                            </template>
+                            <!-- Table Heading - Columns not allow to show according to the level of user-->
+                            <template v-else-if="columnsNotAllowToShowAccordingToUserLevel.includes(column)">
+                            </template>
                             <!-- Table Heading - Edit Mode-->
-                             <template v-if="editing.id">
+                             <template v-else-if="editing.id">
                                 <!-- Table heading not shown in Edit Mode-->
                                 <template v-if="unshownColumnsInEditMode.includes(column)
                                     || hideColumns.includes(column) ||!isUpdatable(column)">
@@ -335,7 +373,7 @@
                                 </th>
                             </template>
                         </template>
-                        <th class="text-left">Actions</th>                     
+                        <th v-if="isFirstLevelUser || isSecondLevelUser || isThirdLevelUser" class="text-left">Actions</th>                     
                     </tr>
                 </thead>
                 <!-- End Table Heading -->
@@ -346,30 +384,37 @@
                     :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Preparation==('Yes') || record.Preparation==('OnGoing') }" 
                     >
                        <!-- bg-red-600 text-white -->
-                        <td v-if="isFirstLevelUser && canSelectItems" class=" text-center">
+                        <td v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems" class=" text-center">
                             <input type="checkbox" :value="record.id" v-model="selected">
                         </td>
 
                         <!-- Loop through each column-->
                         <template v-for="columnValue,column in record" :key="column">
+                        <!-- Columns not allow to show in any mode-->
+                        <template v-if="unshownColumns.includes(column)">
+                        </template>
+                        <!-- Columns not allow to show in according to level of user-->                           
+                        <template v-else-if="columnsNotAllowToShowAccordingToUserLevel.includes(column)">
+                        </template>
                         <!-- Edit Mode-->
-                        <template v-if="editing.id">
+                        <template v-else-if="editing.id">
                             <!-- Edit Mode - column not show -->
                             <template v-if="unshownColumnsInEditMode.includes(column)
                                     || hideColumns.includes(column) || !isUpdatable(column)">
                             </template>
                             <!-- if the record currently edit -->               
                             <template v-else-if="editing.id === record.id">
-                                <td class="py-2 text-left" v-if="response.displayable.includes(column)">   
+                                <td class="py-2 text-left" 
+                                :class="{ 'text-center': textCenterColumns.includes(column)}" 
+                                v-if="response.displayable.includes(column)">   
                                     <template v-if="column=='unit_id'">
-                                    <!-- {{record}} -->
                                     <select 
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                     :class="{
-                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
                                     :name="column" :id="column" 
-                                    :disabled= "notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     v-model="editing.form[column]"
                                     >
                                         <option  value=""></option>
@@ -384,15 +429,14 @@
                                 </template>    
                                 
                                 <template v-else-if="column=='category_id'">
-                                    <!-- {{record}} -->
                                     <select
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                      :class="{
-                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
                                     :name="column" :id="column" 
                                     v-model="editing.form[column]"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     >
                                         <option  value=""></option>
                                         <template v-for="option,index in response.categoryOptions" >
@@ -405,41 +449,28 @@
                                         </template>                                       
                                     </select>                                   
                                 </template>  
-
-                                <template v-else-if="column=='permission_id'">
-                                    <!-- {{record}} -->
-                                    <select
-                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
-                                    :class="{
-                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
-                                    }"                                    
-                                    :name="column" :id="column" v-model="editing.form[column]"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
-
-                                    >
-                                        <option  value=""></option>
-                                        <template v-for="option,index in response.permissionOptions" >
-                
-                                            <template v-if="record.id != option.id">                  
-                                            <option :value="index" :key="option">
-                                              {{option}} 
-                                            </option>
-                                            </template>
-                                        </template>
-                                        
-                                    </select>
-                                    
-                                </template>  
+                             
+                                <template v-else-if="column=='permissions'">
+                                    <ul id="roles" class="ml-2 w-40 flex flex-wrap">
+                                        <li  class="w-full" v-for="option,index in response.permissionOptions" :key="index">
+                                            <input type="checkbox"
+                                            :value="index" 
+                                            :id="option" 
+                                            v-model="editing.form.assignedPermissionIds"
+                                            >
+                                            <label :for="option">{{ option }} ,</label>          
+                                        </li>
+                                    </ul>
+                                </template>
 
                                 <template v-else-if="column=='Preparation'">
-                                    <!-- {{record}} -->
                                     <select 
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                      :class="{
-                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
                                     :name="column" :id="column" v-model="editing.form[column]"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     >   
                                         <option value="Yes">Yes</option>                                  
                                         <option  value="No">No</option>     
@@ -452,9 +483,9 @@
                                     <select
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                     :class="{
-                                        'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column)
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     :name="column" :id="column" 
                                     v-model="editing.form[column]">
                                     <option  value="1">Yes</option>
@@ -472,7 +503,7 @@
                                         'border-3 border-red-700': editing.errors[column], 
                                         'text-center': textCenterColumns.includes(column) 
                                         }"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     > 
                                     <br>
                                     <span v-if="editing.errors[column]" class="text-white font-bold">
@@ -480,6 +511,27 @@
                                     </span>
 
                                 </template> 
+                                 <template v-else-if="column=='location_id'">
+                                    <select
+                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                     :class="{
+                                        'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
+                                    }"
+                                    :name="column" :id="column" 
+                                    v-model="editing.form[column]"
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                    >
+                                        <option  value=""></option>
+                                        <template v-for="option,index in response.locationOptions" >
+                
+                                            <template v-if="record.id != option.id" >                  
+                                            <option :value="index" :key="option">
+                                              {{option}} 
+                                            </option>
+                                            </template>
+                                        </template>                                       
+                                    </select>                                   
+                                </template>  
 
                                 <template v-else>
                                     <input type="text"  
@@ -487,10 +539,10 @@
                                    v-model="editing.form[column]"
                                     :class="{ 
                                     'border-3 border-red-700': editing.errors[column] ,
-                                    'bg-pink-200' : notAllowToEditExceptPeopleInCharge.includes(column),
+                                    'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column),
                                     'text-center': textCenterColumns.includes(column) 
                                     }"
-                                    :disabled= " notAllowToEditExceptPeopleInCharge.includes(column)" 
+                                    :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     > 
                                     <br>
                                     <span v-if="editing.errors[column]" class="text-white font-bold">
@@ -562,12 +614,19 @@
                                                     <span class="font-medium" >{{response.categoryOptions[columnValue]}}</span>
                                                 </div>
                                             </template>
-                                       
-                                            <template v-else-if="column=='permission_id'">
-                                                    <div class="flex items-center">
-                                                    <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+
+                                             <template v-else-if="column=='location_id'">
+                                                <div class="flex items-center">
+                                                    <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
                                                 </div>
                                             </template>
+                                                                          
+                                             <template v-else-if="column=='permissions'">
+                                                <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                                    {{ option.name }}
+                                                </div>      
+                                            </template>   
+
 
                                             <template v-else>
                                                 <span  class="font-medium" >{{columnValue}}</span>
@@ -597,7 +656,8 @@
                                                 <img @click="openSliderImageModal(record)" :src="columnValue" class="w-14 h-14 shadow">
                                         </template>                                      
                                     </span>                                        
-                                    <div class="mt-1">
+                                    <div  v-if= "isFirstLevelUser || isSecondLevelUser || isThirdLevelUser"
+                                    class="mt-1">
                                         <button  class=" px-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
                                             <input type="file" @change="imageChanged($event,record.id)"  
                                             :data-index="record.id"
@@ -677,16 +737,23 @@
                                 </template>
 
                                 <template v-else-if="column=='category_id'">
-                                        <div class="flex items-center">
+                                    <div class="flex items-center">
                                         <span class="font-medium" >{{response.categoryOptions[columnValue]}}</span>
                                     </div>
                                 </template>
-
-                                <template v-else-if="column=='permission_id'">
-                                        <div class="flex items-center">
-                                        <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+                                <template v-else-if="column=='location_id'">
+                                    <div class="flex items-center">
+                                        <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
                                     </div>
                                 </template>
+
+
+                                <template v-else-if="column=='permissions'">
+                                    <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                        {{ option.name }}
+                                    </div>      
+                                </template>  
+                                
                                 <template v-else-if="column=='Active'">
                                         <div class="flex items-center">
                                         <span v-if="columnValue == 1" class="font-medium" >Yes</span>
@@ -703,7 +770,7 @@
                         </template> <!-- End Not in Edit Mode -->                   
                         </template>  <!-- end Loop through each column of rows-->
                          <!-- Last Column - Actions -->
-                        <td>
+                        <td v-if="isFirstLevelUser || isSecondLevelUser || isThirdLevelUser">
                             <div>
                             <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
                             class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
@@ -714,7 +781,7 @@
                             <a href="#" 
                             @click.prevent="destroy(record.id)" 
                             v-if="response.allow.deletion && editing.id !== record.id 
-                            && isFirstLevelUser && canSelectItems" 
+                            && (isFirstLevelUser || isSecondLevelUser) && canSelectItems" 
                             class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
                             >
                             Delete
@@ -754,6 +821,7 @@
 
                     </tr>
                 </tbody>
+                <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
             </table>
         </div>
         <p v-else class="mt-2 text-red-600 text-center text-lg">No Data</p>
@@ -793,16 +861,19 @@ export default {
                     active: false,
                     form: {
                         Active: 1,
-                        permission_id: 1,
                         supplier_id:1,
                         unit_id:1,
-                        category_id:1
+                        category_id:1,
+                        location_id:1,
+                        assignedPermissionIds: [ 1 ],
                     },
                     errors: [],
                 },
                 editing: {
                     id: null,
-                    form: {},
+                    form: {
+                        assignedPermissionIds: [],
+                    },
                     errors: []
                 },
                 // search:{
@@ -810,28 +881,77 @@ export default {
                 //     operator:'equals',
                 //     column: 'id'
                 // },
+
                 isLoading: false,
                 fullPage: true,                
                 selected: [],
-               
-                hideColumns:['slug','description','img','price','permission_id','category_id',
+
+
+                 /****
+                 General Setting
+                ******/
+                // Hide Column Section : checkbox of columns that completely disappear
+                unshownColumns:['slug','img'],
+
+                // columns hidden - can be show by unclick the radio buttons
+                hideColumns:['description','price','category_id',
                 'prepared_point','coverage','Active','unit_id'],
-                               
-                hiddenSelectedColumns:['slug','img'],
+
+                // columns unshown in edit mode
                 unshownColumnsInEditMode:['img_thumbnail'],
+
+                // columns unshown according to user levels
+                secondLevel_ColumnNotAllowsToShow: [
+                    
+                
+                ],                
+
+                thirdLevel_ColumnNotAllowsToShow: [
+                     'Active' 
+                ],     
+                            
+                fourthLevel_ColumnNotAllowsToShow: [
+                    'Active'
+                ],
+
+                // columns does not allow to edit according to user levels
+                secondLevel_ColumnNotAllowsToEdit: [
+                
+                ],                
+
+                thirdLevel_ColumnNotAllowsToEdit: [
+                   'name', 'price','unit_id','supplier_id',
+                    'category_id','description','prepared_point', 
+                    'required_qty', 'coverage','Preparation',
+                    'Active', 'location'  ,'location_id'
+                ],     
+                            
+                fourthLevel_ColumnNotAllowsToEdit: [
+                    'name', 'price','unit_id','supplier_id',
+                    'category_id','description','prepared_point', 
+                    'required_qty', 'coverage','Preparation',
+                    'Active','location','location_id','permissions'
+                ],
 
                 notAllowEditExceptPeopleInCharge: ['name', 'price','unit_id', 'description','category_id' ,'prepared_point', 'required_qty','coverage','Preparation','Active'],
                 textCenterColumns:['price','current_qty',
                 'prepared_point','coverage','required_qty','Preparation','Active',
-                'permission_id','location'],
+                'location'],
                 dollarsSymbolColumns:['price'],
 
-                limit:50,
+
+                /********************* 
+                 Filter Section Setting
+                *********************/
+
+                // number of rows per page
+                limit:100,                
                 quickSearchQuery: '',
-                selected_category: '',
-                selected_preparation: 'Yes,OnGoing',
+                selected_category: 'All',
+                selected_preparation: 'All',
                 selected_active: '1',
                 selected_permission: 'All',
+                selected_location: 'All',
 
                 //image upload
                 image:null,
@@ -847,17 +967,18 @@ export default {
                 // showIMGModal: false,
                 clickImgSliderModalId : null,
                 
-                // Level of Users
-                firstLevelUsers : ['Admin' , 'Manager'],
-                secondLevelUsers : [],
-                
-               
+             
             }
         },
        
  computed: {
       ...mapGetters({
-           getAuth: 'auth/getAuth'
+            getAuth: 'auth/getAuth',
+            firstLevelUsers: 'firstLevelUsers' ,
+            secondLevelUsers: 'secondLevelUsers' ,
+            thirdLevelUsers: 'thirdLevelUsers' ,
+            fourthLevelUsers: 'fourthLevelUsers' ,
+
          }),
     ...mapState(['sideBarOpen']),
       filteredRecords () {
@@ -873,11 +994,8 @@ export default {
                 
                 //  sort data according to clicking the head column
                 if (this.sort.key) {
-                    data = _.orderBy(data, (i) => { //lodash 
-                    // console.log("🚀 ~ file: DataTable.vue ~ line 53 ~ data=_.orderBy ~ i", i)
-                        
+                    data = _.orderBy(data, (i) => { //lodash                         
                         let value = i[this.sort.key]
-                        // console.log("🚀 ~ file: DataTable.vue ~ line 54 ~ data=_.orderBy ~ value", value)
                         
                         if (!isNaN(parseFloat(value)) && isFinite(value)) {
                             return parseFloat(value)
@@ -888,41 +1006,110 @@ export default {
                 }
                 return data
             },
-            getAllPermissionIds() {
-                const allPermissionObjects = this.getAuth.user.permissions;
-                const allPermissionObjectIds = _.map(allPermissionObjects,'id')
-                return allPermissionObjectIds;
-
-                // return allPermissionObjects;
-            },
-            getRoleNames(){
-                const rolNameArray = [];
-                const allRoleNames = this.getAuth.user.roles;
-                allRoleNames.forEach(element => {
-                    rolNameArray.push(element.name)
-                });
+           
+           getRoleNames(){
+                const rolNameArray = []
               
-                return rolNameArray;
-
+                if (this.response.userRoleOptions){
+                    const allRoleNames = this.response.userRoleOptions
+                    allRoleNames.forEach(element => {
+                    rolNameArray.push(element.name)
+                    });                
+                }         
+            return rolNameArray;
             },
             canSelectItems() {
                 return this.filteredRecords.length <= 500
             },
-            notAllowToEditExceptPeopleInCharge(){
-                if(this.getRoleNames.includes('Admin') || this.getRoleNames.includes('Manager')) {
-                    this.notAllowEditExceptPeopleInCharge = []
-                }
-                return this.notAllowEditExceptPeopleInCharge
+            columnsNotAllowToShowAccordingToUserLevel(){
+                if(this.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToShow ;
+                } 
+                else if (this.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToShow ;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToShow;
             },
+
+            columnsNotAllowToEditAccordingToUserLevel(){
+                if(this.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToEdit;
+                } 
+                else if (this.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToEdit ;
+                } 
+                else if (this.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToEdit ;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToEdit;
+            },
+
+            columnsNotAllowToShowAccordingToUserLevel(){
+                if(this.isFirstLevelUser) {
+                    return [] ;
+                } else if (this.isSecondLevelUser){
+                    return this.secondLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.isThirdLevelUser){
+                    return this.thirdLevel_ColumnNotAllowsToShow;
+                } 
+                else if (this.isFourthLevelUser){
+                    return this.fourthLevel_ColumnNotAllowsToShow;
+                } 
+                return this.fourthLevel_ColumnNotAllowsToShow;
+            },
+
             isFirstLevelUser() {
-                let firstLevelUser = false;
-                this.firstLevelUsers.forEach(element => {
-                    if(this.getRoleNames.includes(element)){
-                        firstLevelUser = true;
+                let isCorrect = false;
+                for (var i = 0; i < this.firstLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.firstLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
                     }
-                });
-                return firstLevelUser;
-            }
+                }
+                return isCorrect;
+            },
+            isSecondLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.secondLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.secondLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+                return isCorrect;
+            },
+            isThirdLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.thirdLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.thirdLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+                return isCorrect;
+            },
+            isFourthLevelUser() {
+                let isCorrect = false;
+                for (var i = 0; i < this.fourthLevelUsers.length; i++) {
+                    if (this.getRoleNames.includes(this.fourthLevelUsers[i])) 
+                    {
+                        isCorrect = true;
+                        break;
+                    }
+                }
+                return isCorrect;
+            },
     },
 
 methods: 
@@ -931,7 +1118,6 @@ methods:
     getRecords(){
         return axios.get(`/api/datatable/intermediate_product?${this.getQueryParameters()}`).then((response)=> {
             this.response = response.data.data;
-            console.log('our records', this.response)
         })
     },
     getQueryParameters () {
@@ -941,6 +1127,7 @@ methods:
             Preparation: this.selected_preparation,
             Active: this.selected_active,
             permission_id: this.selected_permission,
+            location_id: this.selected_location,
             // ...this.search
         }, 
         {
@@ -957,6 +1144,14 @@ methods:
         this.editing.errors = []
         this.editing.id = record.id
         this.editing.form = _.pick(record, this.response.updatable)
+        this.editing.form.assignedPermissionIds = [];               
+
+        // when click update button, get the current selected ids of the permissions 
+        const permissionsOfGM = record.permissions;
+        for (let index = 0; index < permissionsOfGM.length; index++) {
+            const element = permissionsOfGM[index];
+                this.editing.form.assignedPermissionIds.push(element.id)
+        }   
     },
     editCurrentQty(record){
         this.editing.errors = []
@@ -975,42 +1170,41 @@ methods:
         this.selected = _.map(this.filteredRecords, 'id')
     },
     update(columnName) {
-        if (this.editing.form.prepared_point >  this.editing.form.coverage){
-        window.alert('prepared point needs to be smaller than coverage')
+        if (parseFloat(this.creating.form.prepared_point) >  parseFloat(this.creating.form.coverage)){
+        window.alert('prepared point needs to be smaller or equal coverage')
         return;
         }
         if (columnName= 'current_qty' && this.editing.currentQtyId) {
             this.editing.id= this.editing.currentQtyId
             this.editing.currentQtyId = null
-        } 
+        }
+        this.isLoading = true
         axios.patch(`/api/datatable/intermediate_product/${this.editing.id}`, this.editing.form).then((response) => {
-            console.log(response.data)
+            this.isLoading = false
             if(response.data == 'Error - OnGoing Update'){
-                window.alert('Sorry ! Cannot update product having OnGoing Preparation.')
+                window.alert(
+                    'Sorry ! The product is currently in "OnGoing" Status in Daily Emp Work. Go to "Daily Emp Work" and update to"Completed" Status before you can update this product here.')
             } else 
             {
                 this.getRecords().then(() => {
                     this.editing.id = null
                     this.editing.form = null
-                    if(response.data=='password updated') {
-                        alert('Password updated successfully !')
-                    }
+                    // if(response.data=='password updated') {
+                    //     alert('Password updated successfully !')
+                    // }
                     
                 })
             }
         }).catch((error) => {
+            this.isLoading = false
             if (error.response.status === 422) {                        
                 this.editing.errors = error.response.data.errors
-                // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ this.editing.errors", this.editing.errors)
-                // console.log("🚀 ~ file: DataTable.vue ~ line 262 ~ axios.patch ~ error.response.data.errors", error.response.data.errors)
             }
         })
     },
     store () {
-
-        console.log(this.creating.form.current_qty)
-        if (this.creating.form.prepared_point >  this.creating.form.coverage){
-            window.alert('prepared point needs to be smaller than coverage')
+        if (parseFloat(this.creating.form.prepared_point) >  parseFloat(this.creating.form.coverage)){
+            window.alert('prepared point needs to be smaller ore equal coverage')
             return;
         }
         if(this.image){
@@ -1018,24 +1212,21 @@ methods:
             data.append('image', this.image)
             this.creating.form.image = data
         }  
-        // console.log('submiss form is : ', this.creating.form)
-
+        this.isLoading = true
         axios.post(`/api/datatable/intermediate_product`, this.creating.form).then((response) => {
-        // console.log("🚀 ~ file: DataTable.vue ~ line 238 ~ axios.post ~ this.endpoint", this.endpoint
-        //    console.log('this is repsonse id:', response.data.id)
-        //    console.log('this is the image:', this.image)
-                 
+            this.isLoading = false
            if(response.data.id && this.image) {
                 let data = new FormData;
                 data.append('image', this.image)
                 
                 axios.post(`/api/datatable/intermediate_product/saveImage/${response.data.id}`, data).then((response1)=>{
+                    this.isLoading = false
                     this.getRecords().then(() => {
-                        console.log('save Image sucessfully')
                         this.imagePreview = null;
                         this.image =null;
                     })
                 }).catch((error) => {
+                    this.isLoading = false
                     if (error.response.status === 422) {
                         this.creating.errors = error.response.data.errors                       
                     }
@@ -1046,17 +1237,16 @@ methods:
                  this.creating.active = true
                 this.creating.form = {}
                 this.creating.form.Active = 1
-                this.creating.form.permission_id = 1
                 this.creating.form.unit_id = 1
                 this.creating.form.category_id = 1   
+                this.creating.form.location_id = 1   
                 this.creating.errors = []
+                this.creating.form.assignedPermissionIds = [1]  
+
+                this.isLoading = false
             })
-            // if(response.data) {
-            //     console.log('saved successfully !')
-            // } else {
-            //     alert ('unsucessfully save image! please contact Admin')
-            // }
         }).catch((error) => {
+            this.isLoading = false
             if (error.response.status === 422) {
                 this.creating.errors = error.response.data.errors                       
             }
@@ -1064,17 +1254,18 @@ methods:
     },
         
     destroy(record){
-    // console.log("🚀 ~ file: DataTable.vue ~ line 174 ~ destroy ~ record", record)
 
         if(!window.confirm(`Are you sure?`)){
             return
         }
-
+        this.isLoading = true
         axios.delete(`/api/datatable/intermediate_product/${record}`).then(()=>{
             this.selected= [],
             this.selected_dropdown_active = false,
             this.getRecords()
+            this.isLoading = false
         }).catch((error) => {
+            this.isLoading = false
             if (error.response.status === 422) {
                 if(error.response.data.message == 'Foreign Key Problem'){
                     alert(error.response.data.error);
@@ -1096,8 +1287,6 @@ methods:
         }
     },
     imageChanged(e,id) {
-        console.log('hei, id of the record is', id);
-        // this.creating.form.imageIcon = e.target.files[0];
         this.image = e.target.files[0];
         let reader = new FileReader();
         reader.readAsDataURL(this.image);
@@ -1114,17 +1303,18 @@ methods:
             let data = new FormData
             data.append('image', this.image)
         
-        console.log(data)
+        this.isLoading = true
 
         axios.post(`/api/datatable/intermediate_product/saveImage/${productId}`, data).then((response1)=>{
             this.getRecords().then(() => {
-                console.log('save Image sucessfully')
                 this.currentPreviewUpdateId = null;
                 this.imagePreviewUpdate = null;
                 this.image =null;
+                this.isLoading = false
             })
            
         }).catch((error) => {
+            this.isLoading = false
             if (error.response.status === 422) {
                 this.creating.errors = error.response.data.errors                       
             }
