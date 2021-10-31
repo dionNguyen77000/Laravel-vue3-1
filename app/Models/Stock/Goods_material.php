@@ -16,7 +16,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Goods_material extends Model
 {
     use HasFactory, LogsActivity;
-    protected static $logAttributes = ['current_qty','prepared_point','coverage'];
+    protected static $logAttributes = [
+        'current_qty',
+        // 'prepared_point',
+        // 'coverage'
+    ];
     
     protected $fillable = [
         'name',
@@ -37,7 +41,8 @@ class Goods_material extends Model
         'required_qty',
         'permission_id',
         'Active',
-        'Preparation'
+        'Preparation',
+        'O_Status'
     ];
     
     public function getRouteKeyName()
@@ -68,5 +73,19 @@ class Goods_material extends Model
     public function permissions()
     {
         return $this->belongsToMany(Permission::class);
+    }
+    public function intermediate_products()
+    {
+        return $this->belongsTo(Intermediate_product::class);
+    }
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class)
+        ->withPivot('unit_price');
+    }
+
+    public function suppliersWithUnputPrice()
+    {
+        
     }
 }

@@ -148,6 +148,27 @@ class UserController extends DataTableController
         return $theUser->load('roles');
         // return new PrivateUserResource($user);
     }
+
+    public function destroy($ids, Request $request)
+    {
+        if (!$this->allowDeletion) {
+            return;
+        }
+
+        $arrayIds = explode(',',$ids);
+
+       
+        // in_array(1, $arrayIds) cannot delete user having id 1 - admin
+        if (!in_array(1, $arrayIds)) {
+            if (count($arrayIds) > 1) {
+                $this->builder->whereIn('id', explode(',', $ids))->delete();
+            } else if (count($arrayIds) == 1){
+                $this->builder->find($ids)->delete();
+                // $this->builder->find($ids)->delete();
+            }
+        }
+    }
+
     protected function getRecords(Request $request)
     {
         $builder = $this->builder;

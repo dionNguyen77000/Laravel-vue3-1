@@ -137,6 +137,12 @@
             Invoices_From_Suppliers
           </div>
           </router-link>
+
+          <router-link :to="{name:'Miscellaneous_Invoices'}">
+          <div class="mb-1 w-full flex justify-center md:justify-start items-center text-blue-400 h-8 pl-4 hover:bg-gray-200 rounded-lg cursor-pointer">
+            Miscellaneous_Invoices
+          </div>
+          </router-link>
     
         <!-- <div class="w-full flex items-center text-blue-400 h-8 pl-4 hover:bg-gray-200 rounded-lg cursor-pointer">
           <svg class="h-6 w-6 fill-current mr-2" viewBox="0 0 20 20">
@@ -144,6 +150,18 @@
           </svg>
           <span class="text-gray-500">Settings</span>
         </div> -->
+      </div>
+      <div v-if="getAuth.isFirstLevelUser|| getAuth.isSecondLevelUser"  
+      class="mb-4 px-4"
+      >
+        <p class="pl-4 text-md text-gray-50 text-center font-semibold mb-1"> Settings</p>
+         
+          <router-link :to="{name:'Activity_Log'}">
+          <div class="mb-1 w-full flex justify-center md:justify-start items-center text-blue-400 h-8 pl-4 hover:bg-gray-200 rounded-lg cursor-pointer">
+            Activity Log
+          </div>
+          </router-link>
+
       </div>
 
     <!-- <div class="mb-4 px-4">

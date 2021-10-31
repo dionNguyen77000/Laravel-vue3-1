@@ -277,22 +277,20 @@ class Invoice_From_Supplier_LineController extends DataTableController
         // if (isset($request->order_to_supplierId)) {
         //     $builder =   $builder->where('invoices_from_supplier_id','=',$request->order_to_supplierId);
         // }
-        
-       
     
         try {
             if($request->compare == 'Yes'){
                 return Compare_Order_InvoiceResourceDB::collection(
                     $builder->limit($request->limit)
                     ->where('orders_to_supplier_id','=',$request->orders_to_supplierId)
-                    ->orderBy('created_at', 'desc')
+                    ->orderBy('created_at', 'asc')
                     ->get($this->getComparedDisplayableColumns())
                 );
             } else {
                 return Invoice_From_Supplier_LineResourceDB::collection(
                     $builder->limit($request->limit)
                     ->where('orders_to_supplier_id','=',$request->orders_to_supplierId)
-                    ->orderBy('created_at', 'desc')
+                    ->orderBy('created_at', 'asc')
                     ->get($this->getDisplayableColumns())
                 );
             }
@@ -303,8 +301,7 @@ class Invoice_From_Supplier_LineController extends DataTableController
     }
 
     public function addAmountFromInvoiceToStock($ids){
-        $arrayIds = explode(',',$ids);
-        
+        $arrayIds = explode(',',$ids);       
         $GM_qty_cannot_be_added = [];
         if (count($arrayIds) > 0 ) {
             for ($i=0; $i < count($arrayIds); $i++) { 
@@ -320,6 +317,14 @@ class Invoice_From_Supplier_LineController extends DataTableController
                     $unitOfGM = $GM->unit->name;
                     if($unitOfGM == $invoice_line->i_unit)  {
                         $GM->current_qty = $GM->current_qty + $invoice_line->i_unit_quantity;
+                        if ($GM->current_qty <= $GM->prepared_point){
+                            $GM->Preparation = 'Yes';
+                            $GM->required_qty = $GM->coverage -   $GM->current_qty;  
+                        } else{
+                            $GM->Preparation = 'No';
+                            $GM->required_qty = 0;
+                        }
+                        $GM->O_Status = null;
                         $GM->save();
                     }     
                     else  {
@@ -334,7 +339,7 @@ class Invoice_From_Supplier_LineController extends DataTableController
             return $GM_qty_cannot_be_added;
         }else return "Added Successfully";
     }
-    public function removeAmountFromInvoiceToStock($ids){
+    public function removeAmountFromInvoice($ids){
         $arrayIds = explode(',',$ids);
         
         $GM_qty_cannot_be_added = [];
@@ -353,6 +358,13 @@ class Invoice_From_Supplier_LineController extends DataTableController
                     $unitOfGM = $GM->unit->name;
                     if($unitOfGM == $invoice_line->i_unit)  {
                         $GM->current_qty = $GM->current_qty - $invoice_line->i_unit_quantity;
+                        if ($GM->current_qty <= $GM->prepared_point){
+                            $GM->Preparation = 'Yes';
+                            $GM->required_qty = $GM->coverage -   $GM->current_qty;  
+                        } else{
+                            $GM->Preparation = 'No';
+                            $GM->required_qty = 0;
+                        }
                         $GM->save();
                     }     
                     else  {
@@ -365,7 +377,48 @@ class Invoice_From_Supplier_LineController extends DataTableController
         } 
         if(count($GM_qty_cannot_be_added)>0){
             return $GM_qty_cannot_be_added;
-        }else return "Removed Successfully";
+        }else return "Deduct Successfully";
+    }
+    public function removeAmountFromInvoiceAndUpdateOrderStatus($ids){
+        $arrayIds = explode(',',$ids);
+        
+        $GM_qty_cannot_be_added = [];
+        if (count($arrayIds) > 0 ) {
+            for ($i=0; $i < count($arrayIds); $i++) { 
+                // $invoice_line =  $this->builder->find($arrayIds[$i]);
+                $invoice_line = Order_To_Supplier_Line::find($arrayIds[$i]);
+                // dd($invoice_line->i_unit_quantity);
+               
+                $invoice_line_name =  $invoice_line->goods_material;
+               
+                $GM = Goods_material::where('name',$invoice_line_name)->first();    
+
+              
+                if($GM){
+                    $unitOfGM = $GM->unit->name;
+                    if($unitOfGM == $invoice_line->i_unit)  {
+                        $GM->current_qty = $GM->current_qty - $invoice_line->i_unit_quantity;
+                        if ($GM->current_qty <= $GM->prepared_point){
+                            $GM->Preparation = 'Yes';
+                            $GM->required_qty = $GM->coverage -   $GM->current_qty;  
+                        } else{
+                            $GM->Preparation = 'No';
+                            $GM->required_qty = 0;
+                        }
+                        $GM->O_Status = 'waiting';
+                        $GM->save();
+                    }     
+                    else  {
+                        array_push($GM_qty_cannot_be_added,$invoice_line);
+                    }                           
+                } else {
+                    array_push($GM_qty_cannot_be_added,$invoice_line);
+                }               
+            }
+        } 
+        if(count($GM_qty_cannot_be_added)>0){
+            return $GM_qty_cannot_be_added;
+        }else return "Deduct Successfully";
     }
 
   

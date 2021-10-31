@@ -10,7 +10,7 @@
               Select Tasks on the sidebar. You can switch the sidebar on or off using Hamburger button. 
             </p>
             <p>
-              This is the beta version of system. Contact me (Dion) regarding any issues. 
+              This is the beta version of system. Contact me (Dion) regarding any issue. 
             </p>
         </div>       
     </div>
@@ -18,7 +18,7 @@
 
 <script>
 // import Chart from 'chart.js'
-import {mapGetters, mapActions} from 'vuex'
+import {mapGetters} from 'vuex'
 
 export default {
     name: 'DashboardHome',

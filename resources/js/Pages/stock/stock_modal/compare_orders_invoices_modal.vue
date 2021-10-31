@@ -304,6 +304,11 @@
                                             <span class="font-medium" >{{columnValue}}</span>
                                         </div>
                                     </template>
+                                    <template v-else-if="column=='goods_material'">
+                                        <div class="flex items-center w-36">
+                                        <span class="font-medium" >{{columnValue}}</span>
+                                        </div>
+                                    </template>
                                     <template v-else>
                                         <div :class="{ 'text-center': textCenterColumns.includes(column) }" >   
                                             <span class="font-medium" >{{columnValue}}</span>
@@ -384,7 +389,7 @@ export default {
                 },
                 sort: {
                     key: 'id',
-                    order: 'desc'
+                    order: 'asc'
                 },
                 creating: {
                     active: false,

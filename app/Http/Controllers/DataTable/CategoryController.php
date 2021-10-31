@@ -52,13 +52,13 @@ class CategoryController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'slug', 'parent_id'
+            'id','name', 'type', 'parent_id'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-            'name', 'slug', 'parent_id'
+            'name', 'type', 'parent_id'
         ];
     }
     
@@ -66,24 +66,20 @@ class CategoryController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:categories,name',
-            'slug' => 'required|unique:categories,slug',
         ]);
 
         // dd($request);
         $this->builder->create($request->only($this->getUpdatableColumns()));
-        return "successfully created";
     }
 
     public function update($id, Request $request)
     {
         $this->validate($request, [
             'name' => 'required|unique:categories,name,' . $id,
-            'slug' => 'required|unique:categories,slug,' . $id,
         ]);
 
 
         $this->builder->find($id)->update($request->only($this->getUpdatableColumns()));
-        return "successfully updated";
         // return new PrivateUserResource($user);
     }
 
@@ -102,6 +98,10 @@ class CategoryController extends DataTableController
 
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
+        }
+
+        if (isset($request->type) && $request->type!='') {
+            $builder =   $builder->where('type','=',$request->type);
         }
 
         try {

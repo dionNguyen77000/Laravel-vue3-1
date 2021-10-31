@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateInvoicesFromSuppliersTable extends Migration
+class CreateMiscellaneousInvoicesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,8 @@ class CreateInvoicesFromSuppliersTable extends Migration
      */
     public function up()
     {
-        Schema::create('invoices_from_suppliers', function (Blueprint $table) {
+        Schema::create('miscellaneous_invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('orders_to_supplier_id')->nullable()->constrained()->onUpdate('cascade')
-            ->onDelete('cascade');
             $table->string('user');
             $table->string('img')->nullable();
             $table->string('img_two')->nullable();
@@ -28,6 +26,8 @@ class CreateInvoicesFromSuppliersTable extends Migration
             $table->string('supplier')->nullable();
             $table->string('Note')->nullable();
             $table->string('paid')->nullable();
+            $table->string('invoice_category')->nullable();
+            $table->string('invoice_type')->nullable();
             $table->timestamps();
         });
     }
@@ -39,6 +39,6 @@ class CreateInvoicesFromSuppliersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('invoices_from_suppliers');
+        Schema::dropIfExists('miscellaneous_invoices');
     }
 }

@@ -82,6 +82,10 @@ class LocationController extends DataTableController
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
         }
+
+        if (isset($request->locationId)) {
+            $builder =   $builder->where('id','=',$request->locationId);
+        }
   
         try {
             $locations = $builder
@@ -166,9 +170,11 @@ class LocationController extends DataTableController
         $theLocation= $this->builder->find($silderImageidArray[0]);
 
         // deal with second or third invoice image
+        // rand(1,999) to create a random number between 1 and 999 so the name of image is different everytime generate
+        // a new image --> this help to solve the proble of catching old image everytime update new image.
         if(count($silderImageidArray)>1){
             $img_number = $silderImageidArray[1];
-            $imageName = $theLocation->name.'_'.$img_number.'.jpg';
+            $imageName = $theLocation->name.rand(1,999).'_'.$img_number.'jpg';
 
 
             //delete old image
@@ -217,9 +223,9 @@ class LocationController extends DataTableController
                 ]);
             }
 
-            
-            $imageName = $theLocation->name.'.jpg';
-            $thumbnailName = $theLocation->name.'_thumbnail_'.'.jpg';
+            $randomNumber = rand(1,999);
+            $imageName = $theLocation->name.$randomNumber.'.jpg';
+            $thumbnailName = $theLocation->name.'_thumbnail_'.$randomNumber.'.jpg';
 
             Storage::put("public/location_images/". $imageName, $imageNameResize->__toString());
             Storage::put("public/location_images/". $thumbnailName, $thumbnailNameResize->__toString());

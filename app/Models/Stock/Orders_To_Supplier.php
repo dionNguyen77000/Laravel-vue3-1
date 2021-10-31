@@ -14,8 +14,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Orders_To_Supplier extends Model
 {
     protected $table = 'orders_to_suppliers';
-    use HasFactory,  LogsActivity;
-    protected static $logAttributes = ['user', 'supplier','estimated_price','ordered_date','Note'];
+    use HasFactory  ;
+    // LogsActivity
+    // protected static $logAttributes = ['user', 'supplier','estimated_price','ordered_date','Note'];
     
     protected $appends = ['InvNumber'];
 
@@ -27,6 +28,7 @@ class Orders_To_Supplier extends Model
         'estimated_price',
         'excel_file',
         'Note',
+        'paid'
      ];
 
      

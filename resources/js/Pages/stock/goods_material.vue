@@ -1,22 +1,22 @@
 <template>
   <div id="goods_material" class="p-6"> 
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">      
-        <loading v-model:active="isLoading"
+            <loading v-model:active="isLoading"
                  :can-cancel="true"
                  :is-full-page="fullPage"/>
-        <div class="w-full p-1">
-            <!-- New Record section  -->
+            <div class="w-full p-1">
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Goods & Materials</div>
                 <div>
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
                     v-if="(isFirstLevelUser || isSecondLevelUser || isThirdLevelUser) && response.allow.creation"
-                    @click.prevent="creating.active = !creating.active">
+                    @click.prevent="toggleNewRecordSection">
                     {{ creating.active ? 'Hide' : 'New record' }}
                     </a>
                 </div>               
             </div>
+            <!-- New Record section  -->
             <div class="flex justify-center" v-if="response.allow.creation && creating.active">
                 <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
                 <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
@@ -55,14 +55,7 @@
                             </select>
                             </template> 
 
-                             <template v-else-if="column=='supplier_id'">
-                            <label :for="column"  class="font-semibold">Supplier :  </label>
-                            <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option :value="index" v-for="option,index in response.supplierOptions" :key="option">
-                                    {{option}}
-                                </option>
-                            </select>                     
-                            </template>    
+                        
 
                              <template v-else-if="column=='img'"> </template> 
                              <template v-else-if="column=='required_qty'">
@@ -90,6 +83,15 @@
                                 </select>
                             </template> 
 
+                            <template v-else-if="column=='supplier_id'">
+                            <label :for="column"  class="font-semibold">Supplier :  </label>
+                            <select :name="column" :id="column" v-model="creating.form[column]">
+                                <option :value="index" v-for="option,index in response.supplierOptions" :key="option">
+                                    {{option}}
+                                </option>
+                            </select>                     
+                            </template>    
+
                             <template v-else>
                             <label :for="column" class="sr-only"> </label>
                             <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
@@ -100,8 +102,11 @@
                             </div>
                             </template>
                         </div> 
-                            <label  class="font-semibold" for="Active">Permissions : </label>    
-                            <ul id="roles" class="width-3/4 flex flex-wrap">
+
+                        
+                        <div>
+                            <label  class="font-semibold" for="Permissions">Permissions : </label>    
+                            <ul id="permissions" class="width-3/4 flex flex-wrap">
                                 <li  class="mr-2" v-for="option,index in response.permissionOptions" :key="index">
                                     <input type="checkbox"                               
                                     :value="index" 
@@ -113,7 +118,38 @@
                             </ul> 
                               <div class="text-red-500 mt-2 text-sm" v-if="creating.errors['assignedPermissionIds']">
                                     <strong>{{ creating.errors['assignedPermissionIds'][0] }}</strong>
-                            </div>        
+                            </div>     
+                        </div>
+
+                        {{this.creating.form.assignedPermissionIds}}
+                       
+                        <div>
+                            <label  class="font-semibold" for="Suppliers">Suppliers : </label>    
+                            <ul id="suppliers" class="width-3/4">
+                                <li  class="mr-2 mb-1" v-for="option,index in response.supplierOptions" :key="index">
+                                    <input type="checkbox"                               
+                                    :value="index" 
+                                    :id="option" 
+                                    v-model="creating.form.assignedSupplierIds"                                 >
+                                    {{ option }}
+                                    <input v-if="creating.form.assignedSupplierIds.includes(index)"
+                                    class="text-center"
+                                    type="number" 
+                                    min="0"
+                                    step=".01"
+                                    :id="index+option"
+                                    v-model="creating.form.assignedSupplierUnitPrices[index]" 
+                                    placeholder="unit price"
+                                    >
+                                </li>
+                            </ul> 
+                              <div class="text-red-500 mt-2 text-sm" v-if="creating.errors['assignedSupplierIds']">
+                                    <strong>{{ creating.errors['assignedSupplierIds'][0] }}</strong>
+                            </div>     
+                        </div>
+                         {{creating.form.assignedSupplierIds}}
+                        {{creating.form.assignedSupplierUnitPrices}}
+                             
                         <div class="text-center">
                             <button type="submit" class="bg-indigo-500 hover:bg-indigo-800 text-white px-4 py-2 rounded">Create</button>
                         </div>                   
@@ -138,67 +174,22 @@
                 <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
                     <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">Supplier Order</h3>
                     <div class="mb-2 text-center">
-                        <label :for="column"  class="font-semibold"> Select Supplier :  </label>                  
+                        <label  class="font-semibold"> Select Supplier :  </label>                  
                             <select v-model="selected_supplier" @change="selectedSupplierForOrder">
-                                <option  value= '' >Supplier</option>
                                 <option v-for="option,index in response.supplierOptions" :value="index" :key="option">
                                     {{option}} 
                                 </option>                               
                             </select>                        
                     </div>              
                     <template v-if="selected_supplier != ''">
-                        <div class="mb-2 text-center">
-                            <label  class="font-semibold" >Supplier Email </label>
-                            <input type="text" class="bg-gray-100 border-2 p-1 mr-3 rounded-lg"
-                            :class="{ 'border-red-500': selectedSupplierInfo.errors['email'] }"
-                            v-model="selectedSupplierInfo.email" >
-                            
-                            <label  class="font-semibold" >Representative </label>
-                            <input type="text" class="bg-gray-100 border-2 p-1 mr-3 rounded-lg"
-                                v-model="selectedSupplierInfo.representative" disabled
-                            >
-                            <label  class="font-semibold" >Phone </label>
-                            <input type="text" class="bg-gray-100 border-2 p-1 mr-3 ounded-lg"
-                                v-model="selectedSupplierInfo.phone" disabled
-                            >
-                      </div>                    
-                        <div class="mb-2 text-center">
-                            <h3 class="font-semibold"  >Optional Message</h3>                      
-                            <textarea 
-                            name="body" id="body" cols="30" rows="3" 
-                            class="bg-gray-100 border-2 w-full p-4 rounded-lg shadow-md" 
-                            v-model="selectedSupplierInfo.optionalMessage"
-                            placeholder="Optional message to supplier ...">
-                            </textarea>                          
-                        </div>
+                                
                         <div class="mb-2 text-center">            
-                            <button @click="exportFiles()" 
+                            <button @click="openOderPreparationModal()" 
                             class="p-2 m-2 shadow-md bg-green-500 text-white text-sm hover:bg-green-700 focus:outline-none rounded"
                             > 
-                            Generate Excel </button>                              
-                            <a v-bind:href="orderExcelFileOfSelectedSupplier.link">{{orderExcelFileOfSelectedSupplier.fileName}}</a>
+                            Prepare Order </button>                              
                         </div>                
-                        <div class="grid grid-cols-3 gap-4">
-                             <button 
-                            class="bg-indigo-500 hover:bg-indigo-800 text-white  p-3 rounded "
-                             @click="createAndSendOrderToSupplier()"
-                            >
-                                Create & Email Order
-                            </button>
-                            <button 
-                            class="bg-indigo-500 hover:bg-indigo-800 text-white  p-3 rounded"
-                             @click="createOrderToSupplier()"
-                            >
-                                Create Order
-                            </button>
-
-                            <button 
-                            class="bg-indigo-500 hover:bg-indigo-800 text-white  p-3 rounded"
-                             @click="emailOrderToSupplier()"
-                            >
-                                Email Order
-                            </button>                       
-                        </div>
+                     
                    </template>
                 </div>
             </div>   
@@ -353,7 +344,7 @@
                 <div class="relative">
                     <select v-model="selected_active" @change="getRecords"
                         class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
-                        <option  value= ''>Active&Inactive</option>         
+                        <option  value= 'All'>Active&Inactive</option>         
                         <option value="0">
                             Inactive
                         </option>
@@ -384,11 +375,12 @@
             </div>
         </div>    
         <!-- start Table -->        
-        <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto">
+        <!-- <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto"> -->
+        <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3 ">
             <table class="min-w-max w-full table-auto">
                 <!-- Table Heading Section -->
                 <thead>
-                    <tr class="collapse py-2 bg-blue-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr class="sticky top-0 collapse py-1 bg-blue-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
                         v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
                         class="py-2"
@@ -535,6 +527,60 @@
                                                 </span>
                                             </template>
 
+                                            <template v-else-if="column=='suppliers'">
+                                                
+                                                <ul id="roles" class="ml-2 w-40 flex flex-wrap">
+                                                    <li  class="w-full" v-for="option,index in response.supplierOptions" :key="index">
+                                                        
+                                                   
+                                                        <input type="checkbox"
+                                                        :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                                        :value="index" 
+                                                        :id="option" 
+                                                        v-model="editing.form.assignedSupplierIds"
+                                                        >
+                                                        <label :for="option">{{ option }}</label>
+                                                        <template v-if="editing.form.assignedSupplierIds.includes(index)">
+                                                        <br> Price/Unit:    <input 
+                                                                class="w-1/2 text-center text-gray-700"
+                                                                :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                                                type="number" 
+                                                                min="0"
+                                                                step=".01"
+                                                                v-model="editing.form.assignedSupplierUnitPrices[index]" 
+                                                                >
+                                                        </template>
+                                                      
+                                                    </li>
+                                                </ul>                                                
+                                                <span v-if="editing.errors['assignedSupplierIds']" class="text-yellow-200 font-bold">
+                                                    <strong>{{ editing.errors['assignedSupplierIds'][0] }}</strong>
+                                                </span>
+                                            </template>
+                            <!-- <div>
+                            <label  class="font-semibold" for="Suppliers">Suppliers : </label>    
+                            <ul id="suppliers" class="width-3/4">
+                                <li  class="mr-2 mb-1" v-for="option,index in response.supplierOptions" :key="index">
+                                    <input type="checkbox"                               
+                                    :value="index" 
+                                    :id="option" 
+                                    v-model="creating.form.assignedSupplierIds"                                 >
+                                    {{ option }}
+                                    <input v-if="creating.form.assignedSupplierIds.includes(index)"
+                                    class="text-center"
+                                    type="number" 
+                                    min="0"
+                                    step=".01"
+                                    :id="index+option"
+                                    v-model="creating.form.assignedSupplierUnitPrices[index]" 
+                                    >
+                                </li>
+                            </ul> 
+                              <div class="text-red-500 mt-2 text-sm" v-if="creating.errors['assignedSupplierIds']">
+                                    <strong>{{ creating.errors['assignedSupplierIds'][0] }}</strong>
+                            </div>     
+                        </div> -->
+
                                             <template v-else-if="column=='Preparation'">
                                                 <select 
                                                 class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
@@ -549,9 +595,8 @@
                                                 </select>
                                                 
                                             </template>    
-
-                                             <template v-else-if="column=='location_id'">
-                                                <select
+                                            <template v-else-if="column=='O_Status'">
+                                                <select 
                                                 class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                                 :class="{
                                                     'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
@@ -559,8 +604,23 @@
                                                 :name="column" :id="column" 
                                                 v-model="editing.form[column]"
                                                 :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                                >   
+                                                    <option value="waiting">Waiting</option>                                  
+                                                    <option  value=''></option>     
+                                                </select>
+                                                
+                                            </template>    
+
+                                             <template v-else-if="column=='location_id'">
+                                                <select
+                                                class='w-36 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                                :class="{
+                                                    'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
+                                                }"
+                                                :name="column" :id="column" 
+                                                v-model="editing.form[column]"
+                                                :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                                 >
-                                                    <option  value=""></option>
                                                     <template v-for="option,index in response.locationOptions" >
                             
                                                         <template v-if="record.id != option.id" >                  
@@ -617,7 +677,6 @@
                                                 :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                                 :name="column" :id="column" 
                                                 v-model="editing.form[column]">                                    >
-                                                    <option  value=""></option>
                                                     <template v-for="option,index in response.supplierOptions" >   
                                                         <template v-if="record.id != option.id">                  
                                                         <option :value="index" :key="option">
@@ -634,7 +693,7 @@
                                                 {{dollarsSymbolColumns.includes(column) ?'$' : '' }} 
                                                 <input type="text"  
                                                 class='w-3/4 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
-                                            v-model="editing.form[column]"
+                                                v-model="editing.form[column]"
                                                 :class="{ 
                                                 'border-3 border-red-700': editing.errors[column] ,
                                                 'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column),
@@ -668,10 +727,9 @@
                                                     <span v-if="editing.errors[column]" class="text-red-700 font-bold">
                                                         <strong>{{ editing.errors[column][0] }}</strong>
                                                     </span>
-
-                                                    
+                                                  
                                                     <div class="mt-1">
-                                                        <button @click.prevent="update('current_qty')"
+                                                        <button @click.prevent="updateCurrentQty(record)"
                                                             class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none">                                         
                                                         Save
                                                     </button> 
@@ -726,12 +784,21 @@
                                            
 
                                             <template v-else-if="column=='location_id'">
-                                            <div class="flex items-center">
-                                                <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                            <div class="w-28 flex items-center">
+                                                  <a href="#"  @click.prevent="openLocationModal(record)" 
+                                                    class="font-semibold  text-indigo-500 hover:underline"  
+                                                        >                     
+                                                    <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                                    </a> 
                                             </div>
                                             </template>
 
                                              <template v-else-if="column=='permissions'">
+                                                <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                                    {{ option.name }}
+                                                </div>      
+                                            </template>         
+                                             <template v-else-if="column=='suppliers'">
                                                 <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
                                                     {{ option.name }}
                                                 </div>      
@@ -809,7 +876,7 @@
 
                                                     
                                                     <div class="mt-1">
-                                                        <button @click.prevent="update('current_qty')"
+                                                        <button @click.prevent="updateCurrentQty(record)"
                                                             class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none">                                         
                                                         Save
                                                     </button> 
@@ -864,14 +931,22 @@
                                                 </div>
                                             </template>  
 
-                                            
                                             <template v-else-if="column=='location_id'">
-                                            <div class="flex items-center">
-                                                <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                            <div class="w-28 flex items-center">
+                                                  <a href="#"  @click.prevent="openLocationModal(record)" 
+                                                    class="font-semibold  text-indigo-500 hover:underline"  
+                                                        >                     
+                                                    <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                                    </a> 
                                             </div>
-                                            </template>                                    
+                                            </template>                                  
                                            
                                             <template v-else-if="column=='permissions'">
+                                                <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                                    {{ option.name }}
+                                                </div>      
+                                            </template>  
+                                            <template v-else-if="column=='suppliers'">
                                                 <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
                                                     {{ option.name }}
                                                 </div>      
@@ -938,11 +1013,28 @@
                             @getRecordForSlider="getRecords" 
                             />
                         </div>
+                        <div v-if="record.id == clickLocationModalId">
+                            <Location_Modal  
+                            :locationId="record.location_id" 
+                            :table_name="'goods_material'"
+                            @close="clickLocationModalId=null" 
+                            />
+                        </div>
                     </tr>
                    
                 </tbody>
              <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
             </table>
+            <div v-if="clickOderPreparationModalId">
+                <Order_Preparation_Modal  
+                :requiredRecords="requiredRecords" 
+                :categoryOptions="response.categoryOptions"
+                :unitOptions="response.unitOptions"
+                :custom_columns="response.custom_columns"
+                :selectedSupplierInfo ="selectedSupplierInfo"
+                @close="clickOderPreparationModalId=null" 
+                />
+            </div>
          
         </div>
           
@@ -954,6 +1046,8 @@
 
 <script>
 import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
+import Location_Modal from './stock_modal/location_modal.vue'
+import Order_Preparation_Modal from './stock_modal/order_preparation_modal.vue'
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/vue-loading.css';
 import {mapGetters, mapState } from 'vuex'
@@ -963,7 +1057,7 @@ export default {
         //   redirectIfNotCustomer
       ],
 
-    components: {Loading, Image_Slider_Modal},
+    components: {Loading, Image_Slider_Modal, Location_Modal,Order_Preparation_Modal},
    data() {
             return {
                 response: {
@@ -986,13 +1080,18 @@ export default {
                         category_id:1,
                         location_id:1,
                         assignedPermissionIds: [ 1 ],
+                        assignedSupplierIds: [ '1' ],
+                        assignedSupplierUnitPrices : [],
                     },
-                    errors: [],
+                    errors: [], 
                 },
                 editing: {
                     id: null,
                     form: {
                         assignedPermissionIds: [],                    
+                        assignedSupplierIds: [],      
+                        assignedSupplierUnitPrices : [],
+              
                     },
                     errors: []
                 },
@@ -1010,7 +1109,7 @@ export default {
                 fullPage: true,
                 selectedSupplierInfo: {
                     id: null,
-                    name: 'work',
+                    name: null,
                     email: null,
                     phone: null,
                     representative: null,
@@ -1033,24 +1132,21 @@ export default {
 
                 // columns hidden - can be show by unclick the radio buttons
                 hideColumns:['supplier_id','description','price','unit_id',
-                'prepared_point','category_id','coverage','Active'],
+                'prepared_point','category_id','coverage','Active','O_Status'],
 
                 // columns unshown in edit mode
                 unshownColumnsInEditMode:['img_thumbnail'],
 
                 // columns unshown according to user levels
-                secondLevel_ColumnNotAllowsToShow: [
-                                    
+                secondLevel_ColumnNotAllowsToShow: [                                    
                 ],
-                
-
 
                 thirdLevel_ColumnNotAllowsToShow: [
-                     'Active' 
+                     'Active' , 'O_Status'
                 ],     
                             
                 fourthLevel_ColumnNotAllowsToShow: [
-                    'Active'
+                    'Active', 'O_Status'
                 ],
 
                 // columns does not allow to edit according to user levels
@@ -1066,7 +1162,7 @@ export default {
                     'name', 'price','unit_id','supplier_id',
                     'category_id','description','prepared_point', 
                     'required_qty', 'coverage','Preparation',
-                    'Active','location_id','permissions'
+                    'Active','location_id','permissions','suppliers'
                 ],
                 
                 textCenterColumns:['price','current_qty','prepared_point','coverage','required_qty','Preparation','Active'],
@@ -1083,6 +1179,12 @@ export default {
                 // showIMGModal: false,
                 clickImgSliderModalId : null,
 
+                // showLocationModal: false,
+                clickLocationModalId : null,
+
+                // showLocationModal: false,
+                clickOderPreparationModalId : null,
+
                 // Filter Section Settings
                 quickSearchQuery: '',
                 selected_supplier: '',
@@ -1097,6 +1199,9 @@ export default {
                 imagePreview:null,
                 imagePreviewUpdate:null,               
                 currentPreviewUpdateId:null,  
+
+                // required Records
+                requiredRecords :  [],
                
             }
         },
@@ -1111,234 +1216,197 @@ export default {
     }),
     ...mapState(['sideBarOpen']),
       filteredRecords () {
-                // return this.response.records;
-                let data = this.response.records;
-                
-                // quick search query
-                data = data.filter((row) => {
-                    return Object.keys(row).some((key) => {
-                        return String(row[key]).toLowerCase().indexOf(this.quickSearchQuery.toLowerCase()) > -1
-                    })
+            // return this.response.records;
+            let data = this.response.records;
+         
+            // quick search query
+            data = data.filter((row) => {
+                return Object.keys(row).some((key) => {
+                    return String(row[key]).toLowerCase().indexOf(this.quickSearchQuery.toLowerCase()) > -1
                 })
-                
-                //  sort data according to clicking the head column
-                if (this.sort.key) {
-                    data = _.orderBy(data, (i) => { //lodash 
-                        
-                        let value = i[this.sort.key]                    
-                        if (!isNaN(parseFloat(value)) && isFinite(value)) {
-                            return parseFloat(value)
-                        }
+            })
 
-                        return String(i[this.sort.key]).toLowerCase()
-                    }, this.sort.order)
-                }
-                return data
-            },
+        
+            
+            //  sort data according to clicking the head column
+            if (this.sort.key) {
+                data = _.orderBy(data, (i) => { //lodash 
+                    
+                    let value = i[this.sort.key]                    
+                    if (!isNaN(parseFloat(value)) && isFinite(value)) {
+                        return parseFloat(value)
+                    }
 
-            canSelectItems() {
-                return this.filteredRecords.length <= 500
-            },
-            getRoleNames(){
-                const rolNameArray = []
-                if (this.response.userRoleOptions){
-                    const allRoleNames = this.response.userRoleOptions
-                    allRoleNames.forEach(element => {
-                    rolNameArray.push(element.name)
-                });                }
-                
-              
-                return rolNameArray;
+                    return String(i[this.sort.key]).toLowerCase()
+                }, this.sort.order)
+            }
+            return data
+        },
 
-            },
-            columnsNotAllowToShowAccordingToUserLevel(){
-                if(this.isFirstLevelUser) {
-                    return [] ;
-                } else if (this.isSecondLevelUser){
-                    return this.secondLevel_ColumnNotAllowsToShow;
-                } 
-                else if (this.isThirdLevelUser){
-                    return this.thirdLevel_ColumnNotAllowsToShow ;
-                } 
-                else if (this.isFourthLevelUser){
-                    return this.fourthLevel_ColumnNotAllowsToShow ;
-                } 
+        canSelectItems() {
+            return this.filteredRecords.length <= 500
+        },
+        getRoleNames(){
+            const rolNameArray = []
+            if (this.response.userRoleOptions){
+                const allRoleNames = this.response.userRoleOptions
+                allRoleNames.forEach(element => {
+                rolNameArray.push(element.name)
+            });                }
+            
+            
+            return rolNameArray;
+
+        },
+        columnsNotAllowToShowAccordingToUserLevel(){
+            if(this.isFirstLevelUser) {
+                return [] ;
+            } else if (this.isSecondLevelUser){
+                return this.secondLevel_ColumnNotAllowsToShow;
+            } 
+            else if (this.isThirdLevelUser){
+                return this.thirdLevel_ColumnNotAllowsToShow ;
+            } 
+            else if (this.isFourthLevelUser){
+                return this.fourthLevel_ColumnNotAllowsToShow ;
+            } 
+            return this.fourthLevel_ColumnNotAllowsToShow;
+        },
+
+        columnsNotAllowToEditAccordingToUserLevel(){
+            if(this.isFirstLevelUser) {
+                return [] ;
+            } else if (this.isSecondLevelUser){
+                return this.secondLevel_ColumnNotAllowsToEdit;
+            } 
+            else if (this.isThirdLevelUser){
+                return this.thirdLevel_ColumnNotAllowsToEdit ;
+            } 
+            else if (this.isFourthLevelUser){
+                return this.fourthLevel_ColumnNotAllowsToEdit ;
+            } 
+            return this.fourthLevel_ColumnNotAllowsToEdit;
+        },
+
+        columnsNotAllowToShowAccordingToUserLevel(){
+            if(this.isFirstLevelUser) {
+                return [] ;
+            } else if (this.isSecondLevelUser){
+                return this.secondLevel_ColumnNotAllowsToShow;
+            } 
+            else if (this.isThirdLevelUser){
+                return this.thirdLevel_ColumnNotAllowsToShow;
+            } 
+            else if (this.isFourthLevelUser){
                 return this.fourthLevel_ColumnNotAllowsToShow;
-            },
+            } 
+            return this.fourthLevel_ColumnNotAllowsToShow;
+        },
 
-            columnsNotAllowToEditAccordingToUserLevel(){
-                if(this.isFirstLevelUser) {
-                    return [] ;
-                } else if (this.isSecondLevelUser){
-                    return this.secondLevel_ColumnNotAllowsToEdit;
-                } 
-                else if (this.isThirdLevelUser){
-                    return this.thirdLevel_ColumnNotAllowsToEdit ;
-                } 
-                else if (this.isFourthLevelUser){
-                    return this.fourthLevel_ColumnNotAllowsToEdit ;
-                } 
-                return this.fourthLevel_ColumnNotAllowsToEdit;
-            },
+        isFirstLevelUser() {
+            let isCorrect = false;
+            for (var i = 0; i < this.firstLevelUsers.length; i++) {
+                if (this.getRoleNames.includes(this.firstLevelUsers[i])) 
+                {
+                    isCorrect = true;
+                    break;
+                }
+            }
+            return isCorrect;
+        },
+        isSecondLevelUser() {
+            let isCorrect = false;
+            for (var i = 0; i < this.secondLevelUsers.length; i++) {
+                if (this.getRoleNames.includes(this.secondLevelUsers[i])) 
+                {
+                    isCorrect = true;
+                    break;
+                }
+            }
+            return isCorrect;
+        },
+        isThirdLevelUser() {
+            let isCorrect = false;
+            for (var i = 0; i < this.thirdLevelUsers.length; i++) {
+                if (this.getRoleNames.includes(this.thirdLevelUsers[i])) 
+                {
+                    isCorrect = true;
+                    break;
+                }
+            }
+            return isCorrect;
+        },
+        isFourthLevelUser() {
+            let isCorrect = false;
+            for (var i = 0; i < this.fourthLevelUsers.length; i++) {
+                if (this.getRoleNames.includes(this.fourthLevelUsers[i])) 
+                {
+                    isCorrect = true;
+                    break;
+                }
+            }
+            return isCorrect;
+        },
 
-            columnsNotAllowToShowAccordingToUserLevel(){
-                if(this.isFirstLevelUser) {
-                    return [] ;
-                } else if (this.isSecondLevelUser){
-                    return this.secondLevel_ColumnNotAllowsToShow;
-                } 
-                else if (this.isThirdLevelUser){
-                    return this.thirdLevel_ColumnNotAllowsToShow;
-                } 
-                else if (this.isFourthLevelUser){
-                    return this.fourthLevel_ColumnNotAllowsToShow;
-                } 
-                return this.fourthLevel_ColumnNotAllowsToShow;
-            },
 
-            isFirstLevelUser() {
-                let isCorrect = false;
-                for (var i = 0; i < this.firstLevelUsers.length; i++) {
-                    if (this.getRoleNames.includes(this.firstLevelUsers[i])) 
-                    {
-                        isCorrect = true;
-                        break;
-                    }
-                }
-                return isCorrect;
-            },
-            isSecondLevelUser() {
-                let isCorrect = false;
-                for (var i = 0; i < this.secondLevelUsers.length; i++) {
-                    if (this.getRoleNames.includes(this.secondLevelUsers[i])) 
-                    {
-                        isCorrect = true;
-                        break;
-                    }
-                }
-                return isCorrect;
-            },
-            isThirdLevelUser() {
-                let isCorrect = false;
-                for (var i = 0; i < this.thirdLevelUsers.length; i++) {
-                    if (this.getRoleNames.includes(this.thirdLevelUsers[i])) 
-                    {
-                        isCorrect = true;
-                        break;
-                    }
-                }
-                return isCorrect;
-            },
-            isFourthLevelUser() {
-                let isCorrect = false;
-                for (var i = 0; i < this.fourthLevelUsers.length; i++) {
-                    if (this.getRoleNames.includes(this.fourthLevelUsers[i])) 
-                    {
-                        isCorrect = true;
-                        break;
-                    }
-                }
-                return isCorrect;
-            },
     },
 
 methods: 
 {
+    toggleNewRecordSection(){
+        this.creating.active = !this.creating.active
+        this.creating.form.assignedSupplierUnitPrices = Object.assign({},this.response.supplierOptions);
+
+        // this.creating.form.assignedSupplierUnitPrices = this.response.supplierOptions
+        for (const key in this.creating.form.assignedSupplierUnitPrices) {
+                this.creating.form.assignedSupplierUnitPrices[key] = 0;
+        }
+   
+
+    },
     selectedSupplierForOrder(){
+        this.isLoading = true
         axios.get(`/api/datatable/goods_material/supplierSelection/${this.selected_supplier}`).then((response)=> {
             this.selectedSupplierInfo.id = response.data.id
+            this.selectedSupplierInfo.name = response.data.name
             this.selectedSupplierInfo.email = response.data.email
             this.selectedSupplierInfo.phone = response.data.phone
             this.selectedSupplierInfo.representative = response.data.representative
-            this.getOrderExcelFile();
-            this.getRecords();
+            
+            this.getRecords().then(() => {
+                this.isLoading = false
+                
+            })
+
         })
         
     },    
-
-    createOrderToSupplier(){
-        if(this.orderExcelFileOfSelectedSupplier.exit == true){
-            this.selectedSupplierInfo.excelFileName = this.orderExcelFileOfSelectedSupplier.link;
-            this.isLoading = true
-            axios.post(`/api/datatable/goods_material/createOrderToSupplier/${this.selected_supplier}`, this.selectedSupplierInfo).then((response) => {
-            this.isLoading = false
-            if(response.data) {
-                alert('Order created successfully! Remember to refresh your browser to see new order');
+    
+    priceUpdateAccordingToSelectedSupplier(data){
+          
+            // assign new unit price of selected supplier
+            let theSelectedSupplier =this.selected_supplier
+            if(this.selected_supplier != ''){
+                // loop through each filtered record
+                _.forEach(data, function(value, key) {
+                    let suppliersOfGMArray =  value['suppliers']                   
+                    //loop through each supplier of GM -- each supplier of GM has pivot 
+                    for (let index = 0; index < suppliersOfGMArray.length; index++) {
+                        const theSupplier = suppliersOfGMArray[index];
+                            if(theSupplier.id == theSelectedSupplier){
+                                value.price = theSupplier.pivot.unit_price
+                                break;
+                            }
+                        
+                    }                  
+                });
             }
-            }).catch((error) => {
-                if (error.response.status === 422) {
-                    this.selectedSupplierInfo.errors = error.response.data.errors                       
-                }
-
-            })
-        } else {
-            alert('Your excel order file has not been generated. You must generate excel file first.');
-        }
-       
-    },
-    emailOrderToSupplier(){
-
-        if(this.orderExcelFileOfSelectedSupplier.exit == true){
-            this.selectedSupplierInfo.excelFileName = this.orderExcelFileOfSelectedSupplier.link;           
-            this.isLoading = true
-            axios.post(`/api/datatable/goods_material/emailOrderToSupplier/${this.selected_supplier}`, this.selectedSupplierInfo).then((response) => {
-            this.isLoading = false
-            if(response.data) {
-                alert('Order email to supplier successfully! Remember to refresh your browser to see new order');
-            }
-            }).catch((error) => {
-                if (error.response.status === 422) {
-                    this.selectedSupplierInfo.errors = error.response.data.errors                       
-                }
-
-            })
-        } else {
-
-            alert('Your excel order file has not been generated. You must generate excel file first.');
-        }
-    },
-
-    createAndSendOrderToSupplier(){
-        if(this.orderExcelFileOfSelectedSupplier.exit == true){
-            this.selectedSupplierInfo.excelFileName = this.orderExcelFileOfSelectedSupplier.link;
-            this.isLoading = true
-            axios.post(`/api/datatable/goods_material/orderAndEmail/${this.selected_supplier}`, this.selectedSupplierInfo).then((response) => {
-            this.isLoading = false
-            if(response.data) {
-                alert('Order To Supplier created and email to supplier successfully! Remember to refresh your browser to see new order');
-            }
-            }).catch((error) => {
-                if (error.response.status === 422) {
-                    this.selectedSupplierInfo.errors = error.response.data.errors                       
-                }
-                alert(error.response.data.errors['email'][0]);
-            })
-        } else {
-            alert('Your excel order file has not been generated. You must generate excel file first.');
-        }
-    },
-
-    getOrderExcelFile() {
-        
-        axios.get(`/api/datatable/goods_material/checkExcelFileIfGenerated/${this.selected_supplier}`).then((response)=> {
-            if (response.data) {
-                this.orderExcelFileOfSelectedSupplier.exit = true;
-
-                const arrayExcelFileName = response.data.split("/");
-                this.orderExcelFileOfSelectedSupplier.fileName = arrayExcelFileName[arrayExcelFileName.length-1];
-
-                this.orderExcelFileOfSelectedSupplier.link =  response.data;
-            } else {
-                this.orderExcelFileOfSelectedSupplier.exit = false;
-                this.orderExcelFileOfSelectedSupplier.fileName = null;
-                this.orderExcelFileOfSelectedSupplier.link =  null;
-            }
-        })      
     },
 
     getRecords(){
         return axios.get(`/api/datatable/goods_material?${this.getQueryParameters()}`).then((response)=> {
             this.response = response.data.data;
+            this.priceUpdateAccordingToSelectedSupplier(this.response.records)
         })
     },
     getQueryParameters () {
@@ -1358,32 +1426,13 @@ methods:
         )           
     },
 
+
     sortBy(column){
     this.sort.key = column
     this.sort.order = this.sort.order === 'asc' ? 'desc' : 'asc'
     },
 
-    edit (record) {
-      
-        this.editing.errors = []
-        this.editing.id = record.id
-        this.editing.form = _.pick(record, this.response.updatable)
-        this.editing.form.assignedPermissionIds = [];               
-
-        // when click update button, get the current selected ids of the permissions 
-        const permissionsOfGM = record.permissions;
-        for (let index = 0; index < permissionsOfGM.length; index++) {
-            const element = permissionsOfGM[index];
-                this.editing.form.assignedPermissionIds.push(element.id)
-        }
-    },
-
-    editCurrentQty(record){
-        
-        this.editing.errors = []
-        this.editing.currentQtyId = record.id
-        this.editing.form = _.pick(record, this.response.updatable)
-    },
+ 
 
     isUpdatable (column) {
         return this.response.updatable.includes(column)
@@ -1398,22 +1447,94 @@ methods:
         this.selected = _.map(this.filteredRecords, 'id')
     },
 
+    
+    editCurrentQty(record){      
+        this.editing.errors = []
+        this.editing.currentQtyId = record.id
+        this.editing.form = _.pick(record, this.response.updatable)
+    },
+
+    updateCurrentQty(record){
+        // return;     
+        this.isLoading = true
+        axios.post(`/api/datatable/goods_material/updateCurrentQty/${record.id}`, {'current_qty':this.editing.form.current_qty}).then((response) => {
+            this.isLoading = false
+
+           this.getRecords().then(() => {
+                this.editing.currentQtyId = null
+                this.editing.form = null
+                       
+            })
+        }).catch((error) => {
+            this.isLoading = false
+            if (error.response.status === 422) {            
+                this.editing.errors = error.response.data.errors
+            }
+        })
+    },
+
+    edit (record) {  
+        this.editing.errors = []
+        this.editing.id = record.id
+        this.editing.form = _.pick(record, this.response.updatable)
+        this.editing.form.assignedPermissionIds = [];               
+        this.editing.form.assignedSupplierIds = [];               
+        this.editing.form.assignedSupplierUnitPrices = {};               
+
+        // when click update button, get the current selected ids of the permissions 
+        const permissionsOfGM = record.permissions;
+        for (let index = 0; index < permissionsOfGM.length; index++) {
+            const element = permissionsOfGM[index];
+            this.editing.form.assignedPermissionIds.push(element.id)
+        }
+
+        const target_copy= Object.assign({},this.response.supplierOptions);                
+
+        // this.creating.form.assignedSupplierUnitPrices = this.response.supplierOptions
+        for (const key in target_copy) {
+            this.editing.form.assignedSupplierUnitPrices[key] = 0;
+        }
+        // when click update button, get the current selected ids of the suppliers 
+        // populate data to assignedSupplierIds and assignedSupplierUnitPrices
+        const suppliersOfGM = record.suppliers;
+        for (let index = 0; index < suppliersOfGM.length; index++) {
+            const theSupplier = suppliersOfGM[index];
+            this.editing.form.assignedSupplierIds.push(theSupplier.id.toString())
+            this.editing.form.assignedSupplierUnitPrices[theSupplier.id] = theSupplier.pivot.unit_price
+        }      
+    },
+
    update() {
+
+        let selectedArray = Object.values(Object.assign({}, this.editing.form.assignedSupplierIds));
+
+        let theUnitPriceKeyArray = Object.keys(this.editing.form.assignedSupplierUnitPrices)
+        let selectedSupplierIdsUnitPrice = []
+       
+        for (let index = 0; index < theUnitPriceKeyArray.length; index++) {
+            const selectedKey = theUnitPriceKeyArray[index];
+           
+            if(selectedArray.includes(selectedKey)){
+              
+                let selectedSupplierIdsWIthUnitPrice = {
+                    [selectedKey] : this.editing.form.assignedSupplierUnitPrices[selectedKey]
+                }         
+                 selectedSupplierIdsUnitPrice.push(selectedSupplierIdsWIthUnitPrice)
+            }           
+        }
+        this.editing.form.assignedSupplierUnitPrices = selectedSupplierIdsUnitPrice
+
         if (parseFloat(this.editing.form.prepared_point) >  parseFloat(this.editing.form.coverage)){
             window.alert('ordered point needs to be smaller or equal coverage')
             return;
-        }
-        
+        }        
         this.isLoading = true
         axios.patch(`/api/datatable/goods_material/${this.editing.id}`, this.editing.form).then((response) => {
-                   this.isLoading = false
+            this.isLoading = false
 
            this.getRecords().then(() => {
                 this.editing.id = null
-                this.editing.form = null
-                if(response.data=='password updated') {
-                    alert('Password updated successfully !')
-                }            
+                this.editing.form = null        
             })
         }).catch((error) => {
             this.isLoading = false
@@ -1430,8 +1551,36 @@ methods:
         //     data.append('image', this.image)
         //     this.creating.form.image = data
         // }  
-         if (parseFloat(this.creating.form.prepared_point) >  parseFloat(this.creating.form.coverage)){
-            window.alert('ordered point needs to be smaller or equal coverage')
+
+        // this.creating.form.assignedSupplierUnitPrices = 
+        // this.creating.form.assignedSupplierUnitPrices
+        // .filter(this.creating.form.assignedSupplierUnitPrices, 
+        // assignedSupplierUnitPrice => assignedSupplierUnitPrice > 
+        // );
+        // this.creating.form.assignedSupplierUnitPrices =  Object.entries(this.creating.form.assignedSupplierUnitPrices)
+
+        let selectedArray = Object.values(Object.assign({}, this.creating.form.assignedSupplierIds));
+
+        let theUnitPriceKeyArray = Object.keys(this.creating.form.assignedSupplierUnitPrices)
+        // let theSelectedArray = Object.keys(this.selected)
+        let selectedSupplierIdsUnitPrice = []
+      
+
+        for (let index = 0; index < theUnitPriceKeyArray.length; index++) {
+            const selectedKey = theUnitPriceKeyArray[index];
+           
+            if(selectedArray.includes(selectedKey)){
+              
+                let selectedSupplierIdsWIthUnitPrice = {
+                    [selectedKey] : this.creating.form.assignedSupplierUnitPrices[selectedKey]
+                }
+                 selectedSupplierIdsUnitPrice.push(selectedSupplierIdsWIthUnitPrice)
+            }            
+        }
+        this.creating.form.assignedSupplierUnitPrices = selectedSupplierIdsUnitPrice
+
+        if (parseFloat(this.creating.form.prepared_point) >=  parseFloat(this.creating.form.coverage)){
+            window.alert('ordered point needs to be smaller than coverage')
             return;
         }
         this.isLoading = true
@@ -1465,9 +1614,17 @@ methods:
                 this.creating.form.category_id = 1   
                 this.creating.form.location_id = 1   
                 this.creating.form.assignedPermissionIds = [1]  
+                this.creating.form.assignedSupplierIds = [1]  
                 this.creating.errors = []
                 this.isLoading = false
-            })
+
+                this.creating.form.assignedSupplierUnitPrices = Object.assign({},this.response.supplierOptions);                
+            
+                // this.creating.form.assignedSupplierUnitPrices = this.response.supplierOptions
+                for (const key in this.creating.form.assignedSupplierUnitPrices) {
+                        this.creating.form.assignedSupplierUnitPrices[key] = 0;
+                }
+        })
             
         }).catch((error) => {
             if (error.response.status === 422) {
@@ -1538,6 +1695,25 @@ methods:
         this.clickImgSliderModalId = record.id;
     },
 
+    openLocationModal(record) {   
+        this.clickLocationModalId = record.id;
+    },
+
+    openOderPreparationModal() {   
+         // return this.response.records;
+            this.requiredRecords = this.filteredRecords
+            // quick search query
+            // requiredRecords = requiredRecords.filter((row) => {
+            //     return Object.keys(row).some((key) => {
+            //         return String(row[key]).toLowerCase().indexOf(this.quickSearchQuery.toLowerCase()) > -1
+            //     })
+            //     }
+            // )
+            // quick search query
+        this.requiredRecords = this.requiredRecords.filter(row =>row.Preparation  == 'Yes')
+        this.clickOderPreparationModalId = true;
+    },
+
     makeClickIdNull() {
         this.clickThumbnailId = null;
     },
@@ -1547,28 +1723,7 @@ methods:
         })
         
     },
-    exportFiles(){      
-        this.isLoading = true
-        axios.get(`/api/datatable/goods_material/fileExport/${this.selected_supplier}`,
-            {responseType: 'arraybuffer'}
-        )
-        .then((response)=>{
-            this.isLoading = false
-
-            this.getOrderExcelFile()
-            //code to download file after generating
-            // var fileURL = window.URL.createObjectURL(new Blob([response.data]));
-            // var fileLink = document.createElement('a');
-            // fileLink.href = fileURL;
-            // fileLink.setAttribute('download', 'goods.xlsx');
-            // document.body.appendChild(fileLink);
-            // fileLink.click();
-            // console.log(fileLink);
-        }).catch((error) => {
-            console.log(error)
-        })
-    },
-    
+        
 },
 mounted() {  
     this.getRecords()
@@ -1605,4 +1760,6 @@ mounted() {
 
         }
     }
+
+  
 </style>

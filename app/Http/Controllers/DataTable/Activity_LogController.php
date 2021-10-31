@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\DataTable;
 
-use App\Models\Stock\Unit;
+use App\Models\User;
+use App\Models\Activity_Log;
+use App\Http\Resources\Admin\Activity_LogResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class UnitController extends DataTableController
+class Activity_LogController extends DataTableController
 {
     
     protected $allowCreation = true;
@@ -25,6 +27,7 @@ class UnitController extends DataTableController
           'custom_columns' => $this->getCustomColumnsNames(),
           'userPermissionOptions'=> $this->getUserPermissionOptions(),
           'userRoleOptions'=> $this->getUserRoleOptions(),
+          'userOptions'=> $this->getUserOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
               'deletion' => $this->allowDeletion,
@@ -35,7 +38,7 @@ class UnitController extends DataTableController
 
     public function builder()
     {
-        return Unit::query();
+        return Activity_Log::query();
     }
 
     public function getCustomColumnsNames()
@@ -48,20 +51,34 @@ class UnitController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name','type'
+            'id',
+            'description',
+            'subject_type',
+            'subject_id',
+            'causer_id',
+            'properties',
+            'created_at',
+            'updated_at',
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-            'name','type'
+            'id',
+            'description',
+            'subject_type',
+            'subject_id',
+            'causer_id',
+            'properties',
+            'created_at',
+            'updated_at',
         ];
     }
     
     public function store(Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|unique:units,name',
+            'log_name' => 'required|unique:units,log_name',
         ]);
 
         $this->builder->create($request->only($this->getUpdatableColumns()));
@@ -74,24 +91,40 @@ class UnitController extends DataTableController
             $builder = $this->buildSearch($builder, $request);
         }
 
-        if (isset($request->type) && $request->type!='') {
-            $builder = $builder->where('type','=',$request->type);
-        }        
+        // if (isset($request->type) && $request->type!='') {
+        //     $builder = $builder->where('type','=',$request->type);
+        // }        
+
 
         try {
-            return $builder->limit($request->limit)->orderBy('id', 'asc')->get($this->getDisplayableColumns());
-        } catch (QueryException $e) {
-            return [];
-        }    
+            return Activity_LogResource::collection(
+                 $builder->limit($request->limit)
+                 ->orderBy('id', 'asc')
+                 ->get($this->getDisplayableColumns())
+            );
+         } catch (QueryException $e) {
+             return [];
+         }    
     }
 
     public function update($id, Request $request)
     {
         $this->validate($request, [
-            'name' => 'required|unique:units,name,' . $id,
+            'log_name' => 'required|unique:units,log_name,' . $id,
         ]);
 
         return $this->builder->find($id)->update($request->only($this->getUpdatableColumns()));
+    }
+
+    public function getUserOptions()
+    {
+        $r = User::all('id','name');
+
+        $returnArr = [];
+        foreach ($r as  $sr) {
+            $returnArr[$sr['id']] = $sr['name'];
+        }
+        return $returnArr;
     }
 
     public function getUserPermissionOptions()

@@ -11,16 +11,17 @@ use App\Models\Permission;
 use Illuminate\Http\Request;
 use App\Models\Stock\Supplier;
 use Illuminate\Support\Carbon;
+
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Goods_MaterialExport;
 
 use App\Imports\Goods_MaterialImport;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Stock\Orders_To_Supplier;
-use App\Models\Stock\Invoices_From_Supplier;
-use App\Http\Resources\Stock\Invoices_From_SupplierResourceDB;
+use App\Http\Resources\Stock\Miscellaneous_InvoiceResourceDB;
+use App\Models\Stock\Miscellaneous_Invoice;
 
-class Invoices_From_SupplierController extends DataTableController
+class Miscellaneous_InvoiceController extends DataTableController
 
 {
     protected $allowCreation = true;
@@ -42,7 +43,7 @@ class Invoices_From_SupplierController extends DataTableController
           'custom_columns' => $this->getCustomColumnsNames(),
           'supplierOptions'=> $this->getSupplierOptions(),
           'userOptions'=> $this->getUserOptions(),
-          'invoiceOptions'=> $this->getInvoiceOptions(),
+        //   'invoiceOptions'=> $this->getInvoiceOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
               'deletion' => $this->allowDeletion,
@@ -53,7 +54,7 @@ class Invoices_From_SupplierController extends DataTableController
 
     public function builder()
     {
-        return Invoices_From_Supplier::query();
+        return Miscellaneous_Invoice::query();
     }
 
     
@@ -62,10 +63,10 @@ class Invoices_From_SupplierController extends DataTableController
         return [
             'img_thumbnail' => 'img',
             'supplier_invoice_number' => 'invoice',
-            'orders_to_supplier_id' => 'order',
-            'user' => 'checker',
-            'invoice_no' => 'invoice',
+            'received_date' => 'date',
             'total_price' => 'total',
+            'invoice_category' => 'category',
+            'invoice_type' => 'type',
         ];
     }
 
@@ -80,9 +81,10 @@ class Invoices_From_SupplierController extends DataTableController
             'supplier_invoice_number',
             'received_date',
             'total_price',
-            'orders_to_supplier_id',
             'Note',
-            'paid'
+            'paid',
+            'invoice_category',
+            'invoice_type'
 
         ];
     }
@@ -99,9 +101,10 @@ class Invoices_From_SupplierController extends DataTableController
             'supplier_invoice_number',
             'received_date',
             'total_price',
-            'orders_to_supplier_id',
             'Note',
             'paid',
+            'invoice_category',
+            'invoice_type'
         ];
     }
     public function getUpdatableColumns()
@@ -114,7 +117,9 @@ class Invoices_From_SupplierController extends DataTableController
             'received_date',
             'total_price',
             'Note',
-            'paid'
+            'paid',
+            'invoice_category',
+            'invoice_type'
 
         ];
     }
@@ -123,15 +128,16 @@ class Invoices_From_SupplierController extends DataTableController
     {
         return [
             'user',
-            'img',
+            // 'img',
             'img_thumbnail',
             'supplier',
             'supplier_invoice_number',
             'received_date',
             'total_price',
-            'orders_to_supplier_id',
             'Note',
             'paid',
+            'invoice_category',
+            'invoice_type'
         ];
     }
     
@@ -139,23 +145,18 @@ class Invoices_From_SupplierController extends DataTableController
 
     {
         $this->validate($request, [
-            'id',
-            'img',
-            'img_thumbnail',
-            'supplier',
-            'supplier_invoice_number',
-            'received_date',
-            'total_price',
-            'orders_to_supplier_id',
+            'supplier' => 'required',
+            'received_date' => 'required',
+            'total_price' => 'required|numeric'  
         ]);
 
         
-        $order_to_supplier = $this->builder->create
+        $invoice = $this->builder->create
         (           
             $request->only($this->getCreatedColumns())        
         );
 
-        return $order_to_supplier;
+        return $invoice;
       
     }
 
@@ -163,8 +164,9 @@ class Invoices_From_SupplierController extends DataTableController
     {
        
         $this->validate($request, [
-            // 'total_price' => 'required',
-            'total_price' => 'numeric|nullable'   
+            'supplier' => 'required',
+            'received_date' => 'required',
+            'total_price' => 'required|numeric'   
         ]);
 
         // $currencies = new ISOCurrencies();
@@ -186,12 +188,7 @@ class Invoices_From_SupplierController extends DataTableController
             // )
         
         );
-        $order_to_supplier = Orders_To_Supplier::find($invoice->orders_to_supplier_id);
-        if($updatedSuccess){
-            $order_to_supplier->paid = $invoice->paid;
-            $order_to_supplier->save();
-        }
-       
+    
         return $updatedSuccess;
     }
 
@@ -206,10 +203,11 @@ class Invoices_From_SupplierController extends DataTableController
         
       
 
+       
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
         }
-     
+
         if ($this->hasSearchQuery_1($request)) {
             $builder = $this->buildSearch_1($builder, $request);
         }
@@ -219,13 +217,11 @@ class Invoices_From_SupplierController extends DataTableController
         if (isset($request->supplier)) {
             $builder =   $builder->where('supplier','=',$request->supplier);
         }
-
-
       
         // dd($builder);
 
         try {
-            return Invoices_From_SupplierResourceDB::collection(
+            return Miscellaneous_InvoiceResourceDB::collection(
                 $builder
                 ->limit($request->limit)
                 ->orderBy('id', 'asc')
@@ -268,44 +264,48 @@ class Invoices_From_SupplierController extends DataTableController
         $receivedDate=$dateInBrisbane->isoFormat('MMMDoYY'); 
         
         
-        $the_invoice_from_supplier = $this->builder->find($invoiceAndsilderImageidArray[0]);
+        $the_invoice = $this->builder->find($invoiceAndsilderImageidArray[0]);
 
-        $the_order_to_supplier = $the_invoice_from_supplier->orders_to_supplier;
+        // $the_order_to_supplier = $the_invoice->orders_to_supplier;
         
-        $supplierName=$the_order_to_supplier->supplier;
+        $supplierName=$the_invoice->supplier;
 
       
         // deal with second or third invoice image
         if(count($invoiceAndsilderImageidArray)>1 ){
 
+          
+
             $invoice_img_number = $invoiceAndsilderImageidArray[1];
             $fileName="Invoice_$supplierName"."_"."$receivedDate";
             $imageName = $fileName.rand(1,999).'_' .$invoice_img_number.'jpg';
 
-            Storage::put('public/invoices_from_supplier/'. $imageName, $imageNameResize->__toString());
 
             //delete old image
             if ($invoice_img_number == 2) {
-                if ($the_invoice_from_supplier->img_two){
-                    $result_image_array = explode('/',$the_invoice_from_supplier->img_two);
+                if ($the_invoice->img_two){
+                    $result_image_array = explode('/',$the_invoice->img_two);
                     $old_image_name = $result_image_array[count($result_image_array)-1];
                     Storage::delete([
-                    'public/invoices_from_supplier/'. $old_image_name,
+                    'public/miscellaneous_invoice/'. $old_image_name,
                     ]);
                 }
+                Storage::put('public/miscellaneous_invoice/'. $imageName, $imageNameResize->__toString());
                 // save new image path to database
-                $the_invoice_from_supplier -> img_two = "/storage/invoices_from_supplier/".$imageName;
-                $the_invoice_from_supplier -> save();
+                // save new image path to database
+                $the_invoice -> img_two = "/storage/miscellaneous_invoice/".$imageName;
+                $the_invoice -> save();
             } else if ($invoice_img_number == 3) {
-                if ($the_invoice_from_supplier->img_three){
-                    $result_image_array = explode('/',$the_invoice_from_supplier->img_three);
+                if ($the_invoice->img_three){
+                    $result_image_array = explode('/',$the_invoice->img_three);
                     $old_image_name = $result_image_array[count($result_image_array)-1];
                     Storage::delete([
-                    'public/invoices_from_supplier/'. $old_image_name,
+                    'public/miscellaneous_invoice/'. $old_image_name,
                     ]);
                 }
-                $the_invoice_from_supplier -> img_three = "/storage/invoices_from_supplier/".$imageName;
-                $the_invoice_from_supplier -> save();
+                Storage::put('public/miscellaneous_invoice/'. $imageName, $imageNameResize->__toString());
+                $the_invoice -> img_three = "/storage/miscellaneous_invoice/".$imageName;
+                $the_invoice -> save();
             }
           
         } 
@@ -318,29 +318,29 @@ class Invoices_From_SupplierController extends DataTableController
             $imageName = $fileName.$randomNumber.'.jpg';
             $thumbnailName = $fileName.'_thumbnail_'.$randomNumber.'.jpg';
 
-            Storage::put('public/invoices_from_supplier/'. $imageName, $imageNameResize->__toString());
-            Storage::put('public/invoices_from_supplier/'. $thumbnailName, $thumbnailNameResize->__toString());
+            Storage::put('public/miscellaneous_invoice/'. $imageName, $imageNameResize->__toString());
+            Storage::put('public/miscellaneous_invoice/'. $thumbnailName, $thumbnailNameResize->__toString());
             //delete old image
-            if ($the_invoice_from_supplier->img_thumbnail){
-                $result_thumbnail_array = explode('/',$the_invoice_from_supplier->img_thumbnail);
+            if ($the_invoice->img_thumbnail){
+                $result_thumbnail_array = explode('/',$the_invoice->img_thumbnail);
                 $old_thumbnail_name = $result_thumbnail_array[count($result_thumbnail_array)-1];
                 Storage::delete([
-                'public/invoices_from_supplier/'. $old_thumbnail_name,
+                'public/miscellaneous_invoice/'. $old_thumbnail_name,
                 ]);
             }
-            if ($the_invoice_from_supplier->img){
-                $result_image_array = explode('/',$the_invoice_from_supplier->img);
+            if ($the_invoice->img){
+                $result_image_array = explode('/',$the_invoice->img);
                 $old_image_name = $result_image_array[count($result_image_array)-1];
                 Storage::delete([
-                'public/invoices_from_supplier/'. $old_image_name,
+                'public/miscellaneous_invoice/'. $old_image_name,
                 ]);
             }
             // save new image
-            $the_invoice_from_supplier -> img_thumbnail = "/storage/invoices_from_supplier/".$thumbnailName;
-            $the_invoice_from_supplier -> img = "/storage/invoices_from_supplier/".$imageName;
-            $the_invoice_from_supplier -> save();
+            $the_invoice -> img_thumbnail = "/storage/miscellaneous_invoice/".$thumbnailName;
+            $the_invoice -> img = "/storage/miscellaneous_invoice/".$imageName;
+            $the_invoice -> save();
         }
-        return $the_invoice_from_supplier;
+        return $the_invoice;
     }
 
     public function updateNote($id, Request $request){
@@ -373,46 +373,19 @@ class Invoices_From_SupplierController extends DataTableController
         return $returnArr;
     }
 
-    public function getInvoiceOptions()
-    {
-        $c = Invoices_From_Supplier::all('id','supplier_invoice_number');
+    // public function getInvoiceOptions()
+    // {
+    //     $c = Invoices_From_Supplier::all('id','supplier_invoice_number');
 
-        $returnArr = [];
-        foreach ($c as  $sc) {
-            $returnArr[$sc['supplier_invoice_number']] = $sc['supplier_invoice_number'];
-        }
-        return $returnArr;
-    }
-
-    
+    //     $returnArr = [];
+    //     foreach ($c as  $sc) {
+    //         $returnArr[$sc['supplier_invoice_number']] = $sc['supplier_invoice_number'];
+    //     }
+    //     return $returnArr;
+    // }
 
     
 
-     /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function fileImportExport()
-    {
-    //    return view('import');
-       return 'hello';
-    }
-     
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function fileExport(Request $request) 
-    {
-        return Excel::download(new Goods_MaterialExport, 'goods.xlsx');
-    }
-     
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function fileImport(Request $request) 
-    {
-        Excel::import(new Goods_MaterialImport,request()->file('file'));
-             
-        return back();
-    }
+    
     
 }

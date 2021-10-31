@@ -2,24 +2,27 @@
 
 namespace App\Exports;
 
-use App\Models\Stock\Goods_material;
-use App\Models\Stock\Supplier;
+use Carbon\Carbon;
+use App\Models\Stock\Unit;
 // use Maatwebsite\Excel\Concerns\FromQuery;
+use App\Models\Stock\Category;
+use App\Models\Stock\Supplier;
+use Illuminate\Contracts\View\View;
+use App\Models\Stock\Goods_material;
+use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\Exportable;
+// use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Database\Eloquent\Collection;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-// use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromView;
-use Carbon\Carbon;
 
 class Goods_MaterialExport implements 
 // FromCollection, 
@@ -37,28 +40,59 @@ FromView
     use Exportable;
     protected $data;
     protected $supplier_id;
+    // protected $supplier_id;
 
-    public function __construct(int $supplier_id)
+    public function __construct(int $supplier_id, Array $data)
     {
+        $this->data = $data;
         $this->supplier_id = $supplier_id;
+    
     }
+    // public function __construct(int $supplier_id)
+    // {
+    //     $this->supplier_id = $supplier_id;
+    // }
 
     public function view(): View
     {
-        $good_materials = Goods_material::with('unit')
-        ->where('supplier_id', '=', $this->supplier_id)
-        ->where('required_qty', '>', 0)
-        ->orderBy('category_id','asc')
-        ->get();
+        // $good_materials = Goods_material::with('unit')
+        // ->where('supplier_id', '=', $this->supplier_id)
+        // ->where('required_qty', '>', 0)
+        // ->orderBy('category_id','asc')
+        // ->get();
         // $coa = DB::table('coas')->where('name', '=', $request->coa_name)->first();
+
+        $c = Category::all('id','name');
+
+        $categoryOptions = [];
+        foreach ($c as  $sc) {
+            $categoryOptions[$sc['id']] = $sc['name'];
+        }
+        // dd($categoryOptions);
+
+        $u = Unit::all('id','name');
+
+        $unitOptions = [];
+        foreach ($u as  $su) {
+            $unitOptions[$su['id']] = $su['name'];
+        }
+        // dd($unitOptions);
+        
         $supplier = Supplier::find($this->supplier_id);
         $dateTimeInBrisbane = Carbon::now('Australia/Brisbane')->isoFormat('dddd D/M/Y, h:mm:ss a');
         // dd($good_materials);
         return view('exports.supplierOrder', [
-            'good_materials' => $good_materials,
+            'good_materials' => $this->data,
             'date' => $dateTimeInBrisbane ,
             'supplier' =>  $supplier,
+            'categoryOptions'=>$categoryOptions,
+            'unitOptions'=>$unitOptions,
         ]);
+        // return view('exports.supplierOrder', [
+        //     'good_materials' => $good_materials,
+        //     'date' => $dateTimeInBrisbane ,
+        //     'supplier' =>  $supplier,
+        // ]);
     }
     
     public function headings(): array

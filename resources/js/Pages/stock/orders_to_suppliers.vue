@@ -384,12 +384,29 @@
                                     
                                     :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     > 
-                                            <!-- <template v-if=" record.date+' '+record.user_id+' '+record.intermediate_product_id != option.id">                   -->
                                             <option v-for="option,index in response.userOptions"  :value="index" :key="option">
                                             {{option}} 
                                             </option>
-                                            <!-- </template> -->
                                     </select>                                  
+                                </template> 
+
+                                  <template v-else-if="column=='paid'">
+                                    <select
+                                    class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    :class="{
+                                        'bg-pink-200' : !(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser ||getAuth.isThirdLevelUser)
+                                    }"
+                                    :name="column" :id="column" 
+                                    v-model="editing.form[column]"                                  
+                                    :disabled= "!(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser ||getAuth.isThirdLevelUser)" 
+                                    > 
+                                            <option value="No">
+                                              No
+                                            </option>
+                                            <option value="Yes">
+                                              Yes
+                                            </option>
+                               </select>                                  
                                 </template> 
                                                            
                                 <template v-else>
@@ -674,11 +691,10 @@ export default {
                 unshownColumns:[],                
                 
                 // columns hidden - can be show by unclick the radio buttons
-                hideColumns:[],
+                hideColumns:['paid','InvNumber'],
 
                 // columns unshown in edit mode
-                unshownColumnsInEditMode: ['excel_file','Note'],
-                notAllowEditExceptPeopleInCharge: [],
+                unshownColumnsInEditMode: ['excel_file','Note','paid'],
                 advancedFilterColumns:['id','user','ordered_date','estimated_price'],
 
                    // columns unshown according to user levels
@@ -703,7 +719,7 @@ export default {
                     'user','supplier','ordered_date', 'estimated_price'          
                 ],
                 
-                textCenterColumns:['estimated_price'],
+                textCenterColumns:['subject_id'],
                 dollarsSymbolColumns:['estimated_price'],
 
                 selected_dropdown_active: false,
@@ -907,16 +923,21 @@ methods:
         })
     },
         
-    destroy(record){
+    destroy(recordIds){
 
         if(!window.confirm(`Are you sure?`)){
             return
         }
-
-        axios.delete(`/api/datatable/orders_to_supplier/${record}`).then(()=>{
+        
+        axios.delete(`/api/datatable/orders_to_supplier/${recordIds}`).then((response)=>{
+            if(response.data == 'error-order is already paid'){
+                alert('Sorry! You cannot delete paid order')
+            }
             this.selected= [],
             this.selected_dropdown_active = false,
             this.getRecords()
+
+    
         })
         
     },

@@ -27,6 +27,10 @@ import Daily_Emp_Work from "../Pages/stock/daily_emp_work.vue";
 //router component Order Setup
 import Orders_To_Suppliers from "../Pages/stock/orders_to_suppliers.vue";
 import Invoices_From_Suppliers from "../Pages/stock/invoices_from_suppliers.vue";
+import Miscellaneous_Invoices from "../Pages/stock/miscellaneous_invoices.vue";
+
+//router Settings Setup
+import Activity_Log from "../Pages/Admin/Activity_Log.vue";
 
 
 //Midelware 
@@ -146,6 +150,16 @@ const routes = [
         path: "/invoices_from_suppliers",
         name: "Invoices_From_Suppliers",
         component: Invoices_From_Suppliers,
+      },
+      {
+        path: "/iscellaneous_invoices",
+        name: "Miscellaneous_Invoices",
+        component: Miscellaneous_Invoices,
+      },
+      {
+        path: "/activity_log",
+        name: "Activity_Log",
+        component: Activity_Log,
       },
     ],
 

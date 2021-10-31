@@ -68,6 +68,7 @@ class Orders_To_SupplierController extends DataTableController
         return [
             'excel_file' => 'file',
             'InvNumber' => ' Invoice',
+            'user' => ' Orderer',
         ];
     }
 
@@ -81,6 +82,7 @@ class Orders_To_SupplierController extends DataTableController
             'estimated_price',
             'excel_file',
             'Note',
+            'paid',
             'InvNumber',
         ];
     }
@@ -94,6 +96,8 @@ class Orders_To_SupplierController extends DataTableController
             'estimated_price',
             'excel_file',
             'Note',
+            'paid',
+
 
         ];
     }
@@ -108,6 +112,8 @@ class Orders_To_SupplierController extends DataTableController
             'estimated_price',
             'excel_file',
             'Note',
+            'paid',
+
         ];
     }
 
@@ -121,6 +127,8 @@ class Orders_To_SupplierController extends DataTableController
             'estimated_price',
             'excel_file',    
             'Note',
+            'paid',
+
      
         ];
     }
@@ -220,9 +228,9 @@ class Orders_To_SupplierController extends DataTableController
             $builder = $this->buildSearch($builder, $request);
         }
      
-        // if ($this->hasSearchQuery_1($request)) {
-        //     $builder = $this->buildSearch_1($builder, $request);
-        // }
+        if ($this->hasSearchQuery_1($request)) {
+            $builder = $this->buildSearch_1($builder, $request);
+        }
 
         if (isset($request->user)) {
             $builder =   $builder->where('user','=',$request->user);
@@ -301,6 +309,35 @@ class Orders_To_SupplierController extends DataTableController
         Excel::import(new Goods_MaterialImport,request()->file('file'));
              
         return back();
+    }
+
+    
+    public function destroy($ids, Request $request)
+    {
+        if (!$this->allowDeletion) {
+            return;
+        }
+
+        $arrayIds = explode(',',$ids);
+
+        foreach ($arrayIds  as $id) {
+           
+            $theOrder = Orders_To_Supplier::find($id);
+
+           
+            // cannot delte paid order
+            if($theOrder->paid == 'Yes'){
+                return 'error-order is already paid';
+            } else  $theOrder->delete();
+          }
+
+      
+        // if (count($arrayIds) > 1 ) {
+        //     $this->builder->whereIn('id', explode(',', $ids))->delete();
+        // } else if (count($arrayIds) == 1){
+        //     $this->builder->find($ids)->delete();
+        //     // $this->builder->find($ids)->delete();
+        // }
     }
     
 }

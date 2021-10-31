@@ -1,17 +1,17 @@
 <template>
       
-  <div id="orders_to_suppliers" class="p-6"> 
+  <div id="miscellaneous_invoices" class="p-6"> 
         <loading v-model:active="isLoading"
                  :can-cancel="true"
                  :is-full-page="fullPage"/>
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
             <div class="w-full p-1">
             <div class="flex justify-between pt-4">
-                <div class="text-2xl font-semibold uppercase"> Invoices From Suppliers</div>
+                <div class="text-2xl font-semibold uppercase"> Miscellaneous Invoices</div>
                 <div>
                     <a href="#" 
                     class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
-                    v-if="response.allow.creation && isFirstLevelUser"
+                    v-if="response.allow.creation && (getAuth.isFirstLevelUser || getAuth.isSecondLevelUser)"
                     @click.prevent="creating.active = !creating.active">
                     {{ creating.active ? 'Hide' : 'New record' }}
                     </a>
@@ -21,13 +21,15 @@
           
             <div class="flex justify-center" v-if="response.allow.creation && creating.active">
                 <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
+              
                 <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
                   <form action="#" @submit.prevent="store" enctype="multipart/form-data">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.created" :key="column" >  
                             <template v-if="column=='user'">
-                                <label :for="column"  class="font-semibold">Checker : </label>
-                                <select
+                                <label :for="column"  class="font-semibold">Orderer : </label>
+                                {{getAuth.user.name}}
+                                <!-- <select
                                     class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'                              
                                     :name="column" :id="column" 
                                     v-model="creating.form[column]"                                  
@@ -35,9 +37,9 @@
                                     <option v-for="option,index in response.userOptions"  :value="index" :key="option">
                                         {{option}} 
                                     </option>
-                                        <!-- </template> -->
-                                </select>                                  
+                                </select>                                   -->
                             </template> 
+
                             <template v-else-if="column=='img_thumbnail'">
                                 <!-- Photo File Input -->
                                 <label  class="font-semibold" for="product_photo">
@@ -62,27 +64,35 @@
                             </template>    
 
                             <template v-else-if="column=='received_date'">
-                                <label :for="column"  class="font-semibold"> Received Date : </label>
+                                <label :for="column"  class="font-semibold">Date : </label>
        
                                 <input v-if="search.column=='received_date'"
-                                type="datetime-local" 
+                                type="date" 
                                 class="appearance-none h-full rounded-l border block appearance-none w-1/2 bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                                v-model="search.value" 
+                                v-model="creating.form[column]" 
                                 >
                             </template>
                                               
                             <template v-else-if="column=='paid'">
                             <label  class="font-semibold" :for="column">Paid : </label>    
                             <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value="1">Yes</option>
-                                <option  value="0">No</option>                              
+                                <option  value="Yes">Yes</option>
+                                <option  value="No">No</option>                              
                             </select>
                             </template> 
                                   
-                            <template v-else-if="column=='location_id'">
-                                <label  class="font-semibold" :for="column">Location : </label>                           
+                            <template v-else-if="column=='invoice_category'">
+                                <label  class="font-semibold" :for="column">Invoice Category : </label>                           
                                 <select :name="column" :id="column" v-model="creating.form[column]">
-                                    <option :value="index" v-for="option,index in response.locationOptions" :key="option">
+                                    <option :value="option" v-for="option,index in invoiceCategories" :key="option">
+                                        {{option}}
+                                    </option>
+                                </select>
+                            </template> 
+                            <template v-else-if="column=='invoice_type'">
+                                <label  class="font-semibold" :for="column">Invoice Type : </label>                           
+                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                    <option :value="option" v-for="option,index in invoiceTypes" :key="option">
                                         {{option}}
                                     </option>
                                 </select>
@@ -179,7 +189,7 @@
 
             <div class="flex flex-row mb-1 sm:mb-0">
                    <input v-if="search.column=='received_date'"
-                    type="datetime-local" 
+                    type="date" 
                     class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     v-model="search.value" 
                     >
@@ -233,7 +243,7 @@
                 <div class="relative mr-2">
                     
                     <input v-if="search.column_1=='received_date'"
-                    type="datetime-local" 
+                    type="date" 
                     class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     v-model="search.value_1" 
                     >
@@ -273,7 +283,7 @@
                     <ul class="dropdown-menu absolute text-gray-700 pt-1"
                     :class="selected_dropdown_active ? 'block': 'hidden'"
                     >
-                    <!-- <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li> -->
+                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li>
                     </ul>
                 </div>
 
@@ -460,8 +470,8 @@
                                     </select>
                                     
                                 </template>   
-                                 <!-- <template v-else-if="column=='received_date'"> 
-                                    <input type="datetime-local" 
+                                 <template v-else-if="column=='received_date'"> 
+                                    <input type="date" 
                                     :name="column" :id="column"
                                     class="bg-gray-100 border-2 w-52 p-1 rounded-lg"
                                     v-model="editing.form[column]" 
@@ -470,7 +480,7 @@
                                      <span v-if="editing.errors[column]" class="text-red-700 font-bold">
                                         <strong>{{ editing.errors[column][0] }}</strong>
                                     </span>                                   
-                                </template>  -->
+                                </template> 
                                  <template v-else-if="column=='user'">
                                     <!-- {{record}} -->
                                     <select
@@ -479,12 +489,9 @@
                                     :name="column" :id="column" 
                                     v-model="editing.form[column]"                                  
                                     > 
-                                    <!-- :disabled= "!(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser ||getAuth.isThirdLevelUser)"  -->
-                                            <!-- <template v-if=" record.date+' '+record.user_id+' '+record.intermediate_product_id != option.id">                   -->
-                                            <option v-for="option,index in response.userOptions"  :value="index" :key="option">
-                                              {{option}} 
-                                            </option>
-                                            <!-- </template> -->
+                                        <option v-for="option,index in response.userOptions"  :value="index" :key="option">
+                                            {{option}} 
+                                        </option>
                                </select>                                  
                                 </template> 
                                  <template v-else-if="column=='paid'">
@@ -507,6 +514,24 @@
                                             <!-- </template> -->
                                </select>                                  
                                 </template> 
+
+                                       
+                            <template v-else-if="column=='invoice_category'">
+                                <select :name="column" :id="column" v-model="editing.form[column]">
+                                    <option :value="option" v-for="option,index in invoiceCategories" :key="option">
+                                        {{option}}
+                                    </option>
+                                </select>
+                            </template> 
+
+                            <template v-else-if="column=='invoice_type'">
+                                <select :name="column" :id="column" v-model="editing.form[column]">
+                                    <option :value="option" v-for="option,index in invoiceTypes" :key="option">
+                                        {{option}}
+                                    </option>
+                                </select>
+                            </template> 
+
                             
 
                                 <template v-else>
@@ -514,7 +539,7 @@
                                     {{dollarsSymbolColumns.includes(column) ?'$' : '' }} 
                                     </span>
                                     <input type="text"  
-                                     class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                     class='w-20 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                     v-model="editing.form[column]"
                                     :class="{ 
                                     'border-3 border-red-700': editing.errors[column] ,
@@ -679,47 +704,32 @@
                     <!-- Last Column - Actions -->
                         <td  class="items-center">
                             <div v-if="editing.id !== record.id  && editing.id == null">
-                            <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
-                            class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
-                            >
-                            Edit  
-                            </a>   
+                                <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
+                                class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
+                                >
+                                Edit  
+                                </a>   
 
-                            <!-- <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
-                            class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
-                            >
-                            Delete
-                            </a> -->
-                           </div>
-                            
-                           <div v-if="editing.id !== record.id && editing.id == null" class="mt-3">
-                            <a href="#"  @click.prevent="viewInLineInvoice(record)"  v-if="editing.id !== record.id"
-                            class="mr-1 py-1 px-3 shadow-md rounded-full bg-green-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
-                            >
-                            Detail
-                            </a>  
-                           
-                            <a href="#"  @click.prevent="compareOrderAndInvoice(record)"  v-if="editing.id !== record.id"
-                            class="py-1 px-2 shadow-md rounded-full bg-green-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
-                            >
-                            Compare
-                            </a>  
-                            </div>
-                          
+                                <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
+                                class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
+                                >
+                                Delete
+                                </a> 
+                           </div>                         
                            
                             <div>
-                            <template v-if="editing.id === record.id"> 
-                                <a href="#" @click.prevent="editing.id = null"  v-if="editing.id === record.id"
-                            class="p-1 bg-transparent border border-gray-600  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none"
-                            >
-                            Cancel
-                            </a>  
-                            <a href="#" @click.prevent="update"  v-if="editing.id === record.id"
-                            class="m-2 py-2 px-3 shadow-md rounded-full bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"
-                            >
-                            Save
-                            </a>                        
-                            </template>
+                                <template v-if="editing.id === record.id"> 
+                                    <a href="#" @click.prevent="editing.id = null"  v-if="editing.id === record.id"
+                                class="p-1 bg-transparent border border-gray-600  shadow-md rounded-full  text-grey text-sm hover:bg-green-700 hover:text-white focus:outline-none"
+                                >
+                                Cancel
+                                </a>  
+                                <a href="#" @click.prevent="update"  v-if="editing.id === record.id"
+                                class="m-2 py-2 px-3 shadow-md rounded-full bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"
+                                >
+                                Save
+                                </a>                        
+                                </template>
                             </div>
                         </td> 
                        
@@ -727,44 +737,19 @@
                         <div v-if="record.id == clickImgSliderModalId">
                             <Image_Slider_Modal                             
                             :record="record"
-                            :table_name="'invoices_from_supplier'"
+                            :table_name="'miscellaneous_invoices'"
                             @close="clickImgSliderModalId=null" 
                             @getRecordForSlider="getRecords" 
                             />
                         </div>
 
-                          <!-- Orders_To_Suppliers Modal -->
-                        <div v-if="record.id == clickOrdersToSuppliersModalId">
-                            <Orders_To_Suppliers_Modal  
-                            :orders_to_supplierId="record.orders_to_supplier_id" 
-                            @close="clickOrdersToSuppliersModalId=null" 
-                            />
-                        </div>
-
-                        <!-- Modal to display invoices lines details -->
-                        <div v-if="record.id== clickInvoiceLineModalId">
-                            <Invoices_From_Suppliers_Line_Modal  
-                            :invoice_total_price="invoice_from_supplier_line_estimated_price"
-                            :orders_to_supplierId="record.orders_to_supplier_id" 
-                            @close="clickInvoiceLineModalId=null" 
-                            />
-                        </div>
-
-                        <!-- Modal to display invoices lines details -->
-                        <div v-if="record.id== clickCompareOrderInvoicModalId">
-                            <Compare_Orders_Invoices_Modal  
-                            :invoice_total_price="invoice_total_price"
-                            :orders_to_supplierId="record.orders_to_supplier_id" 
-                            @close="clickCompareOrderInvoicModalId=null" 
-                            />
-                        </div>
                         <!-- Modal to display Note Modal -->
                         <div v-if="record.id== clickNoteModalId">
                         <Note_Modal  
                             :note="record.Note"
                             :id="record.id" 
                             :theRecord="record" 
-                            :table_name="'invoices_to_supplier'"
+                            :table_name="'miscellaneous_invoices'"
                             @close="clickNoteModalId=null" 
                             @refreshRecords="getRecords" 
                         />
@@ -790,9 +775,6 @@
 import Modal from  '../../components/modal.vue'
 import Note_Modal from  './stock_modal/note_modal.vue'
 import Goods_Material_Modal from './stock_modal/goods_material_modal.vue'
-import Orders_To_Suppliers_Modal from './stock_modal/orders_to_suppliers_modal.vue'
-import Invoices_From_Suppliers_Line_Modal from './stock_modal/invoices_from_suppliers_line_modal.vue'
-import Compare_Orders_Invoices_Modal from './stock_modal/compare_orders_invoices_modal.vue'
 import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/vue-loading.css';
@@ -807,9 +789,6 @@ export default {
     Note_Modal,
     Goods_Material_Modal,
     Image_Slider_Modal,
-    Orders_To_Suppliers_Modal,
-    Invoices_From_Suppliers_Line_Modal,
-    Compare_Orders_Invoices_Modal,
     Loading},
    data() {
             return {
@@ -826,11 +805,17 @@ export default {
                 creating: {
                     active: false,
                     form: {
+                        // user: this.getAuth.
+                        // user:  this.getAuth.user.id,
+                        // user:   1,
+                        
                         Active: 1,
-                        permission_id: 1,
-                        supplier_id:1,
+                        supplier:'NULL',
                         unit_id:1,
-                        category_id:1
+                        invoice_type:'Operating_Cost',
+                        invoice_category:'NULL',
+                        received_date: new Date().toISOString().substr(0, 10), // 05/09/2019
+                        paid: 'Yes',
                     },
                     errors: [],
                 },
@@ -864,12 +849,16 @@ export default {
                 /*****************
                  General Setting
                 ******************/
+
+               invoiceCategories:['NULL','Kitchen_Supplies','Meeting/Bonus/Giff','Maintainance','Petrol'],
+
+               invoiceTypes:['NULL','Cost_Of_Goods','Operating_Cost'],
                  
                 // Hide Column Section : checkbox of columns that completely disappear
                 unshownColumns:['slug','img'],
 
                 // columns hidden - can be show by unclick the radio buttons
-                hideColumns:['img','img_three','img_two'],
+                hideColumns:['img','img_three','img_two', 'invoice_category','invoice_type'],
 
 
                 // columns unshown in edit mode
@@ -928,18 +917,6 @@ export default {
                  // showIMGModal: false,
                 clickImgSliderModalId : null,
 
-                 // showOrdersToSuppliersModal: false,
-                clickOrdersToSuppliersModalId : null,
-
-                 // showInvoiceLineModal: false,
-                clickInvoiceLineModalId : null,
-
-                 // showCompareOrderInvoiceModal: false,
-                clickCompareOrderInvoicModalId : null,
-
-                 // showOrderModal: false,
-                clickOrderModallId : null,
-
                 clickNoteModalId: null,
 
                 // Level of Users
@@ -947,7 +924,6 @@ export default {
                 secondLevelUsers : [],
 
                 invoice_total_price: null,
-                invoice_from_supplier_line_estimated_price: null,
                 
                
             }
@@ -1056,7 +1032,7 @@ methods:
 {
             
     getRecords(){
-        return axios.get(`/api/datatable/invoices_from_supplier?${this.getQueryParameters()}`).then((response)=> {
+        return axios.get(`/api/datatable/miscellaneous_invoices?${this.getQueryParameters()}`).then((response)=> {
             this.response = response.data.data;
         })
     },
@@ -1102,9 +1078,9 @@ methods:
     },
    update() {
        this.isLoading = true;
-         axios.patch(`/api/datatable/invoices_from_supplier/${this.editing.id}`, this.editing.form).then((response) => {
+         axios.patch(`/api/datatable/miscellaneous_invoices/${this.editing.id}`, this.editing.form).then((response) => {
+             this.isLoading = false
                 this.getRecords().then(() => {
-                    this.isLoading = false
                     this.editing.id = null
                     this.editing.form = null
                 })
@@ -1115,18 +1091,24 @@ methods:
             })
     },
     store () {
+        this.isLoading = true;
+
         if(this.image){
             let data = new FormData
             data.append('image', this.image)
             this.creating.form.image = data
         }  
+         if(this.getAuth.user) {
+            this.creating.form.user = this.getAuth.user.name
+        }     
 
-        axios.post(`/api/datatable/orders_to_suppliers`, this.creating.form).then((response) => {
+        axios.post(`/api/datatable/miscellaneous_invoices`, this.creating.form).then((response) => {
+            this.isLoading = false
            if(response.data.id && this.image) {
                 let data = new FormData;
                 data.append('image', this.image)
             
-            axios.post(`/api/datatable/orders_to_suppliers/saveImage/${response.data.id}`, data).then((response1)=>{
+            axios.post(`/api/datatable/miscellaneous_invoices/saveImage/${response.data.id}`, data).then((response1)=>{
                 this.getRecords().then(() => {
                     this.imagePreview = null;
                     this.image =null;
@@ -1136,16 +1118,23 @@ methods:
                     this.creating.errors = error.response.data.errors                       
                 }
             })
-            } else {
-                alert ('unsucessfully save recores')
-            }
+            } 
 
             this.getRecords().then(() => {
                 this.creating.active = true
                 this.creating.form = {}
                 this.creating.errors = []
+                this.creating.form.Active=1
+                this.creating.form.supplier_id = 1
+                this.creating.form.invoice_type ='Operating_Cost'
+                this.creating.form.received_date = new Date().toISOString().substr(0, 10) // 05/09/2019
+                this.creating.form.paid= 'Yes'
+                this.creating.form.supplier= 'NULL'
+
             })
         }).catch((error) => {
+            this.isLoading = false
+
             if (error.response.status === 422) {
                 this.creating.errors = error.response.data.errors                       
             }
@@ -1155,8 +1144,10 @@ methods:
     destroy(record){
         if(!window.confirm(`Are you sure?`)){
             return
+
         }
-        axios.delete(`/api/datatable/orders_to_supplier/${record}`).then(()=>{
+        axios.delete(`/api/datatable/miscellaneous_invoices/${record}`).then(()=>{
+
             this.selected= [],
             this.selected_dropdown_active = false,
             this.getRecords()
@@ -1167,47 +1158,14 @@ methods:
     openSliderImageModal(record) {        
         this.clickImgSliderModalId = record.id;
     },
-    openOrderToSuppliersModal(record) {  
-        
-        this.clickOrdersToSuppliersModalId = record.id;
-    },
 
-    openOrderToSupplierModal(record) {
-        this.clickOrderModallId = record.id;
-    },
-    viewInLineInvoice(record) {
-        this.clickInvoiceLineModalId = record.id;
-        let invoice_from_supplier_line = _.find(this.response.records, ['id', record.id]);
-        this.invoice_from_supplier_line_estimated_price = invoice_from_supplier_line['estimated_price']
-
-    },
-    compareOrderAndInvoice(record) {
-        this.clickCompareOrderInvoicModalId = record.id;
-        let invoice_from_supplier_line = _.find(this.response.records, ['id', record.id]);
-        this.invoice_total_price = invoice_from_supplier_line['total_price']
-    },
+    
 
     makeModalIdNull(modalName) {
         switch (modalName) {
             case 'imageSlider':
                this.clickImgSliderModalId = null; 
                 break;
-            case 'ordersToSuppliers':
-               this.clickOrdersToSuppliersModalId = null; 
-                break;
-
-            case 'orderToSupplier':
-                this.clickOrderModallId = null; 
-                break;
-
-            case 'invoiceLine':
-                this.clickInvoiceLineModalId = null; 
-                break;
-
-            case 'compareOrderInvoice':
-                this.clickCompareOrderInvoicModalId = null; 
-                break;
-
             case 'note':
                 this.clickNoteModalId = null; 
                 break;
@@ -1251,7 +1209,7 @@ methods:
             data.append('image', this.image)
         
          this.isLoading = true;
-        axios.post(`/api/datatable/invoices_from_supplier/saveImage/${invoiceId}`, data).then((response1)=>{
+        axios.post(`/api/datatable/miscellaneous_invoices/saveImage/${invoiceId}`, data).then((response1)=>{
             this.getRecords().then(() => {
                 this.isLoading = false
                 this.currentPreviewUpdateId = null;
@@ -1271,13 +1229,6 @@ methods:
     // makeClickIdNull() {
     //     this.clickImgSliderModalId = null;
     // },
-
-    importExcel(){
-        axios.post(`/api/datatable/orders_to_suppliers/fileImport`).then(()=>{
-            
-        })
-        
-    },
     
 },
 mounted() {

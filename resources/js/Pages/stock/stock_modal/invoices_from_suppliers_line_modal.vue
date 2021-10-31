@@ -1,6 +1,9 @@
 <template>
 
 <div class="backdrop overflow-y-auto" @click.self="closeModal">
+     <Loading v-model:active="isLoading"
+            :can-cancel="true"
+            :is-full-page="fullPage"/> 
   <div class="modal p-6" id="supplier" > 
       <button @click="closeModal" type="button" 
         class="mt-4 mb-2 w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -106,7 +109,8 @@
                     >
                     <!-- <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "destroy(selected)">Delete</a></li> -->
                     <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "addAmountFromInvoiceToStock(selected)">Add To Stock</a></li>
-                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "removeAmountFromInvoiceToStock(selected)">Remove From Stock</a></li>
+                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "removeAmountFromInvoice(selected)">Remove From Stock</a></li>
+                    <li><a class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" href="#" @click.prevent = "removeAmountFromInvoiceAndUpdateOrderStatus(selected)">Remove + Update Status</a></li>
                     </ul>
                 </div>
                 <div class="relative">
@@ -249,7 +253,9 @@
                                             </template>
                                         </template>                                       
                                     </select>                                   
-                                    </template>                               
+                                    </template> 
+
+                                                           
                                 
                                     <template v-else>                                  
                                         <input type="text"  
@@ -271,11 +277,20 @@
                                 </template>
 
                                 <template v-else>
-                                <div :class="{ 'text-center': textCenterColumns.includes(column) }">                 
-                                   <span class="font-medium" >
-                                    {{(dollarsSymbolColumns.includes(column) && columnValue != null) ?'$' : '' }}{{columnValue}}
-                                    </span> 
-                                </div>
+                                 <template v-if="column=='goods_material'">
+                                    <div class="flex items-center w-36">
+                                        <span class="font-medium" >{{columnValue}}</span>
+                                    </div>
+                                </template>      
+                                <template v-else>
+                                    <div :class="{ 'text-center': textCenterColumns.includes(column) }">                 
+                                        <span class="font-medium" >
+                                            {{(dollarsSymbolColumns.includes(column) && columnValue != null) ?'$' : '' }}{{columnValue}}
+                                        </span> 
+                                    </div>
+                                </template>
+
+                              
                                 </template>   
                             </td>
                             </template>
@@ -332,9 +347,12 @@
 
 <script>
 import {mapGetters, mapState } from 'vuex'
+import Loading from 'vue-loading-overlay';
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
     props: ['orders_to_supplierId','order_total_price'],
+    components: {Loading},
+
    data() {
             return {
                 response: {
@@ -345,7 +363,7 @@ export default {
                 },
                 sort: {
                     key: 'id',
-                    order: 'desc'
+                    order: 'asc'
                 },
                 creating: {
                     active: false,
@@ -403,6 +421,10 @@ export default {
                 
                 textCenterColumns:['i_unit','i_unit_quantity','i_unit_price','i_line_price'],
                 dollarsSymbolColumns:['i_unit_price','i_line_price'],
+
+                
+                isLoading: false,
+                fullPage: true,
 
                 limit:50,
                 quickSearchQuery: '',
@@ -543,9 +565,9 @@ export default {
             let new_line_price = this.editing.form['i_unit_price'] * this.editing.form['i_unit_quantity']
             // reassign i_line_price 
             this.editing.form['i_line_price'] = new_line_price.toFixed(2)
-           
+            this.isLoading = true
             axios.patch(`/api/datatable/invoice_from_supplier_line/${this.editing.id}`, this.editing.form).then((response) => {
-                
+            this.isLoading = false
                 this.getRecords().then(() => {
                     this.editing.id = null
                     this.editing.form = null
@@ -564,7 +586,9 @@ export default {
         store () {    
             this.creating.form['orders_to_supplier_id'] = this.orders_to_supplierId
             this.creating.form['i_line_price']= this.creating.form['i_unit_price'] * this.creating.form['i_unit_quantity']
+            this.isLoading = true
             axios.post(`/api/datatable/invoice_from_supplier_line`, this.creating.form).then((response) => {
+                this.isLoading = false
                 this.getRecords().then(() => {
                     this.creating.active = true
                     this.creating.form = {}
@@ -585,8 +609,9 @@ export default {
             if(!window.confirm(`Are you sure?`)){
                 return
             }
-
+            this.isLoading = true
             axios.post(`/api/datatable/invoice_from_supplier_line/${record}`).then((response)=>{
+                this.isLoading = false
                 if(response.data = "cannot delete - invoice items existing in order to supplier"){
                     alert('Cannot delete this item. Please set Quantity to 0 instead.')
                 }
@@ -597,18 +622,18 @@ export default {
             
         },
         addAmountFromInvoiceToStock(record){
-        //   return;
+            this.isLoading = true
             axios.post(`/api/datatable/invoice_from_supplier_line/addAmountFromInvoiceToStock/${record}`).then((response)=>{
-              
+                this.isLoading = false
               if (response.data == 'Added Successfully'){
-                  window.alert('Added Update sucessfully to your stock !')
+                  window.alert('Added sucessfully from invoice to your stock !')
               } else {
                 let nameOfGM_CannotBeUpdated = [];
                 response.data.forEach(element => {
                    nameOfGM_CannotBeUpdated.push('\n ***' + element.goods_material)
                 });
 
-                alert('To be added or deducted the quantity, name and unit of products in your system must be exactly the same as in invoices. \n Some Goods Materials below can not be added due to the different name or different unit between invoice and your stock. \n Please re-check the name or unit of your products and added manually. \n' 
+                alert('To be added or deducted the quantity from the invoice to your stock, name and unit of Good and Material in Table Good Material must be exactly the same as in Invoices_From_Suppliers. \n  Good Materials below can not be added  \n Please re-check the name or unit of good material. \n' 
                 + nameOfGM_CannotBeUpdated.toString() )
 
 
@@ -617,18 +642,40 @@ export default {
             })
             
         },
-        removeAmountFromInvoiceToStock(record){
-        //   return;
-            axios.post(`/api/datatable/invoice_from_supplier_line/removeAmountFromInvoiceToStock/${record}`).then((response)=>{
-            if (response.data == 'Removed Successfully'){
-                  window.alert('Removed Update sucessfully to your stock !')
+        removeAmountFromInvoiceAndUpdateOrderStatus(record){
+            this.isLoading = true
+            axios.post(`/api/datatable/invoice_from_supplier_line/removeAmountFromInvoiceAndUpdateOrderStatus/${record}`).then((response)=>{
+                this.isLoading = false
+              if (response.data == 'Added Successfully'){
+                  window.alert('Added sucessfully from invoice to your stock !')
               } else {
                 let nameOfGM_CannotBeUpdated = [];
                 response.data.forEach(element => {
                    nameOfGM_CannotBeUpdated.push('\n ***' + element.goods_material)
                 });
 
-                alert('To be added or deducted the quantity, name and unit of products in your system must be exactly the same as in invoices. \n Some Goods Materials below can not be removed due to the different name or different unit between invoice and your stock. \n Please re-check the name or unit of your products and added manually. \n' 
+                alert('To be added or deducted the quantity from the invoice to your stock, name and unit of Good and Material in Table Good Material must be exactly the same as in Invoices_From_Suppliers. \n  Good Materials below can not be added  \n Please re-check the name or unit of good material. \n' 
+                + nameOfGM_CannotBeUpdated.toString() )
+
+
+              }
+                this.getRecords()
+            })
+            
+        },
+        removeAmountFromInvoice(record){
+            this.isLoading = true
+            axios.post(`/api/datatable/invoice_from_supplier_line/removeAmountFromInvoice/${record}`).then((response)=>{
+                this.isLoading = false
+            if (response.data == 'Deduct Successfully'){
+                  window.alert('Deduct sucessfully from invoice to your stock !')
+              } else {
+                let nameOfGM_CannotBeUpdated = [];
+                response.data.forEach(element => {
+                   nameOfGM_CannotBeUpdated.push('\n ***' + element.goods_material)
+                });
+
+                alert('To be added or deducted the quantity from the invoice to your stock, name and unit of Good and Material in Table Good Material must be exactly the same as in Invoices_From_Suppliers. \n  Good Materials below can not be deducted  \n Please re-check the name or unit of good material. \n' 
                 + nameOfGM_CannotBeUpdated.toString() )
               }
                 this.getRecords()               

@@ -27,7 +27,7 @@
             </div>
         </template>   
       	<div  class="px-5 py-4 flex justify-end">
-              <template v-if="(theRecord.user_id == getAuth.user.id) || isFirstLevelUser">
+              <template v-if="(theRecord.user_id == getAuth.user.id) || getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getPermissionNames.includes('Order_Management')">
                     <button @click.prevent="edit()" 
                     v-if="editing.id !== id"
                     class="bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
@@ -35,7 +35,7 @@
                     </button>
                     <template v-if="editing.id === id"> 
                         <button @click.prevent="editing.id = null"
-                        class="bg-transparent border border-gray-700 text-sm hover:text-white hover:bg-green-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
+                        class="bg-transparent border border-gray-700 text-sm hover:text-white bg-green-300 hover:bg-green-700 focus:outline-none mr-1 rounded text-sm py-2 px-3">
                             Cancel
                         </button>
                         <button @click.prevent="update()"
@@ -78,6 +78,11 @@ export default {
         fourthLevelUsers: 'fourthLevelUsers' ,
 
     }),
+
+     getPermissionNames(){
+        const permissionNameArray = _.map(this.getAuth.user.permissions, 'name');
+        return permissionNameArray;
+    },
     filteredRecords () {
               
     },

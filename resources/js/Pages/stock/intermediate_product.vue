@@ -66,7 +66,6 @@
                             disabled>
                             </template>
 
-                            <!-- {{creating.form.assignedPermissionIds}}   -->
                             <template v-else-if="column=='Preparation'">
                             <input type="text" :name="column" :id="column" :placeholder="column" class=" hidden bg-gray-100 border-2 w-full p-1 rounded-lg"
                             disabled>
@@ -78,8 +77,7 @@
         
                                 <select :name="column" :id="column" v-model="creating.form[column]">
                                     <option  value="1">Yes</option>
-                                    <option  value="0">No</option>
-                                
+                                    <option  value="0">No</option>                               
                                 </select>
                             </template> 
                             
@@ -103,6 +101,9 @@
                                     >
                                     {{ option }}
                                 </li>
+                                <div class="text-red-500 mt-2 text-sm" v-if="creating.errors['assignedPermissionIds']">
+                                <strong>{{ creating.errors['assignedPermissionIds'][0] }}</strong>
+                                </div>     
                             </ul>         
                            
                             </template> 
@@ -315,12 +316,12 @@
         </div>
       
         <!-- start Table -->        
-        <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto">
+        <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3 ">
             <!-- {{filteredRecords}} -->
             <table class="min-w-max w-full table-auto">
                 <!-- Table Heading Section -->
                 <thead>
-                    <tr class="collapse py-2 bg-blue-200 text-gray-600 uppercase text-sm leading-normal">
+                    <tr class="sticky top-0 collapse py-2 bg-blue-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
                         v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
                         class="py-2"
@@ -417,7 +418,6 @@
                                     :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     v-model="editing.form[column]"
                                     >
-                                        <option  value=""></option>
                                         <template v-for="option,index in response.unitOptions" >   
                                             <template v-if="record.id != option.id">                  
                                             <option :value="index" :key="option">
@@ -461,6 +461,9 @@
                                             <label :for="option">{{ option }} ,</label>          
                                         </li>
                                     </ul>
+                                      <div class="text-red-500 mt-2 text-sm" v-if="editing.errors['assignedPermissionIds']">
+                                        <strong>{{ editing.errors['assignedPermissionIds'][0] }}</strong>
+                                     </div>     
                                 </template>
 
                                 <template v-else-if="column=='Preparation'">
@@ -513,7 +516,7 @@
                                 </template> 
                                  <template v-else-if="column=='location_id'">
                                     <select
-                                    class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                    class='w-36 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                      :class="{
                                         'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
                                     }"
@@ -521,7 +524,6 @@
                                     v-model="editing.form[column]"
                                     :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     >
-                                        <option  value=""></option>
                                         <template v-for="option,index in response.locationOptions" >
                 
                                             <template v-if="record.id != option.id" >                  
@@ -575,7 +577,7 @@
 
                                                     
                                                     <div class="mt-1">
-                                                        <button @click.prevent="update('current_qty')"
+                                                        <button @click.prevent="updateCurrentQty(record)"
                                                             class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none">                                         
                                                         Save
                                                     </button> 
@@ -616,9 +618,12 @@
                                             </template>
 
                                              <template v-else-if="column=='location_id'">
-                                                <div class="flex items-center">
-                                                    <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
-                                                </div>
+                                                <div class="w-28 flex items-center">
+                                                    <a href="#"  @click.prevent="openLocationModal(record)" 
+                                                        class="font-semibold  text-indigo-500 hover:underline"  
+                                                            >                     
+                                                        <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                                    </a>                                                 </div>
                                             </template>
                                                                           
                                              <template v-else-if="column=='permissions'">
@@ -698,7 +703,7 @@
 
                                         
                                         <div class="mt-1 pl-2">
-                                            <button @click.prevent="update('current_qty')"
+                                            <button @click.prevent="updateCurrentQty(record)"
                                                 class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none">                                         
                                             Save
                                         </button> 
@@ -742,8 +747,12 @@
                                     </div>
                                 </template>
                                 <template v-else-if="column=='location_id'">
-                                    <div class="flex items-center">
-                                        <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                    <div class="w-28 flex items-center">
+                                          <a href="#"  @click.prevent="openLocationModal(record)" 
+                                            class="font-semibold  text-indigo-500 hover:underline"  
+                                                >                     
+                                            <span class="font-medium" >{{response.locationOptions[columnValue]}}</span>
+                                            </a> 
                                     </div>
                                 </template>
 
@@ -819,6 +828,14 @@
                             />
                         </div>
 
+                       <div v-if="record.id == clickLocationModalId">
+                            <Location_Modal  
+                            :locationId="record.location_id" 
+                            :table_name="'goods_material'"
+                            @close="clickLocationModalId=null" 
+                            />
+                        </div>
+
                     </tr>
                 </tbody>
                 <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
@@ -837,6 +854,7 @@
 <script>
 import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
 import Loading from 'vue-loading-overlay';
+import Location_Modal from './stock_modal/location_modal.vue'
 import {mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
@@ -844,7 +862,7 @@ export default {
         //   redirectIfNotCustomer
       ],
 
-    components: {Loading, Image_Slider_Modal},
+    components: {Loading, Image_Slider_Modal,Location_Modal},
    data() {
             return {
                 response: {
@@ -966,6 +984,9 @@ export default {
 
                 // showIMGModal: false,
                 clickImgSliderModalId : null,
+
+                  // showLocationModal: false,
+                clickLocationModalId : null,
                 
              
             }
@@ -1169,16 +1190,34 @@ methods:
 
         this.selected = _.map(this.filteredRecords, 'id')
     },
-    update(columnName) {
-        if (parseFloat(this.creating.form.prepared_point) >  parseFloat(this.creating.form.coverage)){
-        window.alert('prepared point needs to be smaller or equal coverage')
-        return;
-        }
-        if (columnName= 'current_qty' && this.editing.currentQtyId) {
-            this.editing.id= this.editing.currentQtyId
-            this.editing.currentQtyId = null
-        }
+     updateCurrentQty(record){
+       // return;     
         this.isLoading = true
+        axios.post(`/api/datatable/intermediate_product/updateCurrentQty/${record.id}`, {'current_qty':this.editing.form.current_qty}).then((response) => {
+            this.isLoading = false
+
+           this.getRecords().then(() => {
+                this.editing.currentQtyId = null
+                this.editing.form = null
+                       
+            })
+        }).catch((error) => {
+            this.isLoading = false
+            if (error.response.status === 422) {            
+                this.editing.errors = error.response.data.errors
+            }
+        })
+       
+    },
+    update(columnName) {
+    
+        if (parseFloat(this.editing.form.prepared_point) >=  parseFloat(this.editing.form.coverage)){          
+            window.alert('prepared point needs to be smaller than coverage')
+            return;
+        }
+
+        this.isLoading = true
+      
         axios.patch(`/api/datatable/intermediate_product/${this.editing.id}`, this.editing.form).then((response) => {
             this.isLoading = false
             if(response.data == 'Error - OnGoing Update'){
@@ -1188,11 +1227,7 @@ methods:
             {
                 this.getRecords().then(() => {
                     this.editing.id = null
-                    this.editing.form = null
-                    // if(response.data=='password updated') {
-                    //     alert('Password updated successfully !')
-                    // }
-                    
+                    this.editing.form = null                    
                 })
             }
         }).catch((error) => {
@@ -1328,6 +1363,10 @@ methods:
     },
     openSliderImageModal(record) {        
     this.clickImgSliderModalId = record.id;
+    },
+
+    openLocationModal(record) {   
+        this.clickLocationModalId = record.id;
     },
 
     makeClickIdNull() {

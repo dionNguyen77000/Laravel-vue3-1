@@ -168,7 +168,6 @@
                                 <template v-if="editing.id === record.id && isUpdatable(column)">
                                 <div >
                                    <template v-if="column=='o_unit'">
-                                        <!-- {{record}} -->
                                         <select 
                                         class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                         :class="{
@@ -228,11 +227,18 @@
                                 </div>
                                 </template>
                                 <template v-else>
-                                <div :class="{ 'text-center': textCenterColumns.includes(column) }"                                      >                              
-                                    <span class="font-medium" >
-                                    {{(dollarsSymbolColumns.includes(column) && columnValue != null) ?'$' : '' }}{{columnValue}}
-                                    </span>                          
-                                </div>
+                                    <template v-if="column=='goods_material'">
+                                        <div class="flex items-center w-36">
+                                            <span class="font-medium" >{{columnValue}}</span>
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div :class="{ 'text-center': textCenterColumns.includes(column) }"                                      >                              
+                                            <span class="font-medium" >
+                                            {{(dollarsSymbolColumns.includes(column) && columnValue != null) ?'$' : '' }}{{columnValue}}
+                                            </span>                          
+                                        </div>
+                                    </template>                              
                                 </template>   
                             </td>
                             </template>
@@ -302,7 +308,7 @@ export default {
                 },
                 sort: {
                     key: 'id',
-                    order: 'desc'
+                    order: 'asc'
                 },
                 creating: {
                     active: false,

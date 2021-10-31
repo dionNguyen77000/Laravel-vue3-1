@@ -10,7 +10,8 @@ class Unit extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'name'
+        'name',
+        'type',
     ];
 
     public function goods_materials()

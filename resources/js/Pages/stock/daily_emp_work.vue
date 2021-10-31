@@ -27,7 +27,7 @@
                                 <template v-if="column=='date'">
                                 <label :for="column" class="sr-only"> </label>
                             <input type="date" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
-                            v-model="theDate" disabled>
+                             v-model="creating.form[column]" disabled>
                             <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
                                     <strong>{{ creating.errors[column][0] }}</strong>
                             </div>
@@ -248,11 +248,11 @@
                 </div>
             </div> 
             <!-- start Table -->        
-            <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto">
+            <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3">
                 <table class="min-w-max w-full table-auto">
                     <!-- Table Heading Section -->
                     <thead>
-                        <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <tr class="sticky top-0 collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-2" 
                             v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"                          
                             >
@@ -603,6 +603,7 @@ export default {
                     form: {
                         Status: 'OnGoing',
                         intermediate_product_id: '',
+                        date: new Date().toISOString().substr(0, 10), // 05/09/2019
 
                     },
                     errors: [],
@@ -634,7 +635,7 @@ export default {
                 selected_role: '',
                 selected_permission: 'All',
 
-                theDate: new Date().toISOString().substr(0, 10), // 05/09/2019
+                // theDate: new Date().toISOString().substr(0, 10), // 05/09/2019
                 require_qty: 0,
 
                 today: new Date().toISOString().substr(0, 10), // 05/09/2019
@@ -855,9 +856,9 @@ methods:
     },
     store () {
     
-        if(this.theDate ) {
-            this.creating.form.date = this.theDate
-        }
+        // if(this.theDate ) {
+        //     this.creating.form.date = this.theDate
+        // }
          if(this.getAuth.user) {
             this.creating.form.user_id = this.getAuth.user.id
         }              

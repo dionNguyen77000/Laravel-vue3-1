@@ -36,12 +36,16 @@ class Goods_MaterialResourceDB extends JsonResource
             'required_qty'=> $this->required_qty,
             // 'permission_id'=> $this->permission_id,
             'Preparation'=> $this->Preparation,
-            'Active'=> $this->Active,
             'img' => $this->img,
             'img_two' => $this->img_two,
             'img_three' => $this->img_three,
-            'location_id' => $this->location_id,
+            'suppliers' =>  $this->suppliers,     
             'permissions' =>  $this->permissions->map->only(['id', 'name']),   
+            // 'suppliers' =>  $this->suppliers->map->only(['id', 'name']),   
+            // 'unit_price' =>  $this->suppliers,   
+            'location_id' => $this->location_id,
+            'O_Status' =>  $this->O_Status,   
+            'Active'=> $this->Active,
        
         ];
     }

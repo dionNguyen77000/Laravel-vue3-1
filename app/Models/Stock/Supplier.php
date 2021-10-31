@@ -21,6 +21,6 @@ class Supplier extends Model
 
     public function goods_materials()
     {
-        return $this->hasMany(Goods_material::class);
+        return $this->belongsToMany(Goods_material::class);
     }
 }

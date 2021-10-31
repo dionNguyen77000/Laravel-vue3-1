@@ -180,7 +180,7 @@ class Intermediate_ProductController extends DataTableController
         $newI->prepared_point = $request->prepared_point;
         $newI->coverage = $request->coverage;
         $newI->Active = $request->Active;
-        $newI->location = $request->location;
+        $newI->location_id = $request->location_id;
 
         // $newI =  $this->builder->create($request->only($this->getCreatedColumns()));
 
@@ -201,15 +201,38 @@ class Intermediate_ProductController extends DataTableController
         }
        return $newI;
     }
+    public function updateCurrentQty($id,Request $request){
+        // dd($request->current_qty);
+
+        $this->validate($request, [
+            'current_qty' => 'required|numeric',
+        ]);
+        $IP =  $this->builder->find($id);
+        $IP->current_qty = $request->current_qty;
+          //update Preparation according to current_qty, Prepared_Point And Coverage
+          if ($IP->current_qty <= $IP->prepared_point){
+            $IP->Preparation = 'Yes';
+            $IP->required_qty = $IP->coverage -   $IP->current_qty;  
+           
+        } else{
+            $IP->Preparation = 'No';
+            $IP->required_qty = 0;        
+        } 
+        $IP->save();       
+
+        // dd($request->current_qty);
+    }
 
     public function update($id, Request $request)
     {
+        // dd($request->assignedPermissionIds);
         $this->validate($request, [
             'name' => 'required|unique:intermediate_products,name,' . $id,
             // 'price' => 'numeric',
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
+            'assignedPermissionIds' => 'required',
         ]);
 
         
@@ -228,7 +251,7 @@ class Intermediate_ProductController extends DataTableController
         $intermediate->Active = $request->Active;
         $intermediate->location_id = $request->location_id;
 
-        //update the permissions of the good_material
+        //update the permissions of the intermediate
         $intermediate->permissions()->sync($request->assignedPermissionIds);
 
         if ($intermediate->current_qty < $intermediate->prepared_point){
@@ -416,7 +439,7 @@ class Intermediate_ProductController extends DataTableController
         // deal with second or third invoice image
         if(count($silderImageidArray)>1){
             $img_number = $silderImageidArray[1];
-            $imageName = $the_inter->name.'_'.$img_number.'.jpg';
+            $imageName = $the_inter->name.rand(1,999).'_'.$img_number.'.jpg';
 
 
             //delete old image
@@ -465,9 +488,9 @@ class Intermediate_ProductController extends DataTableController
                 ]);
             }
 
-            
-            $imageName = $the_inter->name.'.jpg';
-            $thumbnailName = $the_inter->name.'_thumbnail_'.'.jpg';
+            $randomNumber = rand(1,999);            
+            $imageName = $the_inter->name.$randomNumber.'.jpg';
+            $thumbnailName = $the_inter->name.'_thumbnail_'.$randomNumber.'.jpg';
 
             Storage::put("public/intermediate_product_images/". $imageName, $imageNameResize->__toString());
             Storage::put("public/intermediate_product_images/". $thumbnailName, $thumbnailNameResize->__toString());
@@ -561,9 +584,9 @@ class Intermediate_ProductController extends DataTableController
                     }); 
                     // lopp to all goods and materials
                     foreach ($ips as $ip){
-                        $theGM_Permissions = $ip->permissions;
+                        $theIP_Permissions = $ip->permissions;
                         //loop through all the assigened permission of the gm
-                        foreach($theGM_Permissions as $theGM_Permission){
+                        foreach($theIP_Permissions as $theGM_Permission){
                             // if the permission of gm is one included in the user permissions
                             if(in_array($theGM_Permission->id,$userPermissionIds)) {
                                 array_push($gm_filtered_permission_array,$ip);
@@ -574,9 +597,9 @@ class Intermediate_ProductController extends DataTableController
                 } else {
                     // lopp to all goods and materials
                     foreach ($ips as $ip){
-                        $theGM_Permissions = $ip->permissions;
-                        //loop through all the assigened permission of the gm
-                        foreach($theGM_Permissions as $theGM_Permission){
+                        $theIP_Permissions = $ip->permissions;
+                        //loop through all the assigened permission of the ip
+                        foreach($theIP_Permissions as $theGM_Permission){
                             // if the permission of gm is the user permissions
                             if($theGM_Permission->id ==$request->permission_id) {
                                 array_push($gm_filtered_permission_array,$ip);
@@ -622,7 +645,7 @@ class Intermediate_ProductController extends DataTableController
 
     public function getCategoryOptions()
     {
-        $c = Category::all('id','name');
+        $c = Category::all('id','type','name')->whereIn('type',['All','I']);
 
         $returnArr = [];
         foreach ($c as  $sc) {

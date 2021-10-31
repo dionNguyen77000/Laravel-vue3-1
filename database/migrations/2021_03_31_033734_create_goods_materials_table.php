@@ -18,7 +18,7 @@ class CreateGoodsMaterialsTable extends Migration
 
             $table->string('name');
             $table->string('slug')->nullable()->unique();
-            $table->integer('price')->nullable();
+            $table->float('price')->nullable();
             $table->unsignedBigInteger('unit_id');
             $table->foreign('unit_id')->references('id')->on('units');
             $table->foreignId('supplier_id')->nullable()->constrained()->onUpdate('cascade')
@@ -27,6 +27,7 @@ class CreateGoodsMaterialsTable extends Migration
             ->onDelete('set null');
             $table->text('description')->nullable();
             $table->string('location')->nullable();
+            $table->string('Order_Status')->nullable();
             $table->timestamps();
         });
     }

@@ -22,6 +22,7 @@ class CreateOrdersToSuppliersTable extends Migration
             $table->float('estimated_price')->nullable();
             $table->string('excel_file')->nullable();
             $table->string('Note')->nullable();
+            $table->string('paid')->nullable();
             $table->timestamps();
         });
     }

@@ -16,7 +16,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Intermediate_product extends Model
 {
     use HasFactory, LogsActivity;
-    protected static $logAttributes = ['current_qty','prepared_point','coverage'];
+    protected static $logAttributes = 
+    [
+        'current_qty',
+        // 'prepared_point',
+        // 'coverage'
+    ];
     protected $fillable = [
         'name',
         'slug',
@@ -61,5 +66,9 @@ class Intermediate_product extends Model
     public function permissions()
     {
         return $this->belongsToMany(Permission::class);
+    }
+    public function goods_materials()
+    {
+        return $this->belongsTo(Goods_material::class);
     }
 }

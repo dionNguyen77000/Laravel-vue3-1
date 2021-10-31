@@ -106,9 +106,11 @@ class Goods_MaterialController extends DataTableController
             'coverage',
             'required_qty',
             'Preparation',
-            'Active',
-            'location_id',
+            'suppliers',
             'permissions',
+            'location_id',
+            'O_Status',
+            'Active',
         ];
     }
 
@@ -131,8 +133,9 @@ class Goods_MaterialController extends DataTableController
             'coverage',
             'required_qty',
             'Preparation',
+            'location_id',
+            'O_Status',
             'Active',
-            'location_id'
         ];
     }
     public function getUpdatableColumns()
@@ -151,9 +154,11 @@ class Goods_MaterialController extends DataTableController
             'coverage',
             'required_qty',
             'Preparation',
-            'Active',
+            'suppliers',
             'location_id',
             'permissions',
+            'O_Status',
+            'Active',
         ];
     }
 
@@ -170,14 +175,29 @@ class Goods_MaterialController extends DataTableController
             'current_qty',
             'prepared_point',
             'coverage',
+            'location_id',
+            // 'O_Status',
             'Active',
-            'location_id'
         ];
     }
     
     public function store(Request $request)
-
     {
+      
+        // $good_material = new Goods_material();
+        // if($request->assignedSupplierIds && count($request->assignedSupplierIds) > 0 ) {
+        //     // dd( $request->assignedSupplierIds);
+
+        //     foreach($request->assignedSupplierUnitPrices as $assignedSupplierUnitPrice){
+        //         // dd( $assignedSupplierUnitPrice);
+        //         foreach($assignedSupplierUnitPrice as $supplierId => $unit_price){
+        //             // var_dump($supplierId);
+        //             dd($unit_price);
+        //             $good_material->suppliers()->attach($supplierId,['unit_price'=>$unit_price]);
+        //         }
+        //     }
+        // }
+
         $this->validate($request, [
             'name' => 'required|unique:goods_materials,name',
             // 'slug' => 'required|unique:goods_materials,slug',
@@ -185,7 +205,9 @@ class Goods_MaterialController extends DataTableController
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
-            'assignedPermissionIds' => 'required'
+            'assignedSupplierIds' => 'required',
+            'assignedPermissionIds' => 'required',
+            'assignedSupplierUnitPrices' => 'required',
             // 'img' => 'image|mimes:jpeg,png,jpg,gif,svg'
         ]);
         $good_material = new Goods_material();
@@ -219,19 +241,49 @@ class Goods_MaterialController extends DataTableController
         if($request->assignedPermissionIds && count($request->assignedPermissionIds) > 0 ) {
             $good_material->permissions()->attach($request->assignedPermissionIds);
         }
+        if($request->assignedSupplierIds && count($request->assignedSupplierIds) > 0 ) {
+            foreach($request->assignedSupplierUnitPrices as $assignedSupplierUnitPrice){
+                foreach($assignedSupplierUnitPrice as $supplierId => $unit_price){
+                    // echo($supplierId );
+                    $good_material->suppliers()->attach($supplierId,['unit_price'=>$unit_price]);
+                }
+            }
+        }
         return $good_material;
        
+    }
+    public function updateCurrentQty($id,Request $request){
+        $this->validate($request, [
+            'current_qty' => 'required|numeric',
+        ]);
+        $GM =  $this->builder->find($id);
+        $GM->current_qty = $request->current_qty;
+          //update Preparation according to current_qty, Prepared_Point And Coverage
+          if ($GM->current_qty <= $GM->prepared_point){
+            $GM->Preparation = 'Yes';
+            $GM->required_qty = $GM->coverage -   $GM->current_qty;  
+           
+        } else{
+            $GM->Preparation = 'No';
+            $GM->required_qty = 0;        
+        } 
+        $GM->save();       
+
+        // dd($request->current_qty);
     }
 
     public function update($id, Request $request)
     {
+        
         $this->validate($request, [
             'name' => 'required|unique:goods_materials,name,' . $id,
             'price' => 'numeric|nullable',
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
-            'assignedPermissionIds' => 'required'
+            'assignedSupplierIds' => 'required',
+            'assignedPermissionIds' => 'required',
+            // 'suppliers' => 'required'
 
         ]);
 
@@ -256,11 +308,61 @@ class Goods_MaterialController extends DataTableController
         $GM->required_qty = $request->required_qty;
         $GM->Active = $request->Active;
         $GM->location_id = $request->location_id;
+        if($request->O_Status == ''){
+            $GM->O_Status = null;
+        }
+        else $GM->O_Status = $request->O_Status;
         // $updatedSuccess = $GM->update(
         //     $request->only($this->getUpdatableColumns())
         // );
         //update the permissions of the good_material
-        $GM->permissions()->sync($request->assignedPermissionIds);
+        if($request->assignedPermissionIds && count($request->assignedPermissionIds) > 0 ) {
+            $GM->permissions()->sync($request->assignedPermissionIds);
+        }
+        // if($request->assignedSupplierIds && count($request->assignedSupplierIds) > 0 ) {
+        //     $GM->suppliers()->sync($request->assignedSupplierIds);
+        // }
+        // dd( $request->assignedSupplierUnitPrices);
+
+        // $GM->suppliers()->sync([ 
+        //     1 => ['unit_price' => 0],
+        //     2 => ['unit_price' => 0.07],
+        //     6 => ['unit_price' => 0.09],
+        // ]);
+
+        // dd($request->assignedSupplierUnitPrices);
+        $syncedUnitPriceArray = [
+
+        ];
+
+        if($request->assignedSupplierIds && count($request->assignedSupplierIds) > 0 ) {
+            foreach($request->assignedSupplierUnitPrices as $assignedSupplierUnitPrice){
+                foreach($assignedSupplierUnitPrice as $supplierId => $unit_price){
+                    $syncedUnitPriceArray[$supplierId] = ['unit_price'=>$unit_price];
+                    // echo($supplierId );
+                    // echo($unit_price );
+                    // $GM->suppliers()->sync([
+                    //     // $supplierId => ['unit_price'=>$unit_price]
+                    // ]);
+                }
+            }
+        }
+
+        // dd($syncedUnitPriceArray);
+
+        $GM->suppliers()->sync($syncedUnitPriceArray);
+
+        // if($request->assignedSupplierUnitPrices && count($request->assignedSupplierUnitPrices) > 0 ) {
+        //     foreach($request->assignedSupplierUnitPrices as $assignedSupplierUnitPrice){
+            
+        //             $GM
+        //             ->suppliers()
+        //             ->sync(
+        //                 $assignedSupplierUnitPrice['id'],
+        //                     ['unit_price'=>$assignedSupplierUnitPrice['pivot']['unit_price']]
+        //                 );
+        //     }
+        // }
 
         //update Preparation according to current_qty, Prepared_Point And Coverage
         if ($GM->current_qty <= $GM->prepared_point){
@@ -412,7 +514,7 @@ class Goods_MaterialController extends DataTableController
         // deal with second or third invoice image
         if(count($silderImageidArray)>1){
             $img_number = $silderImageidArray[1];
-            $imageName = $the_g_m->name.'_'.$img_number.'.jpg';
+            $imageName = $the_g_m->name.rand(1,999).'_'.$img_number.'.jpg';
 
 
             //delete old image
@@ -461,9 +563,9 @@ class Goods_MaterialController extends DataTableController
                 ]);
             }
 
-            
-            $imageName = $the_g_m->name.'.jpg';
-            $thumbnailName = $the_g_m->name.'_thumbnail_'.'.jpg';
+            $randomNumber = rand(1,999);
+            $imageName = $the_g_m->name.$randomNumber.'.jpg';
+            $thumbnailName = $the_g_m->name.'_thumbnail_'.$randomNumber.'.jpg';
 
             Storage::put("public/good_material_images/". $imageName, $imageNameResize->__toString());
             Storage::put("public/good_material_images/". $thumbnailName, $thumbnailNameResize->__toString());
@@ -501,11 +603,6 @@ class Goods_MaterialController extends DataTableController
         if ($this->hasSearchQuery($request)) {
             $builder = $this->buildSearch($builder, $request);
         }
-     
-
-        if (isset($request->supplier_id) && $request->supplier_id != 'All' ) {
-            $builder =   $builder->where('supplier_id','=',$request->supplier_id);
-        }
 
         if (isset($request->category_id) && $request->category_id != 'All') {
             $builder =   $builder->where('category_id','=',$request->category_id);
@@ -513,7 +610,8 @@ class Goods_MaterialController extends DataTableController
 
         if (isset($request->location_id) && $request->location_id != 'All') {
             $builder =   $builder->where('location_id','=',$request->location_id);
-        }        // if (isset($request->permission_id)) {
+        }        
+        // if (isset($request->permission_id)) {
         //     if($request->permission_id == 'All'){
         //         $user = auth()->user();
         //         $userPermissions = $user->getPermissions();
@@ -547,7 +645,7 @@ class Goods_MaterialController extends DataTableController
             }
         }
 
-        if (isset($request->Active)) {
+        if (isset($request->Active)&& $request->Active != 'All') {
             $builder =   $builder->where('Active','=',$request->Active);
         }
 
@@ -558,12 +656,31 @@ class Goods_MaterialController extends DataTableController
                             ->limit($request->limit)
                             ->orderBy('id', 'asc')
                             ->get($this->getRetrievedColumns())
-                            ->load(['permissions']);
+                            ->load(['permissions','suppliers']);
                             // ->paginate(2);
            
             // $gmPermissions = $builder->permissions->map->only(['id', 'name']);
             // dd($gmPermissions);
-        
+            $gm_filtered_supplier_array = [];
+            if (isset($request->supplier_id) && $request->supplier_id != 'All' ) {
+                 // lopp to all goods and materials
+                 foreach ($goods_materials as $good_material){
+                    $theGM_Suppliers = $good_material->suppliers;
+                    //loop through all the assigened permission of the gm
+                    foreach($theGM_Suppliers as $theGM_Supplier){
+                        // if the permission of gm is the user permissions
+                        if($theGM_Supplier->id == $request->supplier_id) {
+                            // dd($request->permission_id);
+
+                            array_push($gm_filtered_supplier_array,$good_material);
+                            break;
+                        }
+                    }
+                }
+
+                $goods_materials = collect($gm_filtered_supplier_array);
+            }
+
             
             $gm_filtered_permission_array = [];
             if (isset($request->permission_id)) {
@@ -650,7 +767,7 @@ class Goods_MaterialController extends DataTableController
 
     public function getCategoryOptions()
     {
-        $c = Category::all('id','name');
+        $c = Category::all('id','type','name')->whereIn('type',['All','GM']);
 
         $returnArr = [];
         foreach ($c as  $sc) {
@@ -712,9 +829,12 @@ class Goods_MaterialController extends DataTableController
     /**
     * @return \Illuminate\Support\Collection
     */
-    public function fileExport($supplier_id,Request $request) 
+    public function fileExport1($supplier_id,Request $request) 
     {
-        // dd($supplier_id);
+        // get array data from request
+        $data = json_decode($request->getContent(), true);
+        // dd($data);
+        
         $supplier = Supplier::find($supplier_id);
         $supplierName=$supplier->name;
         $dateInBrisbane= Carbon::now('Australia/Brisbane');
@@ -740,10 +860,12 @@ class Goods_MaterialController extends DataTableController
         
 
 
-        $sucessfullXLSXGeneration  = (new Goods_MaterialExport($supplier_id))->store($pathXLSX);       
+        $sucessfullXLSXGeneration  = (new Goods_MaterialExport($supplier_id, $data))->store($pathXLSX);       
+        // $sucessfullXLSXGeneration  = (new Goods_MaterialExport($supplier_id))->store($pathXLSX);       
         // (new Goods_MaterialExport($supplier_id))->store($pathCSV );       
         // (new Goods_MaterialExport($supplier_id))->store($pathPDF );    
-        return (new Goods_MaterialExport($supplier_id))->download('goods.xlsx');  
+        // return (new Goods_MaterialExport($supplier_id))->download('goods.xlsx');  
+        return (new Goods_MaterialExport($supplier_id, $data))->download('goods.xlsx');  
         
     
         // return (new Goods_MaterialExport)->store($pathPDF, \Barryvdh\DomPDF\PDF::DOMPDF);        
@@ -815,17 +937,20 @@ class Goods_MaterialController extends DataTableController
         }
     }
 
-    public function emailOrderToSupplier($supplier_id, Request $emailDetail){
+    public function emailOrderToSupplier($supplier_id, Request $request){
         // // dd(storage_path('img/logo_backend.png'));
         // dd($emailDetail);
+        // $excelData = $request->excelData;
+        $emailDetail = $request->supplierInfo;
+        // dd($emailDetail['email']);
         $details = [
-            'email' => $emailDetail->email,
+            'email' => $emailDetail['email'],
             'title' => 'Order From Golden Lor Yarrabilba',
-            'body' =>  $emailDetail->optionalMessage
+            'body' =>  $emailDetail['optionalMessage']
         ];
 
         $files = [
-            public_path($emailDetail->excelFileName)
+            public_path($emailDetail['excelFileName'])
         ];
         try{ 
             Mail::send('emails.myTestMail', $details, function($message)use($details, $files) {
@@ -868,17 +993,13 @@ class Goods_MaterialController extends DataTableController
     //    return $mail_status;
     }
 
-    public function orderAndEmailSupplier($supplier_id, Request $request){
-       
-        $this->validate($request, [       
-            'email' => 'required|email',
-        ]);
-
-        if ($this->emailOrderToSupplier($supplier_id,$request) == 'Email Order Successfully') {
-            return $this->createOrderToSupplier($supplier_id, $request);
-        }
-    }
+    
     public function createOrderToSupplier($supplier_id, Request $request){
+
+        $excelData = $request->excelData;
+        $emailDetail = $request->supplierInfo;
+
+        // dd($excelData);
 
         $user = auth()->user();
         //create new order and insert into table ordertosupplier and ordertosupplierline            
@@ -891,7 +1012,7 @@ class Goods_MaterialController extends DataTableController
         $order_to_supplier->user =$user->name;
         $order_to_supplier->supplier = $supplier->name;
         $order_to_supplier->ordered_date =$theDate;
-        $order_to_supplier->excel_file =$request->excelFileName;
+        $order_to_supplier->excel_file =$emailDetail['excelFileName'];
         $order_to_supplier->save();
         
         
@@ -903,33 +1024,52 @@ class Goods_MaterialController extends DataTableController
         $invoice_from_supplier->save();
         
 
-        $good_materials = Goods_material::where('supplier_id', '=', $supplier_id)
-        ->where('required_qty','>',0)
-        ->orderBy('category_id','asc')
-        ->get();
+        // $good_materials = Goods_material::where('supplier_id', '=', $supplier_id)
+        // ->where('required_qty','>',0)
+        // ->orderBy('category_id','asc')
+        // ->get();
 
-        
+
         $estimated_price_order_to_supplier = 0;
-            foreach($good_materials as $good_material)
+        foreach($excelData as $good_material)
         {
+
+            $theGM = Goods_material::where('name', '=',  $good_material['name'])->first();
+            // dd($theGM->Order_Status);
+            $theGM->O_Status = 'waiting';
+            $theGM->save();
+
             $order_to_supplier_line = new Order_To_Supplier_Line();
             $order_to_supplier_line->orders_to_supplier_id = $order_to_supplier->id;
             // $order_to_supplier_line->goods_material_id = $good_material->id;
-            $order_to_supplier_line->goods_material = $good_material->name;
-            $order_to_supplier_line->o_unit = $good_material->unit->name;
-            $order_to_supplier_line->o_unit_quantity = $good_material->required_qty;
-            $order_to_supplier_line->o_unit_price = $good_material->price;
-            $order_to_supplier_line->o_line_price = $good_material->required_qty * $good_material->price;
-            $order_to_supplier_line->category = $good_material->category->name;
+            //update order_status of the good_material in stock
             
-            $order_to_supplier_line->i_unit = $good_material->unit->name;
-            $order_to_supplier_line->i_unit_quantity = $good_material->required_qty;
-            $order_to_supplier_line->i_unit_price = $good_material->price;
-            $order_to_supplier_line->i_line_price = $good_material->required_qty * $good_material->price;
+
+            $order_to_supplier_line->goods_material = $good_material['name'];
+            $order_to_supplier_line->o_unit_price = $good_material['price'];
+
+            $theUnit = Unit::find($good_material['unit_id']);
+
+            $order_to_supplier_line->o_unit = $theUnit->name;
+            
+            $theCategory = Category::find($good_material['category_id']);
+
+            $order_to_supplier_line->category = $theCategory->name;
+
+            $order_to_supplier_line->o_unit_quantity = $good_material['required_qty'];
+            $order_to_supplier_line->o_line_price = $good_material['price'] * $good_material['required_qty'];
+            
+            $order_to_supplier_line->i_unit = $theUnit->name;
+            $order_to_supplier_line->i_unit_quantity = $good_material['required_qty'];
+            $order_to_supplier_line->i_unit_price = $good_material['price'];
+            $order_to_supplier_line->i_line_price = $good_material['price'] * $good_material['required_qty'];
 
             $order_to_supplier_line -> save();
+
             $estimated_price_order_to_supplier = $estimated_price_order_to_supplier + 
             $good_material['price']*$good_material['required_qty'];
+
+          
         }
         $order_to_supplier->estimated_price = $estimated_price_order_to_supplier;
 
@@ -937,6 +1077,20 @@ class Goods_MaterialController extends DataTableController
 
         return $order_to_supplier;
 
+    }
+
+    public function orderAndEmailSupplier($supplier_id, Request $request){
+
+        $excelData = $request->excelData;
+        $emailDetail = $request->supplierInfo;
+        // dd($emailDetail);
+        // $this->validate($request->supplierInfo, [       
+        //     'email' => 'required|email',
+        // ]);
+
+        if ($this->emailOrderToSupplier($supplier_id, $request) == 'Email Order Successfully') {
+            return $this->createOrderToSupplier($supplier_id,  $request);
+        }
     }
 
     

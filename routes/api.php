@@ -13,11 +13,12 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Reminder\PostController;
 use App\Http\Controllers\DataTable\RoleController;
 use App\Http\Controllers\DataTable\UnitController;
-use App\Http\Controllers\DataTable\LocationController;
 use App\Http\Controllers\DataTable\UserController;
 use App\Http\Controllers\DataTable\CategoryController;
+use App\Http\Controllers\DataTable\LocationController;
 use App\Http\Controllers\DataTable\SupplierController;
 use App\Http\Controllers\DataTable\PermissionController;
+use App\Http\Controllers\DataTable\Activity_LogController;
 use App\Http\Controllers\DataTable\Daily_Emp_WorkController;
 use App\Http\Controllers\DataTable\Goods_MaterialController;
 use App\Http\Controllers\DataTable\Orders_To_SupplierController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\DataTable\Intermediate_ProductController;
 use App\Http\Controllers\DataTable\Invoices_From_SupplierController;
 use App\Http\Controllers\DataTable\Order_To_Supplier_LineController;
 use App\Http\Controllers\DataTable\Invoice_From_Supplier_LineController;
+use App\Http\Controllers\DataTable\Miscellaneous_InvoiceController;
 
 
 
@@ -67,6 +69,7 @@ Route::post('datatable/locations/saveImage/{id}', [LocationController::class, 's
 Route::resource('datatable/locations', LocationController::class);
 
 Route::get('datatable/goods_material/fileExport/{supplier_id}', [Goods_MaterialController::class, 'fileExport']);
+Route::post('datatable/goods_material/fileExport1/{supplier_id}', [Goods_MaterialController::class, 'fileExport1']);
 
 
 Route::get('datatable/goods_material/supplierSelection/{supplier_id}', [Goods_MaterialController::class, 'getSupplierDetails']);
@@ -78,6 +81,7 @@ Route::post('datatable/goods_material/emailOrderToSupplier/{supplier_id}', [Good
 
 Route::resource('datatable/goods_material', Goods_MaterialController::class);
 Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController::class, 'saveImage']);
+Route::post('datatable/goods_material/updateCurrentQty/{id}', [Goods_MaterialController::class, 'updateCurrentQty']);
 
 Route::get('datatable/goods_material/import-excel-csv', [Goods_MaterialController::class, 'fileImportExport']);
 
@@ -87,6 +91,8 @@ Route::get('datatable/goods_material/sendMail11', [Goods_MaterialController::cla
 Route::get('datatable/intermediate_product/sendMail', [Intermediate_ProductController::class, 'sendMail']);
 
 Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
+Route::post('datatable/intermediate_product/updateCurrentQty/{id}', [Intermediate_ProductController::class, 'updateCurrentQty']);
+
 Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
 Route::post('datatable/daily_emp_work/updateNote/{order_id}', [Daily_Emp_WorkController::class,'updateNote']);
 
@@ -104,7 +110,12 @@ Route::post('datatable/invoices_to_supplier/updateNote/{order_id}', [Invoices_Fr
 
 Route::resource('datatable/invoice_from_supplier_line', Invoice_From_Supplier_LineController::class);
 Route::post('datatable/invoice_from_supplier_line/addAmountFromInvoiceToStock/{ids}', [Invoice_From_Supplier_LineController::class, 'addAmountFromInvoiceToStock']);
-Route::post('datatable/invoice_from_supplier_line/removeAmountFromInvoiceToStock/{ids}', [Invoice_From_Supplier_LineController::class, 'removeAmountFromInvoiceToStock']);
+Route::post('datatable/invoice_from_supplier_line/removeAmountFromInvoice/{ids}', [Invoice_From_Supplier_LineController::class, 'removeAmountFromInvoice']);
+Route::post('datatable/invoice_from_supplier_line/removeAmountFromInvoiceAndUpdateOrderStatus/{ids}', [Invoice_From_Supplier_LineController::class, 'removeAmountFromInvoiceAndUpdateOrderStatus']);
+
+Route::post('datatable/miscellaneous_invoices/saveImage/{id}', [Miscellaneous_InvoiceController::class, 'saveImage']);
+Route::resource('datatable/miscellaneous_invoices', Miscellaneous_InvoiceController::class);
+Route::post('datatable/miscellaneous_invoices/updateNote/{order_id}', [Miscellaneous_InvoiceController::class,'updateNote']);
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');
@@ -112,6 +123,10 @@ Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('logout', [LogoutController::class, 'action'])->name('logout');
     Route::get('me', [MeController::class, 'action'])->name('me');
 });
+
+Route::resource('datatable/activity_logs', Activity_LogController::class);
+
+
 
 // Route::group(['prefix' => 'auth'], function () {
 //     Route::post('register', RegisterController::class)->name('login');

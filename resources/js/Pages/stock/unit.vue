@@ -191,19 +191,42 @@
                                 </template>
                                 <!-- if the record currently edit -->               
                                 <template v-else-if="editing.id === record.id">
-                                     <td class="py-2 text-left"  
-                                    :class="{ 'text-center': textCenterColumns.includes(column)}" 
-                                    v-if="response.displayable.includes(column)"> 
-                                        <input type="text"  
-                                        class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
-                                        v-model="editing.form[column]"
-                                        :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                       
+                                    <template v-if="column=='type'">
+                                        <td class="py-2 text-left"  
+                                            :class="{ 'text-center': textCenterColumns.includes(column)}" 
+                                            v-if="response.displayable.includes(column)"
                                         > 
-                                        <br>
-                                        <span v-if="editing.errors[column]" class="text-red-700 font-bold">
-                                            <strong>{{ editing.errors[column][0] }}</strong>
-                                        </span>
-                                    </td>    
+                                            <select :name="column" :id="column" v-model="editing.form[column]"
+                                                class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"                                            
+                                            >
+                                                <option  value="GM">GM</option>
+                                                <option  value="I">I</option>
+                                                <option  value="All">All</option>                             
+                                            </select>
+
+                                            <div class="text-red-500 mt-2 text-sm" v-if="editing.errors[column]">
+                                                    <strong>{{ editing.errors[column][0] }}</strong>
+                                            </div>
+                                        </td>
+                                    </template>   
+
+                                    <template v-else>
+                                        <td class="py-2 text-left"  
+                                        :class="{ 'text-center': textCenterColumns.includes(column)}" 
+                                        v-if="response.displayable.includes(column)"> 
+                                            <input type="text"  
+                                            class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                            v-model="editing.form[column]"
+                                            :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                            > 
+                                            <br>
+                                            <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                                <strong>{{ editing.errors[column][0] }}</strong>
+                                            </span>
+                                        </td>    
+                                    </template>
+                                   
                                 </template> <!-- End the row current edit -->
                                 <!-- Edit Mode - for rows not currently edit -->
                                 <template v-else>

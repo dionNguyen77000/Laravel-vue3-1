@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Location extends Model
 {
-    use HasFactory,LogsActivity; 
+    use HasFactory; 
+    // LogsActivity
+    
 
     //only the `deleted` event will get logged automatically
     protected static $recordEvents = ['deleted'];
-    protected static $logAttributes = ['id','name'];
+    // protected static $logAttributes = ['id','name'];
     
     protected $fillable = [
         'name', 

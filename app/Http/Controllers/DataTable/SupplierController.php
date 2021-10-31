@@ -35,7 +35,7 @@ class SupplierController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:suppliers,name',
-            'phone' => 'required',
+            // 'phone' => 'required',
             'address' => 'required',
             'email' => 'required|unique:suppliers,email',
         ]);
@@ -47,7 +47,7 @@ class SupplierController extends DataTableController
     {
         $this->validate($request, [
             'name' => 'required|unique:suppliers,name,' . $id,
-            'phone' => 'required',
+            // 'phone' => 'required',
             'address' => 'required',
             'email' => 'required|unique:suppliers,email,' . $id . '|email',
         ]);

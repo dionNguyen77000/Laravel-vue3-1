@@ -1,9 +1,9 @@
 <template>
-  <div id="location" class="p-6"> 
+  <div id="unit" class="p-6"> 
         <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
             <loading v-model:active="isLoading"
                  :can-cancel="true"
-                 :is-full-page="fullPage"/>       
+                 :is-full-page="fullPage"/>
             <div class="w-full p-1">
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Table {{response.table}}</div>
@@ -23,22 +23,6 @@
                     <form action="#" @submit.prevent="store">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >
-
-                            <template v-if="column=='img_thumbnail'">
-                                <!-- Photo File Input -->
-                                <label  class="font-semibold" for="product_photo">
-                                    Location Image<span class="text-red-600"> </span>
-                                </label>
-                                 <!-- Current Profile Photo -->
-                                <span class="mt-2" x-show="imagePreview">
-                                    <img :src="imagePreview" class="w-20  shadow">
-                                </span>
-                                <div >
-                                   <input type="file" @change="imageSelected" id="product_photo">
-                                </div>                       
-                            </template>  
-
-                            <template v-else>
                             <label :for="column" class="sr-only"> </label>
                             <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
                             :class="{ 'border-red-500': creating.errors[column] }"
@@ -46,7 +30,6 @@
                             <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
                                     <strong>{{ creating.errors[column][0] }}</strong>
                             </div>
-                            </template>
                         </div>
                         
                         <div class="text-center">
@@ -68,7 +51,7 @@
                     :id="column" 
                     :checked="hideColumns.includes(column)"
                     v-model="hideColumns">
-                    {{response.custom_columns[column] || column}}
+                    {{ column }}
                 </li>
             </ul>
           
@@ -130,9 +113,7 @@
                 <!-- Table Heading Section -->
                     <thead class="py-2">
                         <tr class="py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" 
-                             v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
-                             >
+                            <th class="py-2" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -183,7 +164,7 @@
                                 </th>
                             </template>
                             </template>
-                            <th v-if="isFirstLevelUser || isSecondLevelUser || isThirdLevelUser" class="text-left">Actions </th>                          
+                            <th class="text-left">Actions </th>                          
                         </tr>
                     </thead>
                     <!-- End Table Heading -->
@@ -191,8 +172,7 @@
                     <tbody class="text-gray-600 text-sm font-light">
                         <!-- Loop Through each records getting from controller -->
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100">                          
-                            <td v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems" 
-                            class=" text-center">
+                            <td v-if="canSelectItems" class=" text-center">
                                 <input type="checkbox" :value="record.id" v-model="selected">
                             </td>
                             <!-- Loop through each column-->
@@ -211,19 +191,42 @@
                                 </template>
                                 <!-- if the record currently edit -->               
                                 <template v-else-if="editing.id === record.id">
-                                     <td class="py-2 text-left"  
-                                    :class="{ 'text-center': textCenterColumns.includes(column)}" 
-                                    v-if="response.displayable.includes(column)"> 
-                                        <input type="text"  
-                                        class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
-                                        v-model="editing.form[column]"
-                                        :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                       
+                                    <template v-if="column=='type'">
+                                        <td class="py-2 text-left"  
+                                            :class="{ 'text-center': textCenterColumns.includes(column)}" 
+                                            v-if="response.displayable.includes(column)"
                                         > 
-                                        <br>
-                                        <span v-if="editing.errors[column]" class="text-red-700 font-bold">
-                                            <strong>{{ editing.errors[column][0] }}</strong>
-                                        </span>
-                                    </td>    
+                                            <select :name="column" :id="column" v-model="editing.form[column]"
+                                                class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"                                            
+                                            >
+                                                <option  value="GM">GM</option>
+                                                <option  value="I">I</option>
+                                                <option  value="All">All</option>                             
+                                            </select>
+
+                                            <div class="text-red-500 mt-2 text-sm" v-if="editing.errors[column]">
+                                                    <strong>{{ editing.errors[column][0] }}</strong>
+                                            </div>
+                                        </td>
+                                    </template>   
+
+                                    <template v-else>
+                                        <td class="py-2 text-left"  
+                                        :class="{ 'text-center': textCenterColumns.includes(column)}" 
+                                        v-if="response.displayable.includes(column)"> 
+                                            <input type="text"  
+                                            class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                            v-model="editing.form[column]"
+                                            :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                            > 
+                                            <br>
+                                            <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                                <strong>{{ editing.errors[column][0] }}</strong>
+                                            </span>
+                                        </td>    
+                                    </template>
+                                   
                                 </template> <!-- End the row current edit -->
                                 <!-- Edit Mode - for rows not currently edit -->
                                 <template v-else>
@@ -233,49 +236,22 @@
                             <template v-else>
                                  <template v-if="hideColumns.includes(column)">
                                 </template>
+
+                                <template v-else-if="column=='causer_id'">
+                                        <div class="flex items-center">
+                                        <span class="font-medium" >
+                                        {{response.userOptions[columnValue]}}
+                                        </span>
+                                    </div>
+                                </template>
                                 
                                  <template v-else>
                                     <td class="py-2 text-left"  
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     v-if="response.displayable.includes(column)"> 
-                                       <!-- Thumbnail Image -->
-                                            <template v-if="column=='img_thumbnail'">
-                                                <span  :id="'previewImageUpdate_' + record.id" class="mt-2" x-show="!imagePreviewUpdate">
-                                                    <template v-if="imagePreviewUpdate && record.id == currentPreviewUpdateId" >
-                                                            <img :src="imagePreviewUpdate" class="w-14 h-14 shadow">
-                                                    </template>
-                                                    <template v-else>
-                                                            <img @click="openSliderImageModal(record)" :src="columnValue" class="w-14 h-14 shadow">
-                                                    </template>                                      
-                                                </span>                                        
-                                                <div  v-if= "isFirstLevelUser || isSecondLevelUser || isThirdLevelUser" class="mt-1">
-                                                    <button  class=" px-1 shadow-md  bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none">
-                                                        <input type="file" @change="imageChanged($event,record.id)"  
-                                                        :data-index="record.id"
-                                                        :id="'changeImage_' + record.id"
-                                                        accept=".jpg,.jpeg,.png"
-                                                        class="hidden"/>
-                                                        <label :for="'changeImage_' + record.id">Change</label>
-                                                    </button>
-                                                </div>
-                                                <div class="mt-1 pl-2">
-                                                        <button v-if="record.id == currentPreviewUpdateId" class="px-3 shadow-md bg-blue-300 text-white text-sm hover:bg-blue-700 focus:outline-none"> 
-                                                            <input type="submit" @click="saveImage(record.id)"  :id="'saveUpdateImage_' + record.id" class="hidden"/>
-                                                    <label :for="'saveUpdateImage_' + record.id">Save</label>
-                                                    </button>   
-                                                </div>
-                                                <div class="mt-1 pl-2">
-                                                        <button v-if="record.id == currentPreviewUpdateId" class="px-3 shadow-md  text-grey bg-transparent border border-gray-600 text-sm hover:bg-blue-700  focus:outline-none"> 
-                                                            <input type="button" @click="imagePreviewUpdate = null; this.currentPreviewUpdateId= null;"  :id="'cancelUpdateImage_' + record.id" class="hidden"/>
-                                                    <label :for="'cancelUpdateImage_' + record.id">Cancel</label>
-                                                    </button>   
-                                                </div>
-                                            </template>
-                                            <template v-else>
-                                                <div class="flex items-center">
-                                                    <span class="font-medium" >{{columnValue}}</span>
-                                                </div>    
-                                            </template>
+                                         <div class="flex items-center">
+                                            <span class="font-medium" >{{columnValue}}</span>
+                                        </div>    
                                     </td>
                                 </template>
                             </template> <!-- End Not in Edit Mode -->                               
@@ -284,7 +260,7 @@
 
                          <!-- Last Column - Actions -->  
                             
-                             <td v-if="isFirstLevelUser || isSecondLevelUser || isThirdLevelUser">
+                             <td>
                             <div>
                                 <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
                                 class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
@@ -317,17 +293,6 @@
                                 </template>
                             </div>
                         </td> 
-
-                        
-                            <!-- Image Slider Modal -->
-                        <div v-if="record.id == clickImgSliderModalId">
-                            <Image_Slider_Modal  
-                            :record="record"                           
-                            :table_name="'locations'"
-                            @close="clickImgSliderModalId=null" 
-                            @getRecordForSlider="getRecords" 
-                            />
-                        </div>
                         </tr>
                     </tbody>
                     <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
@@ -344,16 +309,14 @@
 
 <script>
 import Loading from 'vue-loading-overlay';
-import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
 import { mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
-
 export default {
   middleware: [
         //   redirectIfNotCustomer
       ],
-    props: ['locationId'],    
-    components: {Loading, Image_Slider_Modal},
+
+components: {Loading},
    data() {
             return {
                 response: {
@@ -383,16 +346,17 @@ export default {
                 // },
                 
                 
+                selected: [],
+
+
                 isLoading: false,
                 fullPage: true,
 
-                selected: [],
-
                   // Hide Column Section : checkbox of columns that completely disappear
-                unshownColumns:['img'],
+                unshownColumns:['slug','img'],
 
                 // columns hidden - can be show by unclick the radio buttons
-                hideColumns:['slug'],
+                hideColumns:['parent_id', 'slug'],
                 // columns unshown in edit mode
                 unshownColumnsInEditMode:[],
 
@@ -402,7 +366,6 @@ export default {
                 ],
  
                 thirdLevel_ColumnNotAllowsToShow: [
-                    
                 ],     
                             
                 fourthLevel_ColumnNotAllowsToShow: [
@@ -428,16 +391,6 @@ export default {
                 quickSearchQuery: '',
 
                 selected_dropdown_active: false,
-
-                  //image upload
-                image:null,
-                imagePreview:null,
-                imagePreviewUpdate:null,               
-                currentPreviewUpdateId:null,  
-
-                 // showIMGModal: false,
-                clickImgSliderModalId : null,
-
                 
                
             }
@@ -456,7 +409,7 @@ export default {
     ...mapState(['sideBarOpen']),
       filteredRecords () {
                 // return this.response.records;
-                let data = this.response.records;                
+                let data = this.response.records;
 
                 // quick search query
                 data = data.filter((row) => {
@@ -592,15 +545,15 @@ export default {
             },
             
             getRecords(){
-                return axios.get(`/api/datatable/locations?${this.getQueryParameters()}`).then((response)=> {
+
+                return axios.get(`/api/datatable/activity_logs?${this.getQueryParameters()}`).then((response)=> {
                     this.response = response.data.data;
+                    
                 })
             },
             getQueryParameters () {
                 return queryString.stringify({
                     limit: this.limit,
-                    locationId: this.locationId,            
-
                     // ...this.search
                 })
                     
@@ -626,55 +579,26 @@ export default {
                 this.selected = _.map(this.filteredRecords, 'id')
             },
             update () {
-                this.isLoading = true
-                axios.patch(`/api/datatable/locations/${this.editing.id}`, this.editing.form).then((response) => {
-                    this.isLoading = false
+                axios.patch(`/api/datatable/activity_logs/${this.editing.id}`, this.editing.form).then((response) => {
                     this.getRecords().then(() => {
                         this.editing.id = null
                         this.editing.form = null
-                       
                       
                     })
                 }).catch((error) => {
-                    this.isLoading = false
                     if (error.response.status === 422) {                        
                         this.editing.errors = error.response.data.errors
                     }
                 })
             },
             store () {    
-                this.isLoading = true
-                axios.post(`/api/datatable/locations`, this.creating.form).then((response) => {
-                    this.isLoading = false
-                    if(this.image) {
-                        let data = new FormData;
-                        data.append('image', this.image)
-                
-                        //save image 
-                        axios.post(`/api/datatable/locations/saveImage/${response.data.id}`, data).then(()=>{
-                        this.getRecords().then(() => {                               
-                            this.image =null;
-                            this.imagePreview = null;
-                            this.imagePreviewUpdate = null;
-
-                          
-                            })
-                        }).catch((error) => {
-                            this.isLoading = false
-                            if (error.response.status === 422) {
-                                this.creating.errors = error.response.data.errors                       
-                            }
-
-                        })
-                    } 
+                axios.post(`/api/datatable/activity_logs`, this.creating.form).then((response) => {
                     this.getRecords().then(() => {
                         this.creating.active = true
                         this.creating.form = {}
                         this.creating.errors = []
-
                     })
                 }).catch((error) => {
-                    this.isLoading = false
                     if (error.response.status === 422) {
                         this.creating.errors = error.response.data.errors
                         
@@ -683,68 +607,18 @@ export default {
             },
                
             destroy(record){
+
                 if(!window.confirm(`Are you sure?`)){
                     return
                 }
-                this.isLoading = true
 
-                axios.delete(`/api/datatable/locations/${record}`).then(()=>{
-                    this.isLoading = false
+                axios.delete(`/api/datatable/activity_logs/${record}`).then(()=>{
                     this.selected= [],
                     this.selected_dropdown_active = false,
                     this.getRecords()
                 })
                 
             },
-            imageSelected(e) {
-                this.image = e.target.files[0];
-                let reader = new FileReader();
-                reader.readAsDataURL(this.image);
-                reader.onload = e => {
-                    this.imagePreview = e.target.result;
-                }
-            },
-            imageChanged(e,id) {
-                this.image = e.target.files[0];
-                let reader = new FileReader();
-                reader.readAsDataURL(this.image);
-                reader.onload = e => {
-                    this.imagePreviewUpdate = e.target.result;
-                    this.currentPreviewUpdateId= id;
-                }
-            },
-
-            saveImage(productId) {
-                            
-                if(this.image){
-                    let data = new FormData
-                    data.append('image', this.image)
-                this.isLoading = true
-                axios.post(`/api/datatable/locations/saveImage/${productId}`, data).then((response)=>{
-                    this.isLoading = false
-                    // window.location.reload(false);
-                    this.getRecords().then(() => {
-                        this.currentPreviewUpdateId = null;
-                        this.imagePreviewUpdate = null;
-                        this.image =null;
-                    })
-                
-                }).catch((error) => {
-                    if (error.response.status === 422) {
-                        this.creating.errors = error.response.data.errors                       
-                    }
-                })
-                }  
-            },
-
-            // openImageModal(goods_material_id){
-            //     this.clickThumbnailId = goods_material_id;
-            // },
-
-            openSliderImageModal(record) {        
-                this.clickImgSliderModalId = record.id;
-            },
-
             
         },
 

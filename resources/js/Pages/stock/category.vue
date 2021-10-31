@@ -21,17 +21,28 @@
                     <form action="#" @submit.prevent="store">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >
-                            <template v-if="column=='parent_id'">
-                            <label :for="column">Parent Category  </label>
-                            <select :name="column" :id="column" v-model="creating.form[column]">
-                                <option  value="">None</option>
-                                <option :value="index" v-for="option,index in response.categoryParentOptions" :key="option">
-                                    {{option}}
-                                </option>
-                            </select>
-                            <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
-                                    <strong>{{ creating.errors[column][0]}}</strong>
-                            </div>
+                            <template v-if="column=='type'">
+                                <label :for="column">Type  </label>
+                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                    <option  value="GM">GM</option>
+                                    <option  value="I">I</option>
+                                    <option  value="All">All</option>                             
+                                </select>
+                                <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
+                                        <strong>{{ creating.errors[column][0]}}</strong>
+                                </div>
+                            </template>    
+                            <template v-else-if="column=='parent_id'">
+                                <label :for="column">Parent Category  </label>
+                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                    <option  value="">None</option>
+                                    <option :value="index" v-for="option,index in response.categoryParentOptions" :key="option">
+                                        {{option}}
+                                    </option>
+                                </select>
+                                <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
+                                        <strong>{{ creating.errors[column][0]}}</strong>
+                                </div>
                             </template>    
 
                             <template v-else>
@@ -106,6 +117,22 @@
                     </div>
                 </div>
             </div>
+               <!-- Active And Inactive Filter -->
+            <div class="block relative">
+                <select v-model="selected_type" @change="getRecords"
+                    class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                    <option  value= ''>Type</option>         
+                    <option  value= 'All'>All</option>         
+                    <option value="GM">Goods Materials</option>
+                    <option value="Y" >Intermediate</option>              
+                </select>
+                <div
+                    class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                </div>
+            </div>
             <div class="block relative">
                 <span class="h-full absolute inset-y-0 left-0 flex items-center pl-2">
                     <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current text-gray-500">
@@ -160,8 +187,19 @@
                                 <!-- User Click Edit button -->
                                 <template v-if="editing.id === record.id && isUpdatable(column)">
                             
-                                    <template v-if="column=='parent_id'">
-                                        <!-- {{editing.form[column]}} -->
+                                 
+                                    <template v-if="column=='type'">
+                                        <select :name="column" :id="column" v-model="editing.form[column]">
+                                            <option  value="GM">GM</option>
+                                            <option  value="I">I</option>
+                                            <option  value="All">All</option>                             
+                                        </select>
+                                        <div class="text-red-500 mt-2 text-sm" v-if="editing.errors[column]">
+                                                <strong>{{ editing.errors[column][0] }}</strong>
+                                        </div>
+                                    </template>    
+                                    
+                                    <template v-else-if="column=='parent_id'">
                                         <select class="w-1/2" :name="column" :id="column" v-model="editing.form[column]">
                                             <option  value='' selected > None</option>
                                             <template v-for="option,index in response.categoryParentOptions" >
@@ -277,7 +315,9 @@ export default {
                 },
                 creating: {
                     active: false,
-                    form: {},
+                    form: {
+                        type: 'GM'
+                    },
                     errors: [],
                 },
                 editing: {
@@ -295,6 +335,7 @@ export default {
                 selected: [],
                 hideColumns:['slug'],
                 limit:50,
+                selected_type: '',
                 quickSearchQuery: '',
 
                 selected_dropdown_active: false,
@@ -346,6 +387,7 @@ export default {
             getQueryParameters () {
                 return queryString.stringify({
                     limit: this.limit,
+                    type: this.selected_type,
                     // ...this.search
                 })
                     

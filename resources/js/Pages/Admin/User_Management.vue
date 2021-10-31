@@ -363,18 +363,18 @@
                                 </td>
                               
                                     <td>
-                                     <div>
-                                    <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
-                                    class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
-                                    >
-                                    Edit
-                                    </a>   
+                                     <div v-if="!(record.id==1) ||getAuth.isFirstLevelUser">
+                                        <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
+                                        class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
+                                        >
+                                        Edit
+                                        </a>   
 
-                                    <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
-                                    class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
-                                    >
-                                    Delete
-                                    </a>  
+                                        <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
+                                        class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
+                                        >
+                                        Delete
+                                        </a>  
                                      </div>
                                     <div>
                                     <template v-if="editing.id === record.id"> 
@@ -406,7 +406,7 @@
 
 <script>
 
-import { mapState } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
 import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
 import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
@@ -465,6 +465,10 @@ export default {
        
  computed: {
 
+  ...mapGetters({
+        getAuth: 'auth/getAuth',
+       
+    }),
         ...mapState(['sideBarOpen']),
         filteredRecords () {
                 // return this.response.records;

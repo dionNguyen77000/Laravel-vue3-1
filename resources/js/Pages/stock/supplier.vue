@@ -21,13 +21,32 @@
                     <form action="#" @submit.prevent="store">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >
-                            <label :for="column" class="sr-only"> </label>
-                            <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
-                            :class="{ 'border-red-500': creating.errors[column] }"
-                            v-model="creating.form[column]">
-                            <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
-                                    <strong>{{ creating.errors[column][0] }}</strong>
-                            </div>
+
+                          <template v-if="column=='group'">
+                                <label  class="font-semibold" :for="column">Group : </label>     
+                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                    <option  value="Null">Null</option>
+                                    <option  value="Meat & Poultry">Meat & Poultry</option>
+                                    <option  value="Dry Food">Dry Food</option>
+                                    <option  value="Veg & Herb">Veg & Herb</option>
+                                    <option  value="Dry Food">Drink</option>
+                                    <option  value="Dry Food">Packagings</option>
+                                </select>
+                            </template>
+
+
+                            <template v-else>
+                                
+                                <label :for="column" class="sr-only"> </label>
+                                <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
+                                :class="{ 'border-red-500': creating.errors[column] }"
+                                v-model="creating.form[column]">
+
+                                <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
+                                        <strong>{{ creating.errors[column][0] }}</strong>
+                                </div>
+                            </template>
+                       
                         </div>
                         
                         <div class="text-center">
@@ -144,18 +163,29 @@
                             </td>
                             <template v-for="columnValue,column in record" :key="column">
                             <td class="py-2 text-left"  v-if="!hideColumns.includes(column)">
-                                <template v-if="editing.id === record.id && isUpdatable(column)">
-                                <div >
-                                    <input type="text"  
-                                    class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
-                                    v-model="editing.form[column]"
-                                    :class="{ 'border-3 border-red-700': editing.errors[column] }"
-                                    > 
-                                    <br>
-                                    <span v-if="editing.errors[column]" class="text-red-700 font-bold">
-                                        <strong>{{ editing.errors[column][0] }}</strong>
-                                    </span>
-                                </div>
+                                <template v-if="editing.id === record.id && isUpdatable(column)">                             
+                                    <template v-if="column=='group'">
+                                        <label  class="font-semibold" :for="column">Group : </label>     
+                                        <select :name="column" :id="column" v-model="editing.form[column]">
+                                            <option  value="Null">Null</option>
+                                            <option  value="Meat & Poultry">Meat & Poultry</option>
+                                            <option  value="Dry Food">Dry Food</option>
+                                            <option  value="Veg & Herb">Veg & Herb</option>
+                                            <option  value="Dry Food">Drink</option>
+                                            <option  value="Dry Food">Packagings</option>
+                                        </select>
+                                    </template>
+                                    <template v-else>
+                                        <input type="text"  
+                                        class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
+                                        v-model="editing.form[column]"
+                                        :class="{ 'border-3 border-red-700': editing.errors[column] }"
+                                        > 
+                                        <br>
+                                        <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                            <strong>{{ editing.errors[column][0] }}</strong>
+                                        </span>
+                                    </template>
                                 </template>
 
                                 <template v-else>
@@ -236,7 +266,9 @@ export default {
                 },
                 creating: {
                     active: false,
-                    form: {},
+                    form: {
+                        'group' : 'Null'
+                    },
                     errors: [],
                 },
                 editing: {
@@ -341,9 +373,7 @@ export default {
                 this.getRecords().then(() => {
                     this.editing.id = null
                     this.editing.form = null
-                    if(response.data=='password updated') {
-                        alert('Password updated successfully !')
-                    }
+
                     
                 })
             }).catch((error) => {
@@ -357,6 +387,7 @@ export default {
                 this.getRecords().then(() => {
                     this.creating.active = true
                     this.creating.form = {}
+                    this.creating.form.group = 'Null'
                     this.creating.errors = []
                        
                 })
