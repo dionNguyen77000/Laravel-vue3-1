@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\DataTable;
 
 use Image;
+use PDF;
 
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\Stock\Unit;
+use App\Models\Stock\Recipe;
 use Illuminate\Http\Request;
+use App\Models\Stock\Allergy;
 use App\Models\Stock\Category;
 use App\Models\Stock\Location;
 use App\Models\Stock\Supplier;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Stock\Goods_material;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Stock\Intermediate_product;
 use App\Http\Resources\Stock\Intermediate_ProductResourceDB;
-
 
 class Intermediate_ProductController extends DataTableController
 {
@@ -36,6 +39,7 @@ class Intermediate_ProductController extends DataTableController
           'db_column_name' =>array_values($this->getDatabaseColumnNames()),
           'displayable' => array_values($this->getDisplayableColumns()),
           'updatable' => array_values($this->getUpdatableColumns()),
+          'created' => array_values($this->getCreatedColumns()),
           'records' => $this->getRecords($request),
           'custom_columns' => $this->getCustomColumnsNames(),
           'unitOptions'=> $this->getUnitOptions(),
@@ -43,9 +47,12 @@ class Intermediate_ProductController extends DataTableController
           'categoryOptions'=> $this->getCategoryOptions(),
           'locationOptions'=> $this->getLocationOptions(),
           'permissionOptions'=> $this->getPermissionOptions(),
+          'allergyOptions'=> $this->getAllergyOptions(),
           'userPermissionOptions'=> $this->getUserPermissionOptions(),
           'userRoleOptions'=> $this->getUserRoleOptions(),        
           'PreparationOptions'=> $this->getPreparationOptions(),
+          'GMOptions'=> $this->getGMOptions(),
+          'IPOptions'=> $this->getIPOptions(),
           'allow' => [
               'creation' => $this->allowCreation,
               'deletion' => $this->allowDeletion,
@@ -78,7 +85,9 @@ class Intermediate_ProductController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'img_thumbnail',
+            'id','name', 
+            'description',
+            'img_thumbnail',
             // 'slug', 
             // 'price', 
             'unit_id',
@@ -92,6 +101,9 @@ class Intermediate_ProductController extends DataTableController
             'Active',
             'location_id',
             'permissions',
+            'allergies',
+            'recipe',
+
         ];
     }
 
@@ -102,6 +114,7 @@ class Intermediate_ProductController extends DataTableController
 
             'id',
             'name', 
+            'description',
             'img',
             'img_three',
             'img_two',
@@ -117,6 +130,8 @@ class Intermediate_ProductController extends DataTableController
             'Preparation',
             'Active',
             'location_id',
+            'recipe',
+
         ];
     }
 
@@ -125,6 +140,7 @@ class Intermediate_ProductController extends DataTableController
         return [
             'name', 
             // 'slug', 
+            'description',
             'img_thumbnail',
             // 'price',
             'unit_id',
@@ -138,24 +154,34 @@ class Intermediate_ProductController extends DataTableController
             'Active',
             'location_id',
             'permissions',
+            'allergies',
+            'recipe',
+
         ];
     }
 
     public function getCreatedColumns()
     {
         return [
+         
             'name', 
+            'description',
             // 'slug', 
+            'img_thumbnail',
             'price',
             'unit_id',
             'category_id', 
             'current_qty',
             'prepared_point',
-            'required_qty',
             'coverage',
+            'required_qty',
             'Preparation',
             'Active',
             'location_id',
+            'permissions',
+            'allergies',
+            // 'recipe',
+
         ];
     }
     
@@ -173,6 +199,7 @@ class Intermediate_ProductController extends DataTableController
        
         $newI = new Intermediate_product();
         $newI->name = $request->name;
+        $newI->description = $request->description;
         $newI->price = $request->price;
         $newI->unit_id = $request->unit_id;
         $newI->category_id = $request->category_id;
@@ -198,6 +225,11 @@ class Intermediate_ProductController extends DataTableController
          
         if($request->assignedPermissionIds && count($request->assignedPermissionIds) > 0 ) {
             $newI->permissions()->attach($request->assignedPermissionIds);
+        }
+
+         
+        if($request->assignedAllergyIds && count($request->assignedAllergyIds) > 0 ) {
+            $newI->allergies()->attach($request->assignedAllergyIds);
         }
        return $newI;
     }
@@ -225,7 +257,6 @@ class Intermediate_ProductController extends DataTableController
 
     public function update($id, Request $request)
     {
-        // dd($request->assignedPermissionIds);
         $this->validate($request, [
             'name' => 'required|unique:intermediate_products,name,' . $id,
             // 'price' => 'numeric',
@@ -233,6 +264,7 @@ class Intermediate_ProductController extends DataTableController
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
             'assignedPermissionIds' => 'required',
+            'assignedAllergyIds' => 'required',
         ]);
 
         
@@ -243,6 +275,7 @@ class Intermediate_ProductController extends DataTableController
         }
 
         $intermediate->name = $request->name;
+        $intermediate->description = $request->description;
         $intermediate->unit_id = $request->unit_id;
         $intermediate->category_id = $request->category_id;
         $intermediate->current_qty = $request->current_qty;
@@ -253,6 +286,7 @@ class Intermediate_ProductController extends DataTableController
 
         //update the permissions of the intermediate
         $intermediate->permissions()->sync($request->assignedPermissionIds);
+        $intermediate->allergies()->sync($request->assignedAllergyIds);
 
         if ($intermediate->current_qty < $intermediate->prepared_point){
             $intermediate->Preparation = 'Yes';
@@ -294,6 +328,7 @@ class Intermediate_ProductController extends DataTableController
             // $this->builder->find($ids)->delete();
         }
     }
+
 
     public function saveImage_origin($id, Request $request)
     {
@@ -503,6 +538,41 @@ class Intermediate_ProductController extends DataTableController
         return $the_inter;
     }
 
+    
+    public function addIngredient($id, Request $request){
+
+        $this->validate($request, [
+         
+        ]);        
+
+        if($request->selectedGMIngredient && $request->gmIngredientAmount ) {
+            $newRecipe = new Recipe();
+            $newRecipe->intermediate_product_id =$id;
+            $newRecipe->goods_material_id = $request->selectedGMIngredient;
+            $newRecipe->amount = $request->gmIngredientAmount;
+            $newRecipe->type = $request->gmIngredientType;
+            $newRecipe->save();
+        }
+
+        if($request->selectedIPIngredient && $request->ipIngredientAmount ) {
+            $newRecipe = new Recipe();
+            $newRecipe->intermediate_product_id =$id;
+            $newRecipe->inter_p_ingredient_id = $request->selectedIPIngredient;
+            $newRecipe->amount = $request->ipIngredientAmount;
+            $newRecipe->type = $request->ipIngredientType;
+            $newRecipe->save();
+        }
+
+        return 'sucessfully';
+
+    }
+
+    public function updateRecipe($id, Request $request){
+        $theIP =  $this->builder->find($id);
+        $theIP->recipe = $request->recipe;
+        $theIP->save();
+        return   $theIP;   
+    }
 
         /**
     * Get all values from specific key in a multidimensional array
@@ -532,6 +602,10 @@ class Intermediate_ProductController extends DataTableController
         }
         if (isset($request->location_id) && $request->location_id != 'All') {
             $builder =   $builder->where('location_id','=',$request->location_id);
+        }
+
+        if (isset($request->intermediate_productId)) {
+            $builder =   $builder->where('id','=',$request->intermediate_productId);
         }
         // if (isset($request->permission_id)) {
         //     if($request->permission_id == 'All'){
@@ -622,6 +696,75 @@ class Intermediate_ProductController extends DataTableController
         }    
     }
 
+    public function exportPDFRecipes($ids, Request $request)
+    {
+        $arrayIds = explode(',',$ids);
+
+        $theIPs = [];
+        foreach ($arrayIds  as $id) {   
+            var_dump($id);       
+            $theIP = Intermediate_product::find($id);
+            $allergies = $theIP->allergies()->get()->map->only(['name'])->flatten();
+            $recipes = Recipe::where('intermediate_product_id',$id)->get();
+            
+            // dd($theIP->recipe);
+            // dd($theIP->allergies);
+            // var_dump($theIP->description);
+            // var_dump($theIP->recipe);
+
+            // return view('exports.supplierOrder', [
+            //     'good_materials' => $this->data,
+            //     'date' => $dateTimeInBrisbane ,
+            //     'supplier' =>  $supplier,
+            //     'categoryOptions'=>$categoryOptions,
+            //     'unitOptions'=>$unitOptions,
+            // ]);
+ 
+            $pdf = PDF::loadView('exports.recipe', [
+                'theIP' => $theIP,
+                'allergies' => $allergies,
+                'recipes' => $recipes,
+                'GMOptions'=> $this->getGMOptions(),
+                'IPOptions'=> $this->getIPOptions(),
+            ]);
+            // $pdf = PDF::loadView('employee', compact('locations'));
+   
+            // download PDF file with download method
+            return $pdf->download('pdf_file.pdf');
+        }
+     
+       
+
+        // if (count($arrayIds) > 1 ) {
+        //     $this->builder->whereIn('id', explode(',', $ids))->delete();
+        // } else if (count($arrayIds) == 1){
+        //     $inter_p = Intermediate_product::withCount('daily_emp_works')->find($ids);
+        //     if($inter_p->daily_emp_works_count == 0){
+        //         $inter_p->delete();
+        //         return ('deleted');
+        //     } else {
+        //         // return ('deleted')->setPreparationCode(422);
+        //         return response(array(
+        //             'message' => 'Foreign Key Problem',
+        //             'error' => 'Cannot delete this product, this product has been used in Daily Emp Work. You need to delete them first in Daily Emp Work before you can delete here.',
+        //          ), 422);
+        //     }
+
+        //     // dd($this->builder->find($ids)->with(['daily_emp_works']));
+        //     // $this->builder->find($ids)->delete();
+        // }
+         // retreive all records from db
+         $locations = Location::all();
+         // dd($data);
+   
+         // share data to view
+         // view()->share('employee',$data);
+         $pdf = PDF::loadView('employee', compact('locations'));
+   
+         // download PDF file with download method
+         return $pdf->download('pdf_file.pdf');
+    }
+
     public function getUnitOptions()
     {
         $c = Unit::all('id','name');
@@ -663,6 +806,26 @@ class Intermediate_ProductController extends DataTableController
         }
         return $returnArr;
     }
+    public function getGMOptions()
+    {
+        $c = Goods_material::all('id','name');
+
+        $returnArr = [];
+        foreach ($c as  $sc) {
+            $returnArr[$sc['id']] = $sc['name'];
+        }
+        return $returnArr;
+    }
+    public function getIPOptions()
+    {
+        $c = Intermediate_product::all('id','name');
+
+        $returnArr = [];
+        foreach ($c as  $sc) {
+            $returnArr[$sc['id']] = $sc['name'];
+        }
+        return $returnArr;
+    }
     public function getPermissionOptions()
     {
         $r = Permission::all('id','name');
@@ -678,9 +841,9 @@ class Intermediate_ProductController extends DataTableController
         $user = auth()->user();
         
         return $user->getPermissions();
-
+        
     }
-   
+    
     public function getUserRoleOptions()
     {
         $user = auth()->user();       
@@ -691,5 +854,15 @@ class Intermediate_ProductController extends DataTableController
         $returnArr = ['Yes'];
         return $returnArr;
     }   
-
+    
+    public function getAllergyOptions()
+    {
+        $r = Allergy::all('id','name');
+    
+        $returnArr = [];
+        foreach ($r as  $sr) {
+            $returnArr[$sr['id']] = $sr['name'];
+        }
+        return $returnArr;
+    }
 }

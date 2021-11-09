@@ -610,7 +610,11 @@ class Goods_MaterialController extends DataTableController
 
         if (isset($request->location_id) && $request->location_id != 'All') {
             $builder =   $builder->where('location_id','=',$request->location_id);
-        }        
+        }              
+
+        if (isset($request->goods_MaterialId)) {
+            $builder =   $builder->where('id','=',$request->goods_MaterialId);
+        }
         // if (isset($request->permission_id)) {
         //     if($request->permission_id == 'All'){
         //         $user = auth()->user();

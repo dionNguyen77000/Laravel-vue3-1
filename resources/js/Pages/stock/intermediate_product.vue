@@ -22,7 +22,7 @@
                 <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
                     <form action="#" @submit.prevent="store" enctype="multipart/form-data">
                         <!-- @csrf -->
-                        <div class="mb-2" v-for="column in response.updatable" :key="column" >
+                        <div class="mb-2" v-for="column in response.created" :key="column" >
                             <template v-if="column=='img_thumbnail'">
                                 <!-- Photo File Input -->
                                 <label  class="font-semibold" for="product_photo">
@@ -89,6 +89,7 @@
                                     </option>
                                 </select>
                             </template> 
+
                             <template v-else-if="column=='permissions'">
                             <label  class="font-semibold" for="Active">Permissions : </label>    
                             <ul id="roles" class="width-3/4 flex flex-wrap">
@@ -105,7 +106,24 @@
                                 <strong>{{ creating.errors['assignedPermissionIds'][0] }}</strong>
                                 </div>     
                             </ul>         
-                           
+                            </template>
+
+                            <template v-else-if="column=='allergies'">
+                            <label  class="font-semibold" for="Active">Allergies : </label>    
+                            <ul id="roles" class="width-3/4 flex flex-wrap">
+                                <li  class="mr-2" v-for="option,index in response.allergyOptions" :key="index">
+                                    <input type="checkbox"                               
+                                    :value="index" 
+                                    :id="option" 
+                                    :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                    v-model="creating.form.assignedAllergyIds"
+                                    >
+                                    {{ option }}
+                                </li>
+                                <div class="text-red-500 mt-2 text-sm" v-if="creating.errors['assignedAllergyIds']">
+                                <strong>{{ creating.errors['assignedAllergyIds'][0] }}</strong>
+                                </div>     
+                            </ul>                                  
                             </template> 
                             <template v-else>
                             <label :for="column" class="sr-only"> </label>
@@ -169,6 +187,13 @@
                             href="#" 
                             @click.prevent = "destroy(selected)">
                             Delete
+                        </a>
+                        </li>
+                        <li><a 
+                            class=" text-sm bg-blue-200 hover:bg-blue-700 hover:text-white py-1 px-6 block whitespace-no-wrap" 
+                            href="#" 
+                            @click.prevent = "exportPDFRecipes(selected)">
+                            Export PDF Recipe
                         </a>
                         </li>
                         </ul>
@@ -466,6 +491,22 @@
                                      </div>     
                                 </template>
 
+                                <template v-else-if="column=='allergies'">
+                                    <ul id="roles" class="ml-2 w-40 flex flex-wrap">
+                                        <li  class="w-full" v-for="option,index in response.allergyOptions" :key="index">
+                                            <input type="checkbox"
+                                            :value="index" 
+                                            :id="option" 
+                                            v-model="editing.form.assignedAllergyIds"
+                                            >
+                                            <label :for="option">{{ option }} ,</label>          
+                                        </li>
+                                    </ul>
+                                      <div class="text-red-500 mt-2 text-sm" v-if="editing.errors['assignedAllergyIds']">
+                                        <strong>{{ editing.errors['assignedAllergyIds'][0] }}</strong>
+                                     </div>     
+                                </template>
+
                                 <template v-else-if="column=='Preparation'">
                                     <select 
                                     class='w-full rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
@@ -601,8 +642,12 @@
 
                                             <template v-else-if="column=='name'">
                                                     <div class="flex items-center w-24">
-                                                    <span class="font-medium" >{{columnValue}}</span>
-                                                </div>
+                                                        <a href="#"  @click.prevent="openRecipeModal(record)" 
+                                                            class="font-semibold  text-indigo-500 hover:underline"  
+                                                            >                     
+                                                        <span class="font-medium" >{{columnValue}}</span>
+                                                        </a>   
+                                                    </div>
                                             </template>
 
                                             <template v-else-if="column=='unit_id'">
@@ -627,6 +672,11 @@
                                             </template>
                                                                           
                                              <template v-else-if="column=='permissions'">
+                                                <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                                    {{ option.name }}
+                                                </div>      
+                                            </template>   
+                                             <template v-else-if="column=='allergies'">
                                                 <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
                                                     {{ option.name }}
                                                 </div>      
@@ -730,8 +780,16 @@
                                 </template>
 
                                 <template v-else-if="column=='name'">
-                                        <div class="flex items-center w-24">
+                                        <!-- <div class="flex items-center w-24">
                                         <span class="font-medium" >{{columnValue}}</span>
+                                        </div> -->
+
+                                     <div class="flex items-center w-24">
+                                        <a href="#"  @click.prevent="openRecipeModal(record)" 
+                                            class="font-semibold  text-indigo-500 hover:underline"  
+                                            >                     
+                                        <span class="font-medium" >{{columnValue}}</span>
+                                        </a>   
                                     </div>
                                 </template>
                                 
@@ -758,6 +816,11 @@
 
 
                                 <template v-else-if="column=='permissions'">
+                                    <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
+                                        {{ option.name }}
+                                    </div>      
+                                </template>  
+                                <template v-else-if="column=='allergies'">
                                     <div  class="mr-2 font-medium" v-for="option,index in columnValue" :key="index">
                                         {{ option.name }}
                                     </div>      
@@ -831,8 +894,21 @@
                        <div v-if="record.id == clickLocationModalId">
                             <Location_Modal  
                             :locationId="record.location_id" 
-                            :table_name="'goods_material'"
                             @close="clickLocationModalId=null" 
+                            />
+                        </div>
+
+                         <div v-if="record.id== clickRecipeModalId">
+                            <Recipe_Modal  
+                                :intermediate_id="record.id" 
+                                :allergies="record.allergies" 
+                                :theRecord="record" 
+                                :recipe="record.recipe"
+                                :GMOptions="response.GMOptions"
+                                :IPOptions="response.IPOptions"
+                                :table="intermediate_product"
+                                @close="clickRecipeModalId=null" 
+                                @refreshRecords="getRecords" 
                             />
                         </div>
 
@@ -855,14 +931,15 @@
 import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
 import Loading from 'vue-loading-overlay';
 import Location_Modal from './stock_modal/location_modal.vue'
+import Recipe_Modal from './stock_modal/recipe_modal.vue'
 import {mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
 export default {
     middleware: [
         //   redirectIfNotCustomer
       ],
-
-    components: {Loading, Image_Slider_Modal,Location_Modal},
+    props: ['intermediate_productId'],    
+    components: {Loading, Image_Slider_Modal,Location_Modal,Recipe_Modal},
    data() {
             return {
                 response: {
@@ -884,6 +961,7 @@ export default {
                         category_id:1,
                         location_id:1,
                         assignedPermissionIds: [ 1 ],
+                        assignedAllergyIds: [ 1 ],
                     },
                     errors: [],
                 },
@@ -909,7 +987,7 @@ export default {
                  General Setting
                 ******/
                 // Hide Column Section : checkbox of columns that completely disappear
-                unshownColumns:['slug','img'],
+                unshownColumns:['slug','img','recipe'],
 
                 // columns hidden - can be show by unclick the radio buttons
                 hideColumns:['description','price','category_id',
@@ -948,7 +1026,7 @@ export default {
                     'name', 'price','unit_id','supplier_id',
                     'category_id','description','prepared_point', 
                     'required_qty', 'coverage','Preparation',
-                    'Active','location','location_id','permissions'
+                    'Active','location','location_id','permissions','allergies'
                 ],
 
                 notAllowEditExceptPeopleInCharge: ['name', 'price','unit_id', 'description','category_id' ,'prepared_point', 'required_qty','coverage','Preparation','Active'],
@@ -987,6 +1065,9 @@ export default {
 
                   // showLocationModal: false,
                 clickLocationModalId : null,
+
+                  // clickRecipeModalId: false,
+                clickRecipeModalId : null,
                 
              
             }
@@ -1149,6 +1230,7 @@ methods:
             Active: this.selected_active,
             permission_id: this.selected_permission,
             location_id: this.selected_location,
+            intermediate_productId: this.intermediate_productId,            
             // ...this.search
         }, 
         {
@@ -1166,12 +1248,21 @@ methods:
         this.editing.id = record.id
         this.editing.form = _.pick(record, this.response.updatable)
         this.editing.form.assignedPermissionIds = [];               
+                
 
         // when click update button, get the current selected ids of the permissions 
-        const permissionsOfGM = record.permissions;
-        for (let index = 0; index < permissionsOfGM.length; index++) {
-            const element = permissionsOfGM[index];
+        const permissionsOfIP = record.permissions;
+        for (let index = 0; index < permissionsOfIP.length; index++) {
+            const element = permissionsOfIP[index];
                 this.editing.form.assignedPermissionIds.push(element.id)
+        }   
+
+        // when click update button, get the current selected ids of the permissions 
+        this.editing.form.assignedAllergyIds = [];    
+        const allergiesOfIP = record.allergies;
+        for (let index = 0; index < allergiesOfIP.length; index++) {
+            const element = allergiesOfIP[index];
+                this.editing.form.assignedAllergyIds.push(element.id)
         }   
     },
     editCurrentQty(record){
@@ -1277,6 +1368,7 @@ methods:
                 this.creating.form.location_id = 1   
                 this.creating.errors = []
                 this.creating.form.assignedPermissionIds = [1]  
+                this.creating.form.assignedAllergyIds = [1]  
 
                 this.isLoading = false
             })
@@ -1305,6 +1397,30 @@ methods:
                 if(error.response.data.message == 'Foreign Key Problem'){
                     alert(error.response.data.error);
                 }                      
+            }
+        })
+        
+    },
+
+    exportPDFRecipes(selectedIDs){    
+        this.isLoading = true
+        axios.get(`/api/datatable/intermediate_product/exportPDFRecipes/${selectedIDs}`,
+            {responseType: 'arraybuffer'}
+        ).then((response)=>{
+            this.isLoading = false
+            this.selected= []
+            this.selected_dropdown_active = false
+
+            //code to download file after generating
+            var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+            var fileLink = document.createElement('a')
+            fileLink.href = fileURL
+            fileLink.setAttribute('download', 'goods.pdf')
+            document.body.appendChild(fileLink)
+            fileLink.click();
+        }).catch((error) => {
+            this.isLoading = false
+            if (error.response.status === 422) {                 
             }
         })
         
@@ -1369,12 +1485,19 @@ methods:
         this.clickLocationModalId = record.id;
     },
 
+    openRecipeModal(record) {   
+        this.clickRecipeModalId = record.id;
+    },
+
     makeClickIdNull() {
         this.clickThumbnailId = null;
     }
     
 },
 mounted() {
+    let tinymceScript = document.createElement('script')
+    tinymceScript.setAttribute('src', 'https://cdn.tiny.cloud/1/bhvx71arz51on72jvi4rx4kp4pjx3rv273jbms68zyh4u22u/tinymce/5/tinymce.min.js')
+    tinymceScript.setAttribute('referrerpolicy', 'origin')
    
     this.getRecords()
 },

@@ -1048,6 +1048,8 @@
 import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
 import Location_Modal from './stock_modal/location_modal.vue'
 import Order_Preparation_Modal from './stock_modal/order_preparation_modal.vue'
+// import Intermediate_Product_Modal from './stock_modal/intermediate_product_modal.vue'
+
 import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/vue-loading.css';
 import {mapGetters, mapState } from 'vuex'
@@ -1056,7 +1058,7 @@ export default {
     middleware: [
         //   redirectIfNotCustomer
       ],
-
+    props: ['goods_MaterialId'],    
     components: {Loading, Image_Slider_Modal, Location_Modal,Order_Preparation_Modal},
    data() {
             return {
@@ -1418,6 +1420,8 @@ methods:
             Active: this.selected_active,
             location_id: this.selected_location,
             permission_id: this.selected_permission,
+            goods_MaterialId: this.goods_MaterialId,            
+
             // ...this.search
         }, 
         {

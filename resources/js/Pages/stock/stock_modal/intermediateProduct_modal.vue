@@ -7,7 +7,7 @@
     </button>
   
         <!-- Goods_Material -->
-            <Goods_Materials  
+            <Intermediate_Product  
               :goods_MaterialId="goods_MaterialId" 
             />
   </div>
@@ -17,11 +17,11 @@
 
 
 <script>
-import Goods_Materials from  '../goods_material.vue'
+import Intermediate_Product from  '../intermediate_product.vue'
 export default {
     // props: ['orders_to_supplierId'],    
     props: ['goods_MaterialId'],    
-    components: {Goods_Materials},
+    components: {Intermediate_Product},
     data() {
         return {
         }

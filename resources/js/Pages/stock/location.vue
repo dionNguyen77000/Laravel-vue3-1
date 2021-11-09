@@ -58,7 +58,7 @@
                 </div>
         </div>  <!-- End New Record Section -->
         
-          <!-- show hide column section -->
+        <!-- show hide column section -->
         <div id="show_hide_section" class="text-center mx-4 space-y-2">
             <p> <b>Show Hide Column </b></p>
             <ul id="hide_show_column_section" class="width-3/4 flex flex-wrap justify-center">
@@ -121,6 +121,15 @@
                 <input v-model="quickSearchQuery" placeholder="Quick Search"
                     class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 border-b block pl-8 pr-6 py-2 w-full bg-white text-sm placeholder-gray-400 text-gray-700 focus:bg-white focus:placeholder-gray-600 focus:text-gray-700" />
             </div>
+        </div>
+
+        <div class="justify-content-end mb-4">
+            <a 
+            class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
+            @click.prevent="exportPDF()"
+            >
+                Export to PDF
+            </a>
         </div>
      
         <!-- start Table -->
@@ -333,7 +342,7 @@
                     <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
                 </table>
             </div>
-                <p v-else>No results</p>
+            <p v-else>No results</p>
         </div>
     </div>
 </div>
@@ -465,21 +474,21 @@ export default {
                     })
                 })
                 
-                //  sort data according to clicking the head column
-                if (this.sort.key) {
-                    data = _.orderBy(data, (i) => { //lodash 
-                        
-                        let value = i[this.sort.key]
-                        
-                        if (!isNaN(parseFloat(value)) && isFinite(value)) {
-                            return parseFloat(value)
-                        }
+            //  sort data according to clicking the head column
+            if (this.sort.key) {
+                data = _.orderBy(data, (i) => { //lodash 
+                    
+                    let value = i[this.sort.key]
+                    
+                    if (!isNaN(parseFloat(value)) && isFinite(value)) {
+                        return parseFloat(value)
+                    }
 
-                        return String(i[this.sort.key]).toLowerCase()
-                    }, this.sort.order)
-                }
-                return data
-            },
+                    return String(i[this.sort.key]).toLowerCase()
+                }, this.sort.order)
+            }
+            return data
+        },
             canSelectItems() {
                 return this.filteredRecords.length <= 500
             },
@@ -679,6 +688,29 @@ export default {
                         this.creating.errors = error.response.data.errors
                         
                     }
+                })
+            },
+
+            exportPDF(){
+                axios.get(`/api/datatable/locations/createPDF`,
+                      {responseType: 'arraybuffer'}
+                )
+                
+                .then((response)=>{
+                     //code to download file after generating
+                    var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                    var fileLink = document.createElement('a');
+                    fileLink.href = fileURL;
+                    fileLink.setAttribute('download', 'goods.pdf');
+                    document.body.appendChild(fileLink);
+                    fileLink.click();
+                    console.log(fileLink);
+                }).catch((error) => {
+                    this.isLoading = false
+                    if (error.response.status === 422) {
+                        this.creating.errors = error.response.data.errors                       
+                    }
+
                 })
             },
                

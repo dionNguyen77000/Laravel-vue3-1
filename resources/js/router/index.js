@@ -180,6 +180,12 @@ const routes = [
     meta: { hideNavigation: true }
   },
   {
+    path: "/delivery",
+    name: "Delivery",
+    component: Reminder,
+    meta: { hideNavigation: true }
+  },
+  {
     path: "/register",
     name: "Register",
     component: Register,

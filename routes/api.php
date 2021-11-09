@@ -27,8 +27,7 @@ use App\Http\Controllers\DataTable\Invoices_From_SupplierController;
 use App\Http\Controllers\DataTable\Order_To_Supplier_LineController;
 use App\Http\Controllers\DataTable\Invoice_From_Supplier_LineController;
 use App\Http\Controllers\DataTable\Miscellaneous_InvoiceController;
-
-
+use App\Http\Controllers\DataTable\RecipeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +65,7 @@ Route::resource('datatable/suppliers', SupplierController::class);
 Route::resource('datatable/units', UnitController::class);
 
 Route::post('datatable/locations/saveImage/{id}', [LocationController::class, 'saveImage']);
+Route::get('datatable/locations/createPDF', [LocationController::class, 'createPDF']);
 Route::resource('datatable/locations', LocationController::class);
 
 Route::get('datatable/goods_material/fileExport/{supplier_id}', [Goods_MaterialController::class, 'fileExport']);
@@ -90,13 +90,17 @@ Route::post('datatable/goods_material/fileImport', [Goods_MaterialController::cl
 Route::get('datatable/goods_material/sendMail11', [Goods_MaterialController::class, 'sendMail11']);
 Route::get('datatable/intermediate_product/sendMail', [Intermediate_ProductController::class, 'sendMail']);
 
-Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
+Route::get('datatable/intermediate_product/exportPDFRecipes/{IPIds}', [Intermediate_ProductController::class, 'exportPDFRecipes']);
+Route::post('datatable/intermediate_product/saveImage/{id}', [Intermediate_ProductController::class, 'saveImage']);
+Route::post('datatable/intermediate_product/addIngredient/{id}', [Intermediate_ProductController::class, 'addIngredient']);
+Route::post('datatable/intermediate_product/updateRecipe/{id}', [Intermediate_ProductController::class, 'updateRecipe']);
 Route::post('datatable/intermediate_product/updateCurrentQty/{id}', [Intermediate_ProductController::class, 'updateCurrentQty']);
+
+Route::resource('datatable/intermediate_product', Intermediate_ProductController::class);
 
 Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
 Route::post('datatable/daily_emp_work/updateNote/{order_id}', [Daily_Emp_WorkController::class,'updateNote']);
 
-Route::post('datatable/intermediate_product/saveImage/{id}', [Intermediate_ProductController::class, 'saveImage']);
 
 
 Route::resource('datatable/orders_to_supplier', Orders_To_SupplierController::class);
@@ -116,6 +120,9 @@ Route::post('datatable/invoice_from_supplier_line/removeAmountFromInvoiceAndUpda
 Route::post('datatable/miscellaneous_invoices/saveImage/{id}', [Miscellaneous_InvoiceController::class, 'saveImage']);
 Route::resource('datatable/miscellaneous_invoices', Miscellaneous_InvoiceController::class);
 Route::post('datatable/miscellaneous_invoices/updateNote/{order_id}', [Miscellaneous_InvoiceController::class,'updateNote']);
+
+Route::resource('datatable/recipe', RecipeController::class);
+
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');

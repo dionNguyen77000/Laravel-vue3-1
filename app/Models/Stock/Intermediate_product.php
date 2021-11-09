@@ -24,6 +24,7 @@ class Intermediate_product extends Model
     ];
     protected $fillable = [
         'name',
+        'description',
         'slug',
         'img',
         'img_two',
@@ -32,7 +33,6 @@ class Intermediate_product extends Model
         'price',
         'unit_id',
         'category_id',
-        'description',
         'current_qty',
         'prepared_point',
         'coverage',
@@ -42,6 +42,7 @@ class Intermediate_product extends Model
         'Preparation',
         'location',
         'location_id',
+        'recipe',
         
     ];
     
@@ -70,5 +71,9 @@ class Intermediate_product extends Model
     public function goods_materials()
     {
         return $this->belongsTo(Goods_material::class);
+    }
+    public function allergies()
+    {
+        return $this->belongsToMany(Allergy::class);
     }
 }

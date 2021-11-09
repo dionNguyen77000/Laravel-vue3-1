@@ -1,15 +1,15 @@
 <template>
 <div class="backdrop overflow-y-auto" @click.self="closeModal">
-  <div class="modal" id="goods_material_modal">       
+  <div class="modal" id="intermediate_product_modal">   
     <button @click="closeModal" type="button" 
         class="w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
         Close
     </button>
-  
-        <!-- Goods_Material -->
-            <Goods_Materials  
-              :goods_MaterialId="goods_MaterialId" 
-            />
+        <!-- Intermediate_Product -->
+       
+        <Intermediate_Product  
+            :intermediate_productId="theRecord.intermediate_product_id" 
+        />
   </div>
 </div>  
 </template>
@@ -17,11 +17,11 @@
 
 
 <script>
-import Goods_Materials from  '../goods_material.vue'
+import Intermediate_Product from  '../intermediate_product.vue'
 export default {
     // props: ['orders_to_supplierId'],    
-    props: ['goods_MaterialId'],    
-    components: {Goods_Materials},
+    props: ['theRecord','intermediate_productId','hello'],    
+    components: {Intermediate_Product},
     data() {
         return {
         }

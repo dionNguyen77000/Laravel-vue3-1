@@ -25,6 +25,7 @@
             <router-link class="mr-4" :to="{name:'DashboardHome'}">Dashboard</router-link>
             </template>
             <router-link class="mr-4" :to="{name:'Reminder'}">Reminder</router-link>
+            <router-link class="mr-4" :to="{name:'Delivery'}">Delivery</router-link>
         </ul>
         <ul class="flex items-center">
         <!-- @if (auth()->user()) -->

@@ -11,7 +11,7 @@
                 <div class="text-2xl font-semibold uppercase"> Daily Work </div>
                 <div>
                     <a href="#" 
-                    class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
+                    class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 focus:outline-none"
                     v-if="response.allow.creation"
                     @click.prevent="showCreatingForm()">
                     {{ creating.active ? 'Hide' : 'Add Work' }}
@@ -305,7 +305,7 @@
                     <tbody class="text-gray-600 text-sm font-light">
                     <!-- Loop Through each records getting from controller -->
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100" 
-                        :class="{ 'bg-green-500 text-white hover:bg-green-600' : record.Status=='OnGoing'}" 
+                        :class="{ 'bg-red-500  hover:bg-red-600' : record.Status=='OnGoing'}" 
                         >               
                             <td 
                             v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
@@ -429,17 +429,17 @@
                                             </span>
                                         </div>
                                     </template>
-
                                     <template v-else-if="column=='intermediate_product_id'">
-                                            <div class="flex items-center">
-                                            <span class="font-medium" >{{response.intermediate_ProductOptions[columnValue].id}} - {{response.intermediate_ProductOptions[columnValue].name}}</span>
-                                            <!-- <span class="font-medium" >{{columnValue}}</span> -->
-                                            <!-- <span class="font-medium" >
-                                                {{response.intermediate_ProductOptions.filter(
-                                                response.intermediate_ProductOptions=>(response.intermediate_ProductOptions.id === 1));
-                                                }}
-                                            </span> -->
-                                        </div>
+                                        <td class="w-44 p-2 text-center border border-green-600"  
+                                            :class="{ 'text-center': textCenterColumns.includes(column) }"
+                                            v-if="response.displayable.includes(column)"
+                                            > 
+                                            <a href="#" @click.prevent="clickIntermediateProducModaltId = record.date+' '+record.user_id+' '+record.intermediate_product_id"  
+                                                class="font-semibold  text-indigo-500 hover:underline"  
+                                                    >                                                        
+                                                <span class="font-medium" >{{response.intermediate_ProductOptions[columnValue].id}} - {{response.intermediate_ProductOptions[columnValue].name}}</span>
+                                            </a>                                                 
+                                        </td> 
                                     </template>
                                     <template v-else-if="column=='Note'">
                                             <a 
@@ -481,16 +481,24 @@
                                             <strong>{{ editing.errors[column][0] }}</strong>
                                         </span>  
                                     </template>    -->
-                                    <template v-else-if="column=='intermediate_product_id'">
+                                    <!-- <template v-else-if="column=='intermediate_product_id'">
                                             <div class="flex items-center">
                                             <span class="font-medium" >{{response.intermediate_ProductOptions[columnValue].id}} - {{response.intermediate_ProductOptions[columnValue].name}}</span>
-                                            <!-- <span class="font-medium" >{{columnValue}}</span> -->
-                                            <!-- <span class="font-medium" >
-                                                {{response.intermediate_ProductOptions.filter(
-                                                response.intermediate_ProductOptions=>(response.intermediate_ProductOptions.id === 1));
-                                                }}
-                                            </span> -->
+                                          
                                         </div>
+                                    </template> -->
+
+                                     <template v-else-if="column=='intermediate_product_id'">
+                                        <td class="w-44 p-2 text-center border border-green-600"  
+                                            :class="{ 'text-center': textCenterColumns.includes(column) }"
+                                            v-if="response.displayable.includes(column)"
+                                            > 
+                                            <a href="#"    @click.prevent="clickIntermediateProducModaltId = record.date+' '+record.user_id+' '+record.intermediate_product_id "  
+                                                class="font-semibold  text-indigo-500 hover:underline"  
+                                                    >                                                        
+                                                <span class="font-medium" >{{response.intermediate_ProductOptions[columnValue].id}} - {{response.intermediate_ProductOptions[columnValue].name}}</span>
+                                            </a>                                                 
+                                        </td> 
                                     </template>
                                     <template v-else-if="column=='Note'">
                                             <a  @click.prevent="clickNoteModalId = record.date+' '+record.user_id+' '+record.intermediate_product_id">
@@ -558,6 +566,15 @@
                                     @refreshRecords="getRecords" 
                                 />
                             </div>
+                            {{record.intermediate_product_id}}
+                            <div v-if="record.date+' '+record.user_id+' '+record.intermediate_product_id == clickIntermediateProducModaltId">
+                                <Intermediate_Product_Modal  
+                                    :intermediate_ProductId="record.intermediate_product_id" 
+                                     :theRecord="record" 
+                                    :hello="'hello'" 
+                                    @close="clickIntermediateProducModaltId=null" 
+                                />
+                            </div>
                         </tr>
                     </tbody>
                     <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
@@ -575,6 +592,8 @@
 <script>
 import Modal from  '../../components/modal.vue'
 import Note_Modal from  './stock_modal/note_modal.vue'
+import Intermediate_Product_Modal from './stock_modal/intermediate_product_modal.vue'
+
 import Loading from 'vue-loading-overlay';
 import { mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
@@ -583,7 +602,7 @@ export default {
         //   redirectIfNotCustomer
       ],
 
-    components: {Modal,Note_Modal,Loading},
+    components: {Modal,Note_Modal,Loading,Intermediate_Product_Modal},
    data() {
             return {
                 response: {
@@ -648,6 +667,7 @@ export default {
                 // noteModal
                 clickNoteModalId: null,
 
+                clickIntermediateProducModaltId : null,
                 
                 isLoading: false,
                 fullPage: true,                
@@ -777,6 +797,8 @@ export default {
                 return isCorrect;
             },
 
+           
+
             
     },
 
@@ -903,7 +925,12 @@ methods:
                 this.creating.form['required_qty'] = userIntermediate_ProductOptions[key].required_qty    
             }
         }
-    }
+    },
+
+    openIntermediateProductModal(record) {   
+            alert(record.intermediate_product_id)
+            this.clickIntermediateProductId = record.intermediate_product_id;
+        },
 
     
 },

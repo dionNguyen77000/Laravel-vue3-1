@@ -17,6 +17,7 @@ class Intermediate_ProductResourceDB extends JsonResource
         return [
             'id'=>$this->id,
             'name' => $this->name,
+            'description' => $this->description,
             'slug' => $this->slug,
             'img_thumbnail' => $this->img_thumbnail,
             'price' => $this->price,
@@ -24,7 +25,6 @@ class Intermediate_ProductResourceDB extends JsonResource
             // 'unit_name' => is_null($this->unit) ? '' : $this->unit['name'],
             'category_id' => $this->category_id,
             // 'category_name' => is_null($this->category) ? '' : $this->category['name'],
-            'description' => $this->description,
             'current_qty'=> $this->current_qty,
             'prepared_point'=> $this->prepared_point,
             'coverage'=> $this->coverage,
@@ -37,6 +37,8 @@ class Intermediate_ProductResourceDB extends JsonResource
             'img_three' => $this->img_three,
             'location_id' => $this->location_id,
             'permissions' =>  $this->permissions->map->only(['id', 'name']),   
+            'allergies' =>  $this->allergies->map->only(['id', 'name']),   
+            'recipe' => $this->recipe,
 
           
         ];

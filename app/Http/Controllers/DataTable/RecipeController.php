@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\DataTable;
 
 use Image;
-// use Barryvdh\DomPDF\PDF;
-use PDF;
+use App\Models\Stock\Recipe;
 use Illuminate\Http\Request;
 use App\Models\Stock\Location;
 use Illuminate\Support\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Stock\Goods_material;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Stock\Intermediate_product;
+use App\Http\Resources\Stock\RecipeResourceDB;
 use App\Http\Resources\Stock\LocationResourceDB;
 
 
-class LocationController extends DataTableController
+class RecipeController extends DataTableController
 {
     
     protected $allowCreation = true;
@@ -27,8 +29,11 @@ class LocationController extends DataTableController
         'data' => [
           'table' => $this->builder->getModel()->getTable(),
           'displayable' => array_values($this->getDisplayableColumns()),
+          'GMOptions'=> $this->getGMOptions(),
+          'IPOptions'=> $this->getIPOptions(),
           'updatable' => array_values($this->getUpdatableColumns()),
           'records' => $this->getRecords($request),
+          'IP_records' => $this->getRecords($request),
           'custom_columns' => $this->getCustomColumnsNames(),
           'userPermissionOptions'=> $this->getUserPermissionOptions(),
           'userRoleOptions'=> $this->getUserRoleOptions(),
@@ -42,37 +47,48 @@ class LocationController extends DataTableController
 
     public function builder()
     {
-        return Location::query();
+        return Recipe::query();
     }
 
     public function getCustomColumnsNames()
     {
         return [
-            'img_thumbnail'=>'image',
+            // 'intermediate_product_id' => 'I_Ingredient', 
+            'goods_material_id' => 'Ingredient (Raw)', 
+            'inter_p_ingredient_id' => 'Ingredient (I)', 
         ];
     }
 
     public function getDisplayableColumns()
     {
         return [
-            'id','name' ,'img_thumbnail',
+            'id',
+            'intermediate_product_id', 
+            'goods_material_id',
+            'inter_p_ingredient_id',
+            'amount',        
+            'type',        
         ];
     }
     public function getRetrievedColumns()
     {
         return [
             'id',
-            'name', 
-            'img',
-            'img_three',
-            'img_two',
-            'img_thumbnail',
+            'intermediate_product_id', 
+            'goods_material_id',
+            'inter_p_ingredient_id',
+            'amount',
+            'type',
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-            'name','img_thumbnail'
+            // 'intermediate_product_id', 
+            'goods_material_id',
+            'inter_p_ingredient_id',
+            'amount',        
+            'type',        
         ];
     }
     
@@ -85,28 +101,32 @@ class LocationController extends DataTableController
             $builder = $this->buildSearch($builder, $request);
         }
 
-        if (isset($request->locationId)) {
-            $builder =   $builder->where('id','=',$request->locationId);
+        if (isset($request->intermediate_id)) {
+            $builder =   $builder->where('intermediate_product_id','=',$request->intermediate_id);
+        }
+
+        if (isset($request->type) && $request->type!='') {
+            $builder =   $builder->where('type','=',$request->type);
         }
   
         try {
             $locations = $builder
-                            ->limit($request->limit)
-                            ->orderBy('id', 'asc')
-                            ->get($this->getRetrievedColumns());
-                            // ->paginate(2);
+                        ->limit($request->limit)
+                        ->orderBy('id', 'asc')
+                        ->get($this->getRetrievedColumns());
+                        // ->paginate(2);
            
             // $gmPermissions = $builder->permissions->map->only(['id', 'name']);
             // dd($gmPermissions);
     
 
-            $pr = LocationResourceDB::collection(
+            $recipe = RecipeResourceDB::collection(
                 $locations
                 // ->get($this->getDisplayableColumns())
             );
             // dd($pr);
             // return $ $goods_materials_builder;
-            return $pr;
+            return $recipe;
             
           
         } catch (QueryException $e) {
@@ -115,19 +135,13 @@ class LocationController extends DataTableController
     }
     public function store(Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required|unique:units,name',
-        ]);
-
-        return $this->builder->create($request->only($this->getUpdatableColumns()));
+    //    store method is in intermediated product controller
         
     }
 
     public function update($id, Request $request)
     {
-        $this->validate($request, [
-            'name' => 'required|unique:units,name,' . $id,
-        ]);
+      
 
         return $this->builder->find($id)->update($request->only($this->getUpdatableColumns()));
     }
@@ -254,18 +268,24 @@ class LocationController extends DataTableController
         return $user->roles->map->only(['id', 'name']);
     }
 
-    
-    // Generate PDF
-    public function createPDF() {
-        // retreive all records from db
-        $locations = Location::all();
-        // dd($data);
-  
-        // share data to view
-        // view()->share('employee',$data);
-        $pdf = PDF::loadView('employee', compact('locations'));
-  
-        // download PDF file with download method
-        return $pdf->download('pdf_file.pdf');
-      }
+    public function getGMOptions()
+    {
+        $c = Goods_material::all('id','name');
+
+        $returnArr = [];
+        foreach ($c as  $sc) {
+            $returnArr[$sc['id']] = $sc['name'];
+        }
+        return $returnArr;
+    }
+    public function getIPOptions()
+    {
+        $c = Intermediate_product::all('id','name');
+
+        $returnArr = [];
+        foreach ($c as  $sc) {
+            $returnArr[$sc['id']] = $sc['name'];
+        }
+        return $returnArr;
+    }
 }
