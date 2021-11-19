@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateDeliveryDetailTable extends Migration
+class CreateDeliveryDetailsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,22 +13,25 @@ class CreateDeliveryDetailTable extends Migration
      */
     public function up()
     {
-        Schema::create('delivery_detail', function (Blueprint $table) {
+        Schema::create('delivery_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('journey_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->date('date');
+            $table->foreignId('delivery_journey_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('driver');
             $table->string('order_number');
             $table->string('suburb');
             $table->string('zone');
-            $table->string('journey');
-            $table->time('depart')->nullable();;
-            $table->integer('estimated_duration')->nullable();;
+            $table->float('cash_recieved')->nullable();
+            $table->float('change')->nullable();
+            $table->string('journey')->nullable();
+            $table->time('departure')->nullable();;
+            $table->integer('estimated_duration_arrival')->nullable();;
+            $table->time('estimated_arrival')->nullable();;
+            $table->time('attual_arrival')->nullable();;
+            $table->integer('estimated_duration_return')->nullable();;
             $table->time('estimated_return')->nullable();;
-            $table->time('return')->nullable();
-            $table->string('Fuel_Cost')->nullable();
-            $table->string('Cash_Recieved')->nullable();
-            $table->string('Change')->nullable();
+            $table->time('actual_return')->nullable();
+            $table->float('fuel_cost')->nullable();
             $table->timestamps();
         });
     }

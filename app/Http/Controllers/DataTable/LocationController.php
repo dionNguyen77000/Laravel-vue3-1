@@ -91,10 +91,10 @@ class LocationController extends DataTableController
   
         try {
             $locations = $builder
-                            ->limit($request->limit)
-                            ->orderBy('id', 'asc')
-                            ->get($this->getRetrievedColumns());
-                            // ->paginate(2);
+                ->limit($request->limit)
+                ->orderBy('id', 'asc')
+                ->get($this->getRetrievedColumns());
+                // ->paginate(2);
            
             // $gmPermissions = $builder->permissions->map->only(['id', 'name']);
             // dd($gmPermissions);

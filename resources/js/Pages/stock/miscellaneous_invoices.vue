@@ -357,7 +357,7 @@
                     class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 border-b block pl-8 pr-6 py-2 w-full bg-white text-sm placeholder-gray-400 text-gray-700 focus:bg-white focus:placeholder-gray-600 focus:text-gray-700" />
             </div>
         </div>
-      
+       {{editing.form}}
         <!-- start Table -->        
         <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto">
             <table class="min-w-max w-full table-auto">
@@ -422,6 +422,7 @@
                 </thead>
                 <!-- End Table Heading -->
                 <!-- Row (Records) Section -->
+               
                 <tbody class="text-gray-600 text-sm font-light">
                     <!-- Loop Through each records getting from controller -->
                     <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100"
@@ -573,7 +574,7 @@
                                   <template v-else-if="column=='received_date'">                                 
                                          <div class="w-20">
                                              <span class="font-medium">
-                                                 {{columnValue}}
+                                                 {{formatTheDate(columnValue)}}
                                                 </span>
                                          </div>
                                 </template>
@@ -662,7 +663,7 @@
                                   <template v-else-if="column=='received_date'">                                 
                                          <div class="w-20">
                                              <span class="font-medium">
-                                                 {{columnValue}}
+                                                 {{formatTheDate(columnValue)}}
                                                 </span>
                                          </div>
                                 </template>
@@ -772,6 +773,7 @@
 
 
 <script>
+import moment from 'moment'
 import Modal from  '../../components/modal.vue'
 import Note_Modal from  './stock_modal/note_modal.vue'
 import Goods_Material_Modal from './stock_modal/goods_material_modal.vue'
@@ -834,11 +836,6 @@ export default {
                     value_1: '',
                     operator_1:'equals',
                     column_1: 'received_date'
-                },
-                search_1:{
-                    value: '',
-                    operator:'equals',
-                    column: 'received_date'
                 },
                 
                 isLoading: false,
@@ -1223,6 +1220,15 @@ methods:
             }
         })
         }  
+    },
+    formatTheDateToHourMinute(rawDate){
+        return moment(String(rawDate)).format('hh:mm A')
+    },
+    formatTheDate(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY')
+    },
+    formatTheDateToDateTime(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY hh:mm A')
     },
 
 

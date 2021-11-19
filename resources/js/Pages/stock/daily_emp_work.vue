@@ -34,7 +34,7 @@
                             </template>    
 
                             <template v-else-if="column=='user_id'">
-                                <label :for="column" class="font-semibold">Employee : </label>
+                                <label :for="column" class="font-semibold">Staff : </label>
                                 <span > {{response.authenticatedUser.name}} </span>
                                 <br>
                                 <label for="" class="font-semibold">Role : </label>   
@@ -469,18 +469,9 @@
                                             </span>
                                         </div>
                                     </template>
-                                      <!-- <template v-else-if="column=='date'">
-                                        <input type="date"  
-                                        class="py-1 font-medium"
-                                        :value="columnValue"
-                                        :class="{ 'border-3 border-red-700': editing.errors[column] }"
-                                        disabled
-                                        > 
-                                        <br>
-                                        <span v-if="editing.errors[column]" class="text-red-700 font-bold">
-                                            <strong>{{ editing.errors[column][0] }}</strong>
-                                        </span>  
-                                    </template>    -->
+                                    <template v-else-if="column=='date'">
+                                         <span  class="font-medium" >{{formatTheDate(columnValue)}}</span>                                        
+                                    </template>   
                                     <!-- <template v-else-if="column=='intermediate_product_id'">
                                             <div class="flex items-center">
                                             <span class="font-medium" >{{response.intermediate_ProductOptions[columnValue].id}} - {{response.intermediate_ProductOptions[columnValue].name}}</span>
@@ -590,6 +581,7 @@
 
 
 <script>
+import moment from 'moment'
 import Modal from  '../../components/modal.vue'
 import Note_Modal from  './stock_modal/note_modal.vue'
 import Intermediate_Product_Modal from './stock_modal/intermediate_product_modal.vue'
@@ -931,7 +923,12 @@ methods:
             alert(record.intermediate_product_id)
             this.clickIntermediateProductId = record.intermediate_product_id;
         },
-
+    formatTheDateToHourMinute(rawDate){
+        return moment(String(rawDate)).format('HH:mm')
+    },
+    formatTheDate(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY')
+    }
     
 },
 mounted() {

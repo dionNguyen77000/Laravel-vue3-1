@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateDeliveryJourneyTable extends Migration
+class CreateDeliveryJourneysTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,16 +13,16 @@ class CreateDeliveryJourneyTable extends Migration
      */
     public function up()
     {
-        Schema::create('delivery_journey', function (Blueprint $table) {
+        Schema::create('delivery_journeys', function (Blueprint $table) {
             $table->id();
             $table->date('date');
             $table->string('journey');
-            $table->time('depart');
-            $table->time('estimated_return');
-            $table->time('return')->nullable();
+            $table->time('departure');
             $table->integer('estimated_duration');
+            $table->time('estimated_return');
+            $table->time('actual_return')->nullable();
             $table->string('status');
-            $table->string('Payment')->nullable();
+            $table->float('fuel_payment')->nullable();
             $table->timestamps();
         });
     }

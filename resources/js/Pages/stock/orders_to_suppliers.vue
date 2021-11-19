@@ -451,7 +451,8 @@
                                     <template v-else-if="column=='ordered_date'">                                 
                                             <div class="w-20">
                                                 <span class="font-medium">
-                                                    {{columnValue}}
+                                                    {{formatTheDateToDateTime(columnValue)}}
+                                    
                                                     </span>
                                             </div>
                                     </template>
@@ -509,10 +510,12 @@
                                     <template v-else-if="column=='ordered_date'">                                 
                                             <div class="w-20">
                                                 <span class="font-medium">
-                                                    {{columnValue}}
+                                                    {{formatTheDateToDateTime(columnValue)}}
+                                    
                                                     </span>
                                             </div>
                                     </template>
+
 
                                     <template v-else-if="column=='excel_file'">
                                             <a v-bind:href="columnValue">
@@ -621,6 +624,7 @@
 
 
 <script>
+import moment from 'moment'
 import Modal from  '../../components/modal.vue'
 import Loading from 'vue-loading-overlay';
 import Note_Modal from  './stock_modal/note_modal.vue'
@@ -1004,6 +1008,16 @@ methods:
             console.log(error)
         })
     },
+
+    formatTheDateToHourMinute(rawDate){
+        return moment(String(rawDate)).format('hh:mm A')
+    },
+    formatTheDate(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY')
+    },
+    formatTheDateToDateTime(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY hh:mm A')
+    }
     
 },
 mounted() {

@@ -10,6 +10,7 @@ import router from './router'
 import Header from './Pages/page_component/header.vue'
 import Footer from './Pages/page_component/footer.vue'
 import Sidebar from './Pages/page_component/sidebar.vue'
+import Sidebar_Delivery from './Pages/page_component/sidebar_delivery.vue'
 import Navbar from './Pages/page_component/Navbar.vue'
 import SidebarHamburger from './components/SidebarHamburger.vue'
 
@@ -26,6 +27,7 @@ store.dispatch('auth/setUpLoginedAuth',localStorage.getItem('token')).then(()=> 
     app.component('Navbar',Navbar)
     app.component('Footer',Footer)
     app.component('Sidebar',Sidebar)
+    app.component('Sidebar_Delivery',Sidebar_Delivery)
     app.component('SidebarHamburger',SidebarHamburger)
 
     // add plugins 

@@ -54,14 +54,14 @@ class UserController extends DataTableController
     public function getDisplayableColumns()
     {
         return [
-            'id','name', 'username', 'email', 'Active'
+            'id','name', 'username', 'mobile','email', 'Active'
             // , 'created_at','updated_at'
         ];
     }
     public function getUpdatableColumns()
     {
         return [
-           'id','name', 'username','email', 'Active'
+            'id','name', 'username', 'mobile','email', 'Active'
         //    ,'created_at','updated_at'
         ];
     }
@@ -87,6 +87,7 @@ class UserController extends DataTableController
             [
                 'name' => $request->name,
                 'username' => $request->username,
+                'mobile' => $request->mobile,
                 'email' => $request->email,
                 'Active' => $request->Active,
                 // 'password' =>$request->password,
@@ -127,6 +128,7 @@ class UserController extends DataTableController
                     
                     'name' => $request->name,
                     'username' => $request->username,
+                    'mobile' => $request->mobile,
                     'email' => $request->email,
                     'Active' => $request->Active,
                     // 'password' =>$request->password,

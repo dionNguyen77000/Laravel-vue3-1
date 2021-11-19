@@ -147,8 +147,7 @@
                                     <strong>{{ creating.errors['assignedSupplierIds'][0] }}</strong>
                             </div>     
                         </div>
-                         {{creating.form.assignedSupplierIds}}
-                        {{creating.form.assignedSupplierUnitPrices}}
+                      
                              
                         <div class="text-center">
                             <button type="submit" class="bg-indigo-500 hover:bg-indigo-800 text-white px-4 py-2 rounded">Create</button>
@@ -444,7 +443,7 @@
                 <tbody class="text-gray-600 text-sm font-light">
                     <!-- Loop Through each records getting from controller -->
                     <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100"
-                    :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Preparation==('Yes')}" 
+                    :class="{ 'bg-red-300 hover:bg-red-400' : record.Preparation==('Yes')}" 
                     >                      
                         <td v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems" class=" text-center">
                             <input type="checkbox" :value="record.id" v-model="selected">

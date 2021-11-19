@@ -18,6 +18,8 @@ class PrivateUserResource extends JsonResource
             'id' => $this->id,
             'name' => $this ->name,
             'username' => $this->username,
+            'mobile' => $this->mobile,
+
             'email' =>$this -> email,
             // 'roles' => $this->roles->pluck('name','id'),
             'Active' =>  $this->Active,

@@ -14,6 +14,7 @@ use App\Http\Controllers\Reminder\PostController;
 use App\Http\Controllers\DataTable\RoleController;
 use App\Http\Controllers\DataTable\UnitController;
 use App\Http\Controllers\DataTable\UserController;
+use App\Http\Controllers\DataTable\RecipeController;
 use App\Http\Controllers\DataTable\CategoryController;
 use App\Http\Controllers\DataTable\LocationController;
 use App\Http\Controllers\DataTable\SupplierController;
@@ -21,13 +22,16 @@ use App\Http\Controllers\DataTable\PermissionController;
 use App\Http\Controllers\DataTable\Activity_LogController;
 use App\Http\Controllers\DataTable\Daily_Emp_WorkController;
 use App\Http\Controllers\DataTable\Goods_MaterialController;
+use App\Http\Controllers\DataTable\Delivery_DetailController;
+use App\Http\Controllers\DataTable\Delivery_JourneyController;
+use App\Http\Controllers\DataTable\Delivery_SettingController;
 use App\Http\Controllers\DataTable\Orders_To_SupplierController;
+use App\Http\Controllers\DataTable\Delivery_Travel_TimeController;
 use App\Http\Controllers\DataTable\Intermediate_ProductController;
+use App\Http\Controllers\DataTable\Miscellaneous_InvoiceController;
 use App\Http\Controllers\DataTable\Invoices_From_SupplierController;
 use App\Http\Controllers\DataTable\Order_To_Supplier_LineController;
 use App\Http\Controllers\DataTable\Invoice_From_Supplier_LineController;
-use App\Http\Controllers\DataTable\Miscellaneous_InvoiceController;
-use App\Http\Controllers\DataTable\RecipeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,6 +127,10 @@ Route::post('datatable/miscellaneous_invoices/updateNote/{order_id}', [Miscellan
 
 Route::resource('datatable/recipe', RecipeController::class);
 
+Route::resource('datatable/delivery_journeys', Delivery_JourneyController::class);
+Route::resource('datatable/delivery_details', Delivery_DetailController::class);
+Route::resource('datatable/delivery_settings', Delivery_SettingController::class);
+Route::resource('datatable/delivery_travel_times', Delivery_Travel_TimeController::class);
 
 Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
     Route::post('register', [RegisterController::class, 'action'])->name('register');

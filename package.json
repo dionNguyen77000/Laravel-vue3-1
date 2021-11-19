@@ -20,6 +20,9 @@
     },
     "dependencies": {
         "@tinymce/tinymce-vue": "^4.0.4",
+        "laravel-echo": "^1.11.3",
+        "moment": "^2.29.1",
+        "pusher-js": "^7.0.3",
         "query-string": "^6.14.1",
         "tailwindcss": "^2.0.2",
         "vue": "^3.2.2",

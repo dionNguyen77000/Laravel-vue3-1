@@ -548,7 +548,7 @@
                                   <template v-else-if="column=='received_date'">                                 
                                          <div class="w-20">
                                              <span class="font-medium">
-                                                 {{columnValue}}
+                                                    {{formatTheDateToDateTime(columnValue)}}
                                                 </span>
                                          </div>
                                 </template>
@@ -637,7 +637,7 @@
                                   <template v-else-if="column=='received_date'">                                 
                                          <div class="w-20">
                                              <span class="font-medium">
-                                                 {{columnValue}}
+                                                    {{formatTheDateToDateTime(columnValue)}}
                                                 </span>
                                          </div>
                                 </template>
@@ -787,6 +787,7 @@
 
 
 <script>
+import moment from 'moment'
 import Modal from  '../../components/modal.vue'
 import Note_Modal from  './stock_modal/note_modal.vue'
 import Goods_Material_Modal from './stock_modal/goods_material_modal.vue'
@@ -849,11 +850,6 @@ export default {
                     value_1: '',
                     operator_1:'equals',
                     column_1: 'received_date'
-                },
-                search_1:{
-                    value: '',
-                    operator:'equals',
-                    column: 'received_date'
                 },
                 
                 isLoading: false,
@@ -1278,6 +1274,16 @@ methods:
         })
         
     },
+
+    formatTheDateToHourMinute(rawDate){
+        return moment(String(rawDate)).format('hh:mm A')
+    },
+    formatTheDate(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY')
+    },
+    formatTheDateToDateTime(rawDate){
+        return moment(String(rawDate)).format('DD/MM/YYYY hh:mm A')
+    }
     
 },
 mounted() {

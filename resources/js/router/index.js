@@ -6,10 +6,9 @@ import Home from "../Pages/Home.vue";
 import DashboardHome from "../Pages/DashboardHome.vue";
 import Dashboard from "../Pages/Dashboard.vue";
 import Reminder from "../Pages/Reminder.vue";
+import Delivery from "../Pages/Delivery.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
-
-
 
 
 //router component Stock Setup on Sidebar
@@ -31,6 +30,12 @@ import Miscellaneous_Invoices from "../Pages/stock/miscellaneous_invoices.vue";
 
 //router Settings Setup
 import Activity_Log from "../Pages/Admin/Activity_Log.vue";
+
+//router component Stock Setup on Sidebar Delivery
+import Delivery_Journey from "../Pages/delivery/delivery_journey.vue";
+import Delivery_Detail from "../Pages/delivery/delivery_detail.vue";
+import Delivery_Setting from "../Pages/delivery/delivery_setting.vue";
+import Delivery_Travel_Time from "../Pages/delivery/delivery_travel_time.vue";
 
 
 //Midelware 
@@ -174,17 +179,55 @@ const routes = [
     // }
   },
   {
+    path: "/delivery",
+    name: "Delivery",
+    component: Delivery,
+
+    // meta: {
+    //   middleware: [
+    //     auth
+    //   ]
+    // },
+
+    children: [
+      { 
+        path: '', 
+        name: "Delivery_Journey",
+        component: Delivery_Journey 
+      },
+      { 
+        path: '/delivery_journey', 
+        name: "Delivery_Journey",
+        component: Delivery_Journey 
+      },
+      { 
+        path: '/delivery_detail', 
+        name: "Delivery_Detail",
+        component: Delivery_Detail 
+      },
+      { 
+        path: '/delivery_setting', 
+        name: "Delivery_Setting",
+        component: Delivery_Setting 
+      },
+      { 
+        path: '/delivery_travel_time', 
+        name: "Delivery_Travel_Time",
+        component: Delivery_Travel_Time 
+      },
+
+    ],
+  },
+
+
+
+  {
     path: "/reminder",
     name: "Reminder",
     component: Reminder,
     meta: { hideNavigation: true }
   },
-  {
-    path: "/delivery",
-    name: "Delivery",
-    component: Reminder,
-    meta: { hideNavigation: true }
-  },
+ 
   {
     path: "/register",
     name: "Register",

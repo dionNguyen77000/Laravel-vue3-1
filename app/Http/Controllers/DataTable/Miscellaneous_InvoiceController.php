@@ -113,6 +113,7 @@ class Miscellaneous_InvoiceController extends DataTableController
             'user',
             'img',
             'img_thumbnail',
+            'supplier',
             'supplier_invoice_number',
             'received_date',
             'total_price',

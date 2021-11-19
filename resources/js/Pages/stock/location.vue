@@ -18,7 +18,7 @@
             </div>
             <!-- New Record section  -->
             <div class="flex justify-center" v-if="response.allow.creation && creating.active">
-                <div class="w-1/8 rounded-lg">
+                <div class="w-10/12 md:w-8/12 lg:6/12 p-6 rounded-lg">
                 <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">New {{response.table}}</h3>
                     <form action="#" @submit.prevent="store">
                         <!-- @csrf -->
