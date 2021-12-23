@@ -196,6 +196,7 @@
                                 </td> 
                             </tr>
                         </tbody>
+                    <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
                     </table>
                 </div>
             </div>

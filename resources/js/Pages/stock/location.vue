@@ -123,14 +123,14 @@
             </div>
         </div>
 
-        <div class="justify-content-end mb-4">
+        <!-- <div class="justify-content-end mb-4">
             <a 
             class="p-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none"
             @click.prevent="exportPDF()"
             >
                 Export to PDF
             </a>
-        </div>
+        </div> -->
      
         <!-- start Table -->
         
@@ -139,7 +139,7 @@
                 <!-- Table Heading Section -->
                     <thead class="py-2">
                         <tr class="py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" 
+                            <th class="p-1" 
                              v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
                              >
                                     <input type="checkbox" 
@@ -163,7 +163,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-left"
+                                    <th class="text-left p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -178,7 +178,7 @@
                             <!-- heading -not in edit mode-->
                             <template v-else>
                                 <th  
-                                class="text-left" 
+                                class="text-left p-1" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) 
                                 }"
                                 v-if="!hideColumns.includes(column)"

@@ -5,7 +5,10 @@ namespace App\Http\Controllers\DataTable;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use App\Events\DeliveryDetailEvent;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Events\NewDestinationArrival;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Delivery\Delivery_Detail;
 use App\Http\Resources\Delivery\Delivery_DetailResourceDB;
@@ -215,8 +218,22 @@ class Delivery_DetailController extends DataTableController
         $the_delivery_detail ->change = $request->change;
         $the_delivery_detail ->actual_arrival = $request->actual_arrival;
         // $the_delivery_detail ->actual_return = $request->actual_return;
+
         $the_delivery_detail ->approve = $request->approve;
+        // var_dump( $the_delivery_detail ->actual_arrival);
+        // dd($driver);
         $the_delivery_detail ->save();
+        $driver = $the_delivery_detail->delivery_journey->driver;
+        if($the_delivery_detail ->save()){
+            $user = auth()->user();  
+            if($the_delivery_detail->actual_arrival){
+                // dd('Iam here');
+                broadcast(new DeliveryDetailEvent($user, $the_delivery_detail->zone,$the_delivery_detail ->actual_arrival))->toOthers();
+            } else {
+                broadcast(new DeliveryDetailEvent($user, $the_delivery_detail->zone,''))->toOthers();
+            }
+        }
+
 
         // $the_delivery_detail = $this->builder->find($id);
         // dd($the_delivery_detail);

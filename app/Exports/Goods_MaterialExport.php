@@ -154,7 +154,7 @@ FromView
                     'italic' => true,
                 ],
             ],
-            
+          
             'A8:F8' => [
                 'font' => [
                     'size' => 14,
@@ -172,7 +172,7 @@ FromView
                 ],
             ],
 
-            'A9:F100' => [
+            'A8:F100' => [
                 'font' => [
                     'size' => 14,
                 ],
@@ -188,11 +188,37 @@ FromView
                     ],
                     
                 ],
-
                 'alignment' => [
-                    'wrapText' => true,
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                ],
+
+                // 'alignment' => [
+                //     'wrapText' => true,
+                // ],          
+               
+            ],
+            'A8:A100'=> [
+               
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                 ],
                
+            ],
+
+            'C8:C100'  => [
+                'font' => [
+                'size' => 15,
+                'bold' => true,
+                'color' => ['argb' => 'FFFF0000'],                   
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                ],
+            ],
+            'D8:E100'  => [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                ],
             ],
 
             
@@ -259,7 +285,7 @@ FromView
     public function columnWidths(): array
     {
         return [
-            'A' => 10           
+            'A' => 5           
         ];
     }
 

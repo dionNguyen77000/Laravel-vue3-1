@@ -23,7 +23,7 @@
                                 <div class="mb-2" v-for="column in response.updatable" :key="column" >
                                      <template v-if="column=='Active'">
                                         <label  class="font-semibold" :for="column">Active : </label>    
-                                        <select :name="column" :id="column" v-model="creating.form[column]">
+                                        <select class="bg-gray-100 border-2 p-1 rounded-lg" :name="column" :id="column" v-model="creating.form[column]">
                                             <option  value="1">Yes</option>
                                             <option  value="0">No</option>                              
                                         </select>
@@ -235,7 +235,7 @@
 
                                 <th class="text-left" v-if="!hideColumns.includes('roles')">Roles</th>
                                 <th class="text-left" v-if="!hideColumns.includes('permissions')">Permissions</th>
-                                <th class="text-left" v-if="!hideColumns.includes('intermediateProducts')">Intermediates</th>
+                                <!-- <th class="text-left" v-if="!hideColumns.includes('intermediateProducts')">Intermediates</th> -->
                                 <th class="text-left" v-if="!hideColumns.includes('password')">Password</th>
 
                                 <th    class="text-left"  >Actions</th>
@@ -336,14 +336,14 @@
                                     </template>
                                 </td>
                                 </template>
-                                  <td v-if="!hideColumns.includes('intermediateProducts')" class="py-2  text-left">
+                                  <!-- <td v-if="!hideColumns.includes('intermediateProducts')" class="py-2  text-left">
                                    
                                     <div class="flex items-center">
                                         <span class="font-medium" >Unshown</span>
                                     </div>
                                    
 
-                                </td>
+                                </td> -->
                                 <td v-if="!hideColumns.includes('password')" class="py-2  text-left">
                                     <template v-if="editing.id === record.id">
                                     <div class="inline">
@@ -363,7 +363,7 @@
                                 </td>
                               
                                     <td>
-                                     <div v-if="!(record.id==1) ||getAuth.isFirstLevelUser">
+                                     <div v-if="!(record.id==1) || getAuth.isFirstLevelUser">
                                         <a href="#" @click.prevent="edit(record)"  v-if="editing.id !== record.id"
                                         class=" mr-1 py-1 px-3 shadow-md rounded-full bg-yellow-500 text-white text-sm hover:bg-yellow-700 focus:outline-none"
                                         >
@@ -394,6 +394,8 @@
                                 </td> 
                             </tr>
                         </tbody>
+                    <p class="mt-2 text-red-600 text-center text-sm" >Count : {{filteredRecords.length}}</p>
+
                     </table>
                 </div>
             </div>
@@ -407,7 +409,7 @@
 <script>
 
 import { mapGetters, mapState } from 'vuex'
-import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
+// import redirectIfNotCustomer from '../../router/middleware/redirectIfNotCustomer'
 import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
 import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
 import queryString from 'query-string' //use package query-string npm install query-string
@@ -453,7 +455,7 @@ export default {
                 
                 
                 selected: [],
-                hideColumns:['password','Active','email','username'],
+                hideColumns:['password','Active','email','mobile','email','intermediates'],
                 limit:50,
                 quickSearchQuery: '',
                 selected_active: '1',

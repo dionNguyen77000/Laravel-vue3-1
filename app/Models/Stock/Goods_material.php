@@ -2,13 +2,14 @@
 
 namespace App\Models\Stock;
 
-use App\Models\Permission;
 use Money\Money;
 use Money\Currency;
+use App\Models\Permission;
 use App\Models\Stock\Unit;
 use App\Models\Stock\Category;
 use App\Models\Stock\Supplier;
 use App\Models\Traits\HasPrice;
+use App\Models\Stock\Unit_Conversion;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -62,6 +63,10 @@ class Goods_material extends Model
     {
         return $this->belongsTo(Unit::class);
     }
+    public function check_stock_permission()
+    {
+        return $this->belongsTo(Permission::class,'check_id');
+    }
 
     public function orders_to_suppliers()
     {
@@ -83,9 +88,9 @@ class Goods_material extends Model
         return $this->belongsToMany(Supplier::class)
         ->withPivot('unit_price');
     }
-
-    public function suppliersWithUnputPrice()
+    public function unit_conversions()
     {
-        
+        return $this->hasMany(Unit_Conversion::class);
     }
+   
 }

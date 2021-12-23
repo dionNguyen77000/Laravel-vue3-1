@@ -183,7 +183,7 @@
                         <tr class="py-8 bg-green-200 text-gray-600 uppercase text-sm md:text-lg leading-normal">
                             
                         <!--  Loop through column in response.displayable  -->
-                         <th class="text-center border border-green-600">
+                         <th class="text-center border border-green-600 p-1">
                            ID
                         </th>
                             <template v-for="column in response.displayable" :key="column">
@@ -201,7 +201,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-center border border-green-600"
+                                    <th class="text-center border border-green-600 p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -216,7 +216,7 @@
                             <!-- heading -not in edit mode-->
                             <template v-else>
                                 <th  
-                                class="p-2 text-center border border-green-600" 
+                                class="p-1 text-center border border-green-600" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) 
                                 }"
                                 v-if="!hideColumns.includes(column)"

@@ -267,7 +267,7 @@
                     <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
                         v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && canSelectItems"
-                        class="py-2"
+                        class="p-1"
                         >
                                 <input type="checkbox" 
                                 @change="toggleSelectAll" 
@@ -291,7 +291,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-left"
+                                    <th class="text-left p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -306,9 +306,9 @@
                             <!-- heading -not in edit mode-->
                             <template v-else>
                                 <th  
-                                class="text-left" 
-                                :class="{ 'text-center': textCenterColumns.includes(column) 
-                                }"
+                                class="text-left p-1" 
+                                :class="{ 'text-center': textCenterColumns.includes(column)}"
+                               
                                 v-if="!hideColumns.includes(column)"
                                 >
                                     <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -408,6 +408,23 @@
                                             </option>
                                </select>                                  
                                 </template> 
+                                    <template v-else-if="column=='ordered_date'">
+                                
+                                        <input type="datetime-local" 
+                                        :name="column" :id="column"
+                                        class="bg-gray-100 border-2 w-52 p-1 rounded-lg"
+                                        :class="{ 
+                                            'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column),
+                                            'text-center': textCenterColumns.includes(column)}"
+                                        v-model="editing.form[column]" 
+                                        :disabled= "columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                        >
+
+                                        <span v-if="editing.errors[column]" class="text-red-700 font-bold">
+                                            <strong>{{ editing.errors[column][0] }}</strong>
+                                        </span>         
+                              
+                                </template>
                                                            
                                 <template v-else>
                                 <input type="text"  
@@ -451,7 +468,7 @@
                                     <template v-else-if="column=='ordered_date'">                                 
                                             <div class="w-20">
                                                 <span class="font-medium">
-                                                    {{formatTheDateToDateTime(columnValue)}}
+                                            {{(columnValue != null ) ? formatTheDateToDateTime(columnValue) : ''}}
                                     
                                                     </span>
                                             </div>
@@ -510,7 +527,7 @@
                                     <template v-else-if="column=='ordered_date'">                                 
                                             <div class="w-20">
                                                 <span class="font-medium">
-                                                    {{formatTheDateToDateTime(columnValue)}}
+                                            {{(columnValue != null ) ? formatTheDateToDateTime(columnValue) : ''}}
                                     
                                                     </span>
                                             </div>
@@ -859,6 +876,11 @@ methods:
         this.editing.errors = []
         this.editing.id = record.id
         this.editing.form = _.pick(record, this.response.updatable)
+         if(this.editing.form.ordered_date){
+            this.editing.form.ordered_date = this.formatTheDateToDateTimeLocal(this.editing.form.ordered_date)
+        } else {                 
+            this.editing.form.ordered_date = this.getTodayDateAndTime()
+        }
     },
     editCurrentQty(record){        
         this.editing.errors = []
@@ -1009,6 +1031,22 @@ methods:
         })
     },
 
+    getTodayDateAndTime(){
+        var today = new Date();
+        var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+        var currentHours=today.getHours();
+        var currentMinutes=today.getMinutes();
+        var hourInTwoMinutes = ("0"+currentHours).slice(-2)
+        var minutesInTwoMinutes = ("0"+currentMinutes).slice(-2)
+        var time = hourInTwoMinutes + ":" + minutesInTwoMinutes
+        var dateTime = date + 'T' + time              
+        return dateTime;
+    },
+  
+    formatTheDateToDateTimeLocal(rawDate){
+        return moment(String(rawDate)).format('YYYY-MM-DDThh:mm')
+    },
+
     formatTheDateToHourMinute(rawDate){
         return moment(String(rawDate)).format('hh:mm A')
     },
@@ -1017,7 +1055,7 @@ methods:
     },
     formatTheDateToDateTime(rawDate){
         return moment(String(rawDate)).format('DD/MM/YYYY hh:mm A')
-    }
+    },
     
 },
 mounted() {

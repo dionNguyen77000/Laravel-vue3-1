@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\DataTable;
 
-use Image;
 use PDF;
+use Image;
 
 use App\Models\Role;
 use App\Models\Permission;
@@ -20,6 +20,7 @@ use App\Models\Stock\Goods_material;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Events\IntermediateProductEvent;
 use App\Models\Stock\Intermediate_product;
 use App\Http\Resources\Stock\Intermediate_ProductResourceDB;
 
@@ -79,6 +80,7 @@ class Intermediate_ProductController extends DataTableController
             'Preparation' => 'Prep',
             'required_qty'=> 'Required',
             'location_id'=> 'Location',
+            'check_id'=> 'Check_Stock',
         ];
     }
 
@@ -99,8 +101,9 @@ class Intermediate_ProductController extends DataTableController
             'required_qty',
             'Preparation',
             'Active',
-            'location_id',
+            'check_id',
             'permissions',
+            'location_id',
             'allergies',
             'recipe',
 
@@ -129,6 +132,7 @@ class Intermediate_ProductController extends DataTableController
             'required_qty',
             'Preparation',
             'Active',
+            'check_id',
             'location_id',
             'recipe',
 
@@ -152,8 +156,9 @@ class Intermediate_ProductController extends DataTableController
             'required_qty',
             'Preparation',
             'Active',
-            'location_id',
+            'check_id',
             'permissions',
+            'location_id',
             'allergies',
             'recipe',
 
@@ -168,7 +173,7 @@ class Intermediate_ProductController extends DataTableController
             'description',
             // 'slug', 
             'img_thumbnail',
-            'price',
+            // 'price',
             'unit_id',
             'category_id', 
             'current_qty',
@@ -177,8 +182,9 @@ class Intermediate_ProductController extends DataTableController
             'required_qty',
             'Preparation',
             'Active',
-            'location_id',
+            'check_id',
             'permissions',
+            'location_id',
             'allergies',
             // 'recipe',
 
@@ -191,6 +197,7 @@ class Intermediate_ProductController extends DataTableController
         // dd($request->permission_id);
         $this->validate($request, [
             'name' => 'required|unique:intermediate_products,name',
+            'check_id' => 'required',
             // 'slug' => 'unique:intermediate_products,slug',
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
@@ -200,28 +207,31 @@ class Intermediate_ProductController extends DataTableController
         $newI = new Intermediate_product();
         $newI->name = $request->name;
         $newI->description = $request->description;
-        $newI->price = $request->price;
+        // $newI->price = $request->price;
         $newI->unit_id = $request->unit_id;
         $newI->category_id = $request->category_id;
         $newI->current_qty = $request->current_qty;
         $newI->prepared_point = $request->prepared_point;
         $newI->coverage = $request->coverage;
         $newI->Active = $request->Active;
+        $newI->check_id = $request->check_id;
         $newI->location_id = $request->location_id;
 
         // $newI =  $this->builder->create($request->only($this->getCreatedColumns()));
 
         if($request->Preparation != 'OnGoing') {
 
-            if ($request->current_qty < $request->prepared_point){
+            if ($request->current_qty <= $request->prepared_point){
                 $newI->required_qty = $request->coverage - $request->current_qty;
                 $newI->Preparation = 'Yes';
-            } elseif ($request->current_qty >= $request->prepared_point) {
+            } elseif ($request->current_qty > $request->prepared_point) {
                 $newI->required_qty = 0;
                 $newI->Preparation = 'No';
             }
         }     
-        $newI->save();
+        if($newI->save()) {
+            broadcast(new IntermediateProductEvent())->toOthers();
+        }
          
         if($request->assignedPermissionIds && count($request->assignedPermissionIds) > 0 ) {
             $newI->permissions()->attach($request->assignedPermissionIds);
@@ -250,9 +260,10 @@ class Intermediate_ProductController extends DataTableController
             $IP->Preparation = 'No';
             $IP->required_qty = 0;        
         } 
-        $IP->save();       
+        if ($IP->save()) {
+            broadcast(new IntermediateProductEvent())->toOthers();
+        }       
 
-        // dd($request->current_qty);
     }
 
     public function update($id, Request $request)
@@ -261,6 +272,7 @@ class Intermediate_ProductController extends DataTableController
             'name' => 'required|unique:intermediate_products,name,' . $id,
             // 'price' => 'numeric',
             'current_qty' => 'required|numeric',
+            'check_id' => 'required',
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
             'assignedPermissionIds' => 'required',
@@ -282,21 +294,24 @@ class Intermediate_ProductController extends DataTableController
         $intermediate->prepared_point = $request->prepared_point;
         $intermediate->coverage = $request->coverage;
         $intermediate->Active = $request->Active;
+        $intermediate->check_id = $request->check_id;
         $intermediate->location_id = $request->location_id;
 
         //update the permissions of the intermediate
         $intermediate->permissions()->sync($request->assignedPermissionIds);
         $intermediate->allergies()->sync($request->assignedAllergyIds);
 
-        if ($intermediate->current_qty < $intermediate->prepared_point){
+        if ($intermediate->current_qty <= $intermediate->prepared_point){
             $intermediate->Preparation = 'Yes';
             $intermediate->required_qty = $intermediate->coverage -  $intermediate->current_qty;  
-        } elseif ($intermediate->current_qty >= $intermediate->prepared_point){
+        } elseif ($intermediate->current_qty > $intermediate->prepared_point){
             $intermediate->Preparation = 'No';
             $intermediate->required_qty = 0;
         } 
 
-        $intermediate->save();
+        if($intermediate->save()){
+            broadcast(new IntermediateProductEvent())->toOthers();
+        }
 
         return $intermediate;
     }
@@ -315,6 +330,7 @@ class Intermediate_ProductController extends DataTableController
             $inter_p = Intermediate_product::withCount('daily_emp_works')->find($ids);
             if($inter_p->daily_emp_works_count == 0){
                 $inter_p->delete();
+                broadcast(new IntermediateProductEvent())->toOthers();
                 return ('deleted');
             } else {
                 // return ('deleted')->setPreparationCode(422);
@@ -490,6 +506,8 @@ class Intermediate_ProductController extends DataTableController
                 // save new image path to database
                 $the_inter -> img_two = "/storage/intermediate_product_images/".$imageName;
                 $the_inter -> save();
+                broadcast(new IntermediateProductEvent())->toOthers();
+
             } else if ($img_number == 3) {
                 if ($the_inter->img_three){
                     $result_image_array = explode('/',$the_inter->img_three);
@@ -501,6 +519,8 @@ class Intermediate_ProductController extends DataTableController
                 Storage::put("public/intermediate_product_images/". $imageName, $imageNameResize->__toString());
                 $the_inter -> img_three = "/storage/intermediate_product_images/".$imageName;
                 $the_inter -> save();
+                broadcast(new IntermediateProductEvent())->toOthers();
+
             }
           
         }        
@@ -534,6 +554,8 @@ class Intermediate_ProductController extends DataTableController
             $the_inter -> img_thumbnail = "/storage/intermediate_product_images/".$thumbnailName;
             $the_inter -> img = "/storage/intermediate_product_images/".$imageName;
             $the_inter -> save();
+            broadcast(new IntermediateProductEvent())->toOthers();
+
         }
         return $the_inter;
     }
@@ -602,6 +624,9 @@ class Intermediate_ProductController extends DataTableController
         }
         if (isset($request->location_id) && $request->location_id != 'All') {
             $builder =   $builder->where('location_id','=',$request->location_id);
+        }
+        if (isset($request->check_id) && $request->check_id != 'All') {
+            $builder =   $builder->where('check_id','=',$request->check_id);
         }
 
         if (isset($request->intermediate_productId)) {

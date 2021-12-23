@@ -24,13 +24,14 @@
 
                           <template v-if="column=='group'">
                                 <label  class="font-semibold" :for="column">Group : </label>     
-                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                <select class="bg-gray-100 border-2 p-1 rounded-lg" :name="column" :id="column" v-model="creating.form[column]">
                                     <option  value="Null">Null</option>
-                                    <option  value="Meat & Poultry">Meat & Poultry</option>
-                                    <option  value="Dry Food">Dry Food</option>
-                                    <option  value="Veg & Herb">Veg & Herb</option>
-                                    <option  value="Dry Food">Drink</option>
-                                    <option  value="Dry Food">Packagings</option>
+                                    <option  value="Meat_Poultry">Meat & Poultry</option>
+                                    <option  value="Dry_Food">Dry Food</option>
+                                    <option  value="Veg_Herb">Veg & Herb</option>
+                                    <option  value="Drink">Drink</option>
+                                    <option  value="Packagings">Packagings</option>
+                                    <option  value="Mixed">Mixed</option>
                                 </select>
                             </template>
 
@@ -131,7 +132,7 @@
                 <table class="min-w-max w-full table-auto">
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <th class="p-1" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -139,7 +140,7 @@
                             </th>
                             <template v-for="column in response.displayable" :key="column">
                             <th  
-                            class="text-left"  
+                            class="text-left p-1"  
                             v-if="!hideColumns.includes(column)"
                             >
 
@@ -164,15 +165,16 @@
                             <template v-for="columnValue,column in record" :key="column">
                             <td class="py-2 text-left"  v-if="!hideColumns.includes(column)">
                                 <template v-if="editing.id === record.id && isUpdatable(column)">                             
-                                    <template v-if="column=='group'">
+                                     <template v-if="column=='group'">
                                         <label  class="font-semibold" :for="column">Group : </label>     
                                         <select :name="column" :id="column" v-model="editing.form[column]">
                                             <option  value="Null">Null</option>
-                                            <option  value="Meat & Poultry">Meat & Poultry</option>
-                                            <option  value="Dry Food">Dry Food</option>
-                                            <option  value="Veg & Herb">Veg & Herb</option>
-                                            <option  value="Dry Food">Drink</option>
-                                            <option  value="Dry Food">Packagings</option>
+                                            <option  value="Meat_Poultry">Meat & Poultry</option>
+                                            <option  value="Dry_Food">Dry Food</option>
+                                            <option  value="Veg_Herb">Veg & Herb</option>
+                                            <option  value="Drink">Drink</option>
+                                            <option  value="Packaging">Packagings</option>
+                                            <option  value="Mixed">Mixed</option>
                                         </select>
                                     </template>
                                     <template v-else>

@@ -56,7 +56,7 @@
                             @change="updateRequiredQty(creating.form[column])"
                             >
                                 <option  value="" selected>Select </option>
-                                <option :value="option.id" v-for="option,index in response.needPrepareIntermediate_ProductOptions" :key="index">
+                                <option :value="option.id" v-for="option,index in response.needPrepareIntermediate_Products" :key="index">
                                     {{option.name}}
                                 </option>
                             </select>
@@ -253,7 +253,7 @@
                     <!-- Table Heading Section -->
                     <thead>
                         <tr class="sticky top-0 collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" 
+                            <th class="p-1" 
                             v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"                          
                             >
                                     <input type="checkbox" 
@@ -269,7 +269,7 @@
                                     </template>
                                     <!-- Table heading shown in Edit Mode -->
                                     <template v-else>
-                                        <th class="text-left"
+                                        <th class="text-left p-1"
                                         :class="{ 'text-center': textCenterColumns.includes(column) }"
                                         >
                                             <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -284,7 +284,7 @@
                                 <!-- heading -not in edit mode-->
                                 <template v-else>
                                 <th  
-                                class="text-left" 
+                                class="text-left p-1" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) }"
                                 v-if="!hideColumns.includes(column)"
                                 >
@@ -305,7 +305,7 @@
                     <tbody class="text-gray-600 text-sm font-light">
                     <!-- Loop Through each records getting from controller -->
                         <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100" 
-                        :class="{ 'bg-red-500  hover:bg-red-600' : record.Status=='OnGoing'}" 
+                        :class="{ ' bg-red-100 hover:bg-red-200' : record.Status=='OnGoing'}"                      
                         >               
                             <td 
                             v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
@@ -366,7 +366,7 @@
                                             class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
                                             
                                             :name="column" :id="column" v-model="editing.form[column]">
-                                            <option :value="option.id" v-for="option,index in response.intermediate_ProductOptions" :key="index">
+                                            <option :value="option.id" v-for="option,index in response.needPrepareIntermediate_Products" :key="index">
                                                 {{option.name}}
                                             </option>
                                                 
@@ -934,7 +934,10 @@ methods:
 mounted() {
    
     this.getRecords()
-    // this.getAuth
+       window.Echo.channel('dailyEmpWork')
+        .listen('DailyEmpWorkEvent', (e) => {
+            this.getRecords()
+        });
 },
     
 }

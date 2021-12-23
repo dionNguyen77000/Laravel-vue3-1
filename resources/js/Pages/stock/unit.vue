@@ -23,6 +23,17 @@
                     <form action="#" @submit.prevent="store">
                         <!-- @csrf -->
                         <div class="mb-2" v-for="column in response.updatable" :key="column" >
+                              <template v-if="column=='type'">
+                                <label  class="font-semibold" :for="column">Type : </label>
+        
+                                <select class="bg-gray-100 border-2 p-1 rounded-lg"  :name="column" :id="column" v-model="creating.form[column]">
+                                    <option  value="0">All</option>                               
+                                    <option  value="0">GM</option>                               
+                                    <option  value="I">I</option>
+                                    <option  value="0">NULL</option>                               
+                                </select>
+                            </template> 
+                            <template v-else>
                             <label :for="column" class="sr-only"> </label>
                             <input type="text" :name="column" :id="column" :placeholder="column" class="bg-gray-100 border-2 w-full p-1 rounded-lg"
                             :class="{ 'border-red-500': creating.errors[column] }"
@@ -30,6 +41,7 @@
                             <div class="text-red-500 mt-2 text-sm" v-if="creating.errors[column]">
                                     <strong>{{ creating.errors[column][0] }}</strong>
                             </div>
+                            </template>
                         </div>
                         
                         <div class="text-center">
@@ -113,7 +125,7 @@
                 <!-- Table Heading Section -->
                     <thead class="py-2">
                         <tr class="py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <th class="p-1" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -135,7 +147,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-left"
+                                    <th class="text-left p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -150,7 +162,7 @@
                             <!-- heading -not in edit mode-->
                             <template v-else>
                                 <th  
-                                class="text-left" 
+                                class="text-left p-1" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) 
                                 }"
                                 v-if="!hideColumns.includes(column)"

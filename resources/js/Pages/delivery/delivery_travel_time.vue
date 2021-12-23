@@ -194,7 +194,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-left"
+                                    <th class="text-left p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -209,7 +209,7 @@
                             <!-- heading -not in edit mode-->
                             <template v-else>
                                 <th  
-                                class="text-left" 
+                                class="text-left p-1" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) 
                                 }"
                                 v-if="!hideColumns.includes(column)"
@@ -384,13 +384,15 @@
 
 <script>
 import Loading from 'vue-loading-overlay';
-// import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
 import { mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
+
 
 export default {
   middleware: [
-        //   redirectIfNotCustomer
+          redirectIfNotFirstLevelUser,redirectIfNotSecondLevelUser
       ],
     props: [],    
     components: {Loading},
@@ -526,18 +528,7 @@ export default {
             canSelectItems() {
                 return this.filteredRecords.length <= 500
             },
-            getRoleNames(){
-                const rolNameArray = []
-                if (this.response.userRoleOptions){
-                    const allRoleNames = this.response.userRoleOptions
-                    allRoleNames.forEach(element => {
-                    rolNameArray.push(element.name)
-                });                }
-                
-              
-                return rolNameArray;
-
-            },
+         
             columnsNotAllowToShowAccordingToUserLevel(){
                 if(this.getAuth.isFirstLevelUser) {
                     return [] ;
@@ -717,55 +708,6 @@ export default {
                 })
                 
             },
-            imageSelected(e) {
-                this.image = e.target.files[0];
-                let reader = new FileReader();
-                reader.readAsDataURL(this.image);
-                reader.onload = e => {
-                    this.imagePreview = e.target.result;
-                }
-            },
-            imageChanged(e,id) {
-                this.image = e.target.files[0];
-                let reader = new FileReader();
-                reader.readAsDataURL(this.image);
-                reader.onload = e => {
-                    this.imagePreviewUpdate = e.target.result;
-                    this.currentPreviewUpdateId= id;
-                }
-            },
-
-            saveImage(productId) {
-                            
-                if(this.image){
-                    let data = new FormData
-                    data.append('image', this.image)
-                this.isLoading = true
-                axios.post(`/api/datatable/delivery_travel_times/saveImage/${productId}`, data).then((response)=>{
-                    this.isLoading = false
-                    // window.location.reload(false);
-                    this.getRecords().then(() => {
-                        this.currentPreviewUpdateId = null;
-                        this.imagePreviewUpdate = null;
-                        this.image =null;
-                    })
-                
-                }).catch((error) => {
-                    if (error.response.status === 422) {
-                        this.creating.errors = error.response.data.errors                       
-                    }
-                })
-                }  
-            },
-
-            // openImageModal(goods_material_id){
-            //     this.clickThumbnailId = goods_material_id;
-            // },
-
-            openSliderImageModal(record) {        
-                this.clickImgSliderModalId = record.id;
-            },
-
             
         },
 

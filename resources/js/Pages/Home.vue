@@ -1,7 +1,7 @@
 <template>
     <div id="home" class="p-6">
             <div class="lg:flex justify-between items-center mb-6">
-              <p class="text-2xl font-semibold mb-2 lg:mb-0">Good afternoon, Joe!</p>
+              <p class="text-2xl font-semibold mb-2 lg:mb-0">Hello</p>
               <button class="bg-blue-500 hover:bg-blue-600 focus:outline-none rounded-lg px-6 py-2 text-white font-semibold shadow">View Logs</button>
             </div>
 
@@ -125,9 +125,15 @@
 
 <script>
 // import Chart from 'chart.js'
+import auth from '../router/middleware/auth'
 
 export default {
     name: 'Home',
+    middleware: [
+      auth, 
+      // redirectIfNotFirstLevelUser,
+      // redirectIfNotSecondLevelUser
+    ],
     data() {
         return {
             buyersData: {

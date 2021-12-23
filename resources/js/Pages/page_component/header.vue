@@ -1,5 +1,4 @@
 <template>
-<!-- {{getAuth}} -->
   <!-- <div id="header" class="w-full flex justify-center min-w-screen  p-4 bg-yellow-600 lg:sticky top-0 z-40 text-center"> -->
   <div id="header" class="w-full flex justify-center min-w-screen  p-4 bg-yellow-600 z-40 text-center">
     <div id="logo">
@@ -15,17 +14,14 @@
             <img :src="'/img/logo_backend.png'" alt="Golden Lor Yarrabilba"
             class="hidden sm:block  text-center h-14 ">
           </div>
-            <!-- <router-link class="mr-4" to="/"> Home </router-link> -->
-            <template v-if="
-              getAuth.isFirstLevelUser 
-              || getAuth.isSecondLevelUser 
-              || getAuth.isThirdLevelUser
-              || getAuth.isFourthLevelUser
-              ">
+          <template v-if="getAuth.loggedIn">
+             <!-- <router-link class="mr-4" to="/"> Home </router-link> -->
             <router-link class="mr-4" :to="{name:'DashboardHome'}">Dashboard</router-link>
-            </template>
-            <router-link class="mr-4" :to="{name:'Reminder'}">Reminder</router-link>
+            <!-- <router-link class="mr-4" :to="{name:'Reminder'}">Reminder</router-link> -->
             <router-link class="mr-4" :to="{name:'Delivery'}">Delivery</router-link>
+            <router-link class="mr-4" :to="{name:'Orders'}">Orders</router-link>
+          </template>
+           
         </ul>
         <ul class="flex items-center">
         <!-- @if (auth()->user()) -->
@@ -61,6 +57,9 @@ export default {
     name: 'Header',
     
     data() {
+      return {
+        
+      }
     },
     computed: {
          ...mapGetters({

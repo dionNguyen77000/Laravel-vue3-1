@@ -18,6 +18,7 @@ use App\Http\Controllers\DataTable\RecipeController;
 use App\Http\Controllers\DataTable\CategoryController;
 use App\Http\Controllers\DataTable\LocationController;
 use App\Http\Controllers\DataTable\SupplierController;
+use App\Http\Controllers\DataTable\Unit_ConversionController;
 use App\Http\Controllers\DataTable\PermissionController;
 use App\Http\Controllers\DataTable\Activity_LogController;
 use App\Http\Controllers\DataTable\Daily_Emp_WorkController;
@@ -32,6 +33,8 @@ use App\Http\Controllers\DataTable\Miscellaneous_InvoiceController;
 use App\Http\Controllers\DataTable\Invoices_From_SupplierController;
 use App\Http\Controllers\DataTable\Order_To_Supplier_LineController;
 use App\Http\Controllers\DataTable\Invoice_From_Supplier_LineController;
+use App\Http\Controllers\Pos\OrderController;
+use App\Models\Stock\Unit_Conversion;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +70,7 @@ Route::resource('datatable/permissions', PermissionController::class);
 Route::resource('datatable/categories', CategoryController::class);
 Route::resource('datatable/suppliers', SupplierController::class);
 Route::resource('datatable/units', UnitController::class);
+Route::resource('datatable/unit_conversions', Unit_ConversionController::class);
 
 Route::post('datatable/locations/saveImage/{id}', [LocationController::class, 'saveImage']);
 Route::get('datatable/locations/createPDF', [LocationController::class, 'createPDF']);
@@ -82,6 +86,8 @@ Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController
 Route::post('datatable/goods_material/orderAndEmail/{supplier_id}', [Goods_MaterialController::class, 'orderAndEmailSupplier']);
 Route::post('datatable/goods_material/createOrderToSupplier/{supplier_id}', [Goods_MaterialController::class, 'createOrderToSupplier']);
 Route::post('datatable/goods_material/emailOrderToSupplier/{supplier_id}', [Goods_MaterialController::class, 'emailOrderToSupplier']);
+Route::post('datatable/goods_material/removeWaitingStatus/{ids}', [Goods_MaterialController::class, 'removeWaitingStatus']);
+Route::post('datatable/goods_material/updateCurrentQtyFromIntemediate/{ids}', [Goods_MaterialController::class, 'updateCurrentQtyFromIntemediate']);
 
 Route::resource('datatable/goods_material', Goods_MaterialController::class);
 Route::post('datatable/goods_material/saveImage/{id}', [Goods_MaterialController::class, 'saveImage']);
@@ -91,7 +97,9 @@ Route::get('datatable/goods_material/import-excel-csv', [Goods_MaterialControlle
 
 Route::post('datatable/goods_material/fileImport', [Goods_MaterialController::class, 'fileImport']);
 
+
 Route::get('datatable/goods_material/sendMail11', [Goods_MaterialController::class, 'sendMail11']);
+
 Route::get('datatable/intermediate_product/sendMail', [Intermediate_ProductController::class, 'sendMail']);
 
 Route::get('datatable/intermediate_product/exportPDFRecipes/{IPIds}', [Intermediate_ProductController::class, 'exportPDFRecipes']);
@@ -104,8 +112,6 @@ Route::resource('datatable/intermediate_product', Intermediate_ProductController
 
 Route::resource('datatable/daily_emp_work', Daily_Emp_WorkController::class);
 Route::post('datatable/daily_emp_work/updateNote/{order_id}', [Daily_Emp_WorkController::class,'updateNote']);
-
-
 
 Route::resource('datatable/orders_to_supplier', Orders_To_SupplierController::class);
 Route::post('datatable/orders_to_supplier/updateNote/{order_id}', [Orders_To_SupplierController::class,'updateNote']);
@@ -127,6 +133,7 @@ Route::post('datatable/miscellaneous_invoices/updateNote/{order_id}', [Miscellan
 
 Route::resource('datatable/recipe', RecipeController::class);
 
+Route::post('datatable/delivery_journeys/approve/{ids}', [Delivery_JourneyController::class, 'approveJourney']);
 Route::resource('datatable/delivery_journeys', Delivery_JourneyController::class);
 Route::resource('datatable/delivery_details', Delivery_DetailController::class);
 Route::resource('datatable/delivery_settings', Delivery_SettingController::class);
@@ -140,6 +147,13 @@ Route::group(['prefix' => 'auth', 'namespace'=> 'Auth'], function () {
 });
 
 Route::resource('datatable/activity_logs', Activity_LogController::class);
+
+Route::resource('orders', OrderController::class);
+Route::post('orders/completeOrder/{id}', [OrderController::class, 'completeOrder']);
+Route::post('orders/completeOrders/{ids}', [OrderController::class, 'completeOrders']);
+Route::post('orders/completeTheItem/{id}', [OrderController::class, 'completeTheItem']);
+
+Route::resource('order_details', OrderController::class);
 
 
 

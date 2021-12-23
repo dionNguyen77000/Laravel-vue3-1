@@ -57,6 +57,22 @@ class Delivery_Journey extends Model
         }
         return   $fuel_payment ;
     }
+    public function getChange(){
+        $the_delivery_details=  $this->delivery_details;
+        $change = 0.00;
+        foreach ($the_delivery_details as $the_delivery_detail) {
+            $change = $change + $the_delivery_detail->change;
+        }
+        return   $change ;
+    }
+    public function getCashPaidByCustomers(){
+        $the_delivery_details=  $this->delivery_details;
+        $cash = 0.00;
+        foreach ($the_delivery_details as $the_delivery_detail) {
+            $cash = $cash + $the_delivery_detail->cash_received;
+        }
+        return   $cash ;
+    }
 
     public function delivery_details()
     {

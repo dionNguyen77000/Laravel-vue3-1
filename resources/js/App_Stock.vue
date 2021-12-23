@@ -41,6 +41,15 @@ export default {
      },
     created() {
         // axios.defaults.headers.common["Authorization"] = "Bearer" + localStorage.getItem("user_token");
+        //  window.Echo.channel('destinationArrival')
+        //     .listen('NewDestinationArrival', (e) => {
+        //         // this.messages.push({
+        //         // message: e.message.message,
+        //         // user: e.user
+        //         // });
+        //         alert(e);
+        //         console.log(e);
+        //     });
     }
    
 }

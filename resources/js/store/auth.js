@@ -36,7 +36,7 @@ export default {
             if (state.auth.user && state.auth.token) {
                 state.auth.loggedIn = true
                 state.auth.isCustomer=false
-                console.log(state)
+                // console.log(state)
 
                 // const rolNameArray = [];
                 // const allRoleNames = state.auth.user.roles;
@@ -51,7 +51,7 @@ export default {
                 // state.auth.isFirstLevelUser = true
                 //set firstLevelusers
                 for (var i = 0; i < rootState.firstLevelUsers.length; i++) {
-                    console.log(rootState.firstLevelUsers[i])
+                    // console.log(rootState.firstLevelUsers[i])
                     if (roleNameArray.includes(rootState.firstLevelUsers[i])) 
                     {
                         state.auth.isFirstLevelUser = true
@@ -60,7 +60,7 @@ export default {
                 }
                 //set secondLevelUsers
                 for (var i = 0; i < rootState.secondLevelUsers.length; i++) {
-                    console.log(rootState.secondLevelUsers[i])
+                    // console.log(rootState.secondLevelUsers[i])
                     if (roleNameArray.includes(rootState.secondLevelUsers[i])) 
                     {
                         state.auth.isSecondLevelUser = true
@@ -69,7 +69,7 @@ export default {
                 }
                 //set thirdLevelUsers
                 for (var i = 0; i < rootState.thirdLevelUsers.length; i++) {
-                    console.log(rootState.thirdLevelUsers[i])
+                    // console.log(rootState.thirdLevelUsers[i])
                     if (roleNameArray.includes(rootState.thirdLevelUsers[i])) 
                     {
                         state.auth.isThirdLevelUser = true
@@ -78,7 +78,7 @@ export default {
                 }
                 //set fourthLevelUsers
                 for (var i = 0; i < rootState.fourthLevelUsers.length; i++) {
-                    console.log(rootState.fourthLevelUsers[i])
+                    // console.log(rootState.fourthLevelUsers[i])
                     if (roleNameArray.includes(rootState.fourthLevelUsers[i])) 
                     {
                         state.auth.isFourthLevelUser = true

@@ -357,7 +357,7 @@
                     class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 border-b block pl-8 pr-6 py-2 w-full bg-white text-sm placeholder-gray-400 text-gray-700 focus:bg-white focus:placeholder-gray-600 focus:text-gray-700" />
             </div>
         </div>
-       {{editing.form}}
+       <!-- {{editing.form}} -->
         <!-- start Table -->        
         <div  v-if="filteredRecords.length" class="bg-white shadow-md rounded my-3  overflow-x-auto">
             <table class="min-w-max w-full table-auto">
@@ -366,7 +366,7 @@
                     <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
                         v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser ||getAuth.isThirdLevelUser) && canSelectItems"
-                        class="py-2"
+                        class="p-1"
                         >
                                 <input type="checkbox" 
                                 @change="toggleSelectAll" 
@@ -389,7 +389,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-left"
+                                    <th class="text-left p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -404,7 +404,7 @@
                             <!-- heading -not in edit mode-->
                             <template v-else>
                                 <th  
-                                class="text-left" 
+                                class="text-left p-1" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) }"
                                 v-if="!hideColumns.includes(column)"
                                 >

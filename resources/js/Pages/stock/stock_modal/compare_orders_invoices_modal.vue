@@ -158,7 +158,7 @@
                 <table class="min-w-max w-full table-auto">
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <!-- <th class="py-2" v-if="canSelectItems">
+                            <!-- <th class="p-1" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -166,7 +166,7 @@
                             </th> -->
                             <template v-for="column in response.displayable" :key="column">
                             <th  
-                            class="text-left"  
+                            class="text-left p-1"  
                             :class="{ 'text-center': textCenterColumns.includes(column) }"
                             v-if="!hideColumns.includes(column)"
                             >

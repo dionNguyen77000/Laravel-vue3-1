@@ -10,6 +10,7 @@ use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use App\Events\DailyEmpWorkEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Stock\Daily_Emp_Work;
 use Illuminate\Support\Facades\File;
@@ -38,6 +39,7 @@ class Daily_Emp_WorkController extends DataTableController
             'custom_columns' => $this->getCustomColumnsNames(),
             'intermediate_ProductOptions'=> $this->getIntermediate_ProductOptions(),
             'needPrepareIntermediate_ProductOptions'=> $this->getNeedPrepareIntermediate_ProductOptions(),
+            'needPrepareIntermediate_Products'=> $this->getNeedPrepareIntermediate_Products(),
             'permissionOptions'=> $this->getPermissionOptions(),
             'userPermissionOptions'=> $this->getUserPermissionOptions(),
             'authenticatedUser' =>$this->getAuthenticateduser(),
@@ -159,6 +161,7 @@ class Daily_Emp_WorkController extends DataTableController
             $theRelatedIP->Preparation = 'OnGoing';
             $theRelatedIP->save();
         }
+        broadcast(new DailyEmpWorkEvent())->toOthers();
 
         return $newD;
         // if($request->Status == 'Completed'){
@@ -257,6 +260,7 @@ class Daily_Emp_WorkController extends DataTableController
         //     $intermediate->required_qty = 0;
         //     $intermediate->save();
         // }
+        broadcast(new DailyEmpWorkEvent())->toOthers();
 
         return $updatedSuccess;
     }
@@ -284,7 +288,7 @@ class Daily_Emp_WorkController extends DataTableController
         // $the_daily_emp_work->Note = 'wow -w work';
 
         // $the_daily_emp_work->save();
-
+        broadcast(new DailyEmpWorkEvent())->toOthers();
         return   $the_daily_emp_work;   
 
     }
@@ -311,6 +315,9 @@ class Daily_Emp_WorkController extends DataTableController
                 $inter_p->delete();
             } else return 'record is undefined';
         }
+        broadcast(new DailyEmpWorkEvent())->toOthers();
+
+
 
         // intend to implement but finally did not do it
         // if (count($arrayIds) == 1){
@@ -649,7 +656,14 @@ class Daily_Emp_WorkController extends DataTableController
 
     public function getNeedPrepareIntermediate_ProductOptions()
     {
-        $user = auth()->user();        
+        $user = auth()->user();  
+        // dd($user->getIntermediateProducts());      
+        return $user->getIntermediateProductOptions();
+    }
+    public function getNeedPrepareIntermediate_Products()
+    {
+        $user = auth()->user();  
+        // dd($user->getIntermediateProducts());      
         return $user->getIntermediateProducts();
     }
    

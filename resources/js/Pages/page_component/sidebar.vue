@@ -110,6 +110,11 @@
                 Daily Emp Work
             </div>
           </router-link>
+          <router-link :to="{name:'Unit_Conversion'}">
+            <div class="mb-1 w-full flex justify-center md:justify-start items-center text-blue-400 h-8 pl-4 hover:bg-gray-200 rounded-lg cursor-pointer">
+                Unit Conversion
+            </div>
+          </router-link>
 
          
 

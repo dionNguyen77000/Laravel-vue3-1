@@ -395,14 +395,16 @@
 <script>
 import moment from 'moment'
 import Loading from 'vue-loading-overlay';
-// import Image_Slider_Modal from './stock_modal/imageSliderModal.vue'
+import redirectIfNotFirstLevelUser from '../../router/middleware/redirectIfNotFirstLevelUser'
+import redirectIfNotSecondLevelUser from '../../router/middleware/redirectIfNotSecondLevelUser'
+import redirectIfNotThirdLevelUser from '../../router/middleware/redirectIfNotThirdLevelUser'
 import { mapGetters, mapState } from 'vuex'
 import queryString from 'query-string' //use package query-string npm install query-string
 
 export default {
-  middleware: [
-        //   redirectIfNotCustomer
-      ],
+ middleware: [
+    //  redirectIfNotFirstLevelUser,redirectIfNotSecondLevelUser,redirectIfNotThirdLevelUser
+  ],
     props: ['delivery_JourneyId'],    
     components: {Loading},
    data() {
@@ -502,15 +504,6 @@ export default {
 
                 selected_dropdown_active: false,
 
-                  //image upload
-                image:null,
-                imagePreview:null,
-                imagePreviewUpdate:null,               
-                currentPreviewUpdateId:null,  
-
-                 // showIMGModal: false,
-                clickImgSliderModalId : null,
-
                 
                
             }
@@ -555,18 +548,6 @@ export default {
         },
             canSelectItems() {
                 return this.filteredRecords.length <= 500
-            },
-            getRoleNames(){
-                const rolNameArray = []
-                if (this.response.userRoleOptions){
-                    const allRoleNames = this.response.userRoleOptions
-                    allRoleNames.forEach(element => {
-                    rolNameArray.push(element.name)
-                });                }
-                
-              
-                return rolNameArray;
-
             },
             columnsNotAllowToShowAccordingToUserLevel(){
                 if(this.getAuth.isFirstLevelUser) {
@@ -756,56 +737,8 @@ export default {
                 })
                 
             },
-            imageSelected(e) {
-                this.image = e.target.files[0];
-                let reader = new FileReader();
-                reader.readAsDataURL(this.image);
-                reader.onload = e => {
-                    this.imagePreview = e.target.result;
-                }
-            },
-            imageChanged(e,id) {
-                this.image = e.target.files[0];
-                let reader = new FileReader();
-                reader.readAsDataURL(this.image);
-                reader.onload = e => {
-                    this.imagePreviewUpdate = e.target.result;
-                    this.currentPreviewUpdateId= id;
-                }
-            },
 
-            saveImage(productId) {
-                            
-                if(this.image){
-                    let data = new FormData
-                    data.append('image', this.image)
-                this.isLoading = true
-                axios.post(`/api/datatable/delivery_details/saveImage/${productId}`, data).then((response)=>{
-                    this.isLoading = false
-                    // window.location.reload(false);
-                    this.getRecords().then(() => {
-                        this.currentPreviewUpdateId = null;
-                        this.imagePreviewUpdate = null;
-                        this.image =null;
-                    })
-                
-                }).catch((error) => {
-                    if (error.response.status === 422) {
-                        this.creating.errors = error.response.data.errors                       
-                    }
-                })
-                }  
-            },
-
-            // openImageModal(goods_material_id){
-            //     this.clickThumbnailId = goods_material_id;
-            // },
-
-            openSliderImageModal(record) {        
-                this.clickImgSliderModalId = record.id;
-            },
-
-             getTodayDateAndTime(){
+            getTodayDateAndTime(){
                 var today = new Date();
                 var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
                 var currentHours=today.getHours();
@@ -836,7 +769,31 @@ export default {
 
         mounted() {
             this.getRecords()
+            
+            //  window.Echo.channel('destinationArrival')
+            //     .listen('App\\Events\\NewDestinationArrival', (e) => {
+            //         // this.messages.push({
+            //         // message: e.message.message,
+            //         // user: e.user
+            //         // });
+            //         console.log('Iam here')
+            //         alert(e.user);
+            //         console.log(e);
+            // });
         },
+
+        created(){
+            window.Echo.channel('destinationArrival')
+            .listen('NewDestinationArrival', (e) => {
+                // this.messages.push({
+                // message: e.message.message,
+                // user: e.user
+                // });
+                alert(e);
+                console.log(e);
+            });
+
+        }
     
 }
 

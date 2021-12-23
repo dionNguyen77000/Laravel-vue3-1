@@ -28,6 +28,11 @@ class Permission extends Model
     {
         return $this->belongsToMany(Goods_material::class);
     }
+
+    public function goods_materials_checks()
+    {
+        return $this->hasMany(Goods_material::class,'check_id');
+    }
     public function intermediate_products()
     {
         return $this->belongsToMany(Intermediate_product::class);

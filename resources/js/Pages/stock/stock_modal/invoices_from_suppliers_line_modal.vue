@@ -169,7 +169,7 @@
                 <table class="min-w-max w-full table-auto">
                     <thead>
                         <tr class="collapse py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2"
+                            <th class="p-1"
                                 v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser || getAuth.isThirdLevelUser) && canSelectItems"
                             >
                                     <input type="checkbox" 
@@ -179,7 +179,7 @@
                             </th>
                             <template v-for="column in response.displayable" :key="column">
                             <th  
-                            class="text-left"  
+                            class="text-left p-1"  
                             :class="{ 'text-center': textCenterColumns.includes(column) }"
                             v-if="!hideColumns.includes(column)"
                             >
@@ -304,7 +304,8 @@
                                 Edit
                                 </a>   
 
-                                <a href="#" @click.prevent="destroy(record.id)" v-if="response.allow.deletion && editing.id !== record.id" 
+                                <a href="#" @click.prevent="destroy(record.id)"
+                                v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser) && response.allow.deletion && editing.id !== record.id" 
                                 class=" mr-1 py-1 px-2 shadow-md rounded-full bg-red-400 text-white text-sm hover:bg-red-700 focus:outline-none"
                                 >
                                 Delete

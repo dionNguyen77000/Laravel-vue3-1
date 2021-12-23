@@ -11,9 +11,9 @@
      <loading v-model:active="isLoading"
                  :can-cancel="true"
                  :is-full-page="fullPage"/>
-
+    
+        
     <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center rounded-lg shadow-md">
-        <!-- {{requiredRecords}} -->
         <div class="w-full p-1">  
             <div class="flex justify-between pt-4">
                 <div class="text-2xl font-semibold uppercase"> Order Placement</div>        
@@ -21,7 +21,11 @@
                 <h3 class="text-xl text-gray text-center font-bold  p-3 mb-1">Supplier Order</h3>
                 <div class="mb-2 text-center">
                 <label  class="font-semibold"> Supplier :  {{selectedSupplierInfo.name}}</label>                                                         
-            </div>    
+            </div>  
+            <div>
+            <!-- <span>{{}}</span> -->
+              <!-- <pre>{{ requiredRecords }}</pre> -->
+            </div>  
 
             <div class="mb-2 text-center">
                 <div class="mb-2">
@@ -63,12 +67,7 @@
             </div>      
                     
             <div class="grid grid-cols-3 gap-4">
-                    <button 
-                class="bg-indigo-500 hover:bg-indigo-800 text-white  p-3 rounded "
-                    @click="createAndSendOrderToSupplier()"
-                >
-                    Create & Email Order
-                </button>
+            
                 <button 
                 class="bg-indigo-500 hover:bg-indigo-800 text-white  p-3 rounded"
                     @click="createOrderToSupplier()"
@@ -81,7 +80,13 @@
                     @click="emailOrderToSupplier()"
                 >
                     Email Order
-                </button>                       
+                </button>    
+                <button 
+                class="bg-indigo-500 hover:bg-indigo-800 text-white  p-3 rounded "
+                    @click="createAndSendOrderToSupplier()"
+                >
+                    Create & Email Order
+                </button>                   
             </div>
 
             <div id="show_hide_section" class="text-center mx-3 my-3 space-y-2">
@@ -127,7 +132,7 @@
                       
                             <th 
                             v-if="(getAuth.isFirstLevelUser || getAuth.isSecondLevelUser ||  getAuth.isThirdLevelUser)"
-                            class="py-2"
+                            class="p-1"
                             >
                                 <input type="checkbox" 
                                 @change="toggleSelectAll" 
@@ -144,7 +149,7 @@
                             </template>
 
                             <template v-else>
-                                <th class="text-left"
+                                <th class="text-left p-1"
                                 :class="{ 'text-center': textCenterColumns.includes(column) }"
                                 >
                                     <span class="sortable" @click="sortBy(column)"> {{custom_columns[column] || column}}</span>
@@ -468,9 +473,7 @@ export default {
             })
         },
 
-        createOrderToSupplier(){
-
-            
+        createOrderToSupplier(){         
             // check if the items are already ordered
             let numOfOrderedItems = this.itemsAlreadyOrdered()
             let notProceed = false
@@ -484,7 +487,7 @@ export default {
             }
 
 
-            if(this.orderExcelFileOfSelectedSupplier.exit == true){
+            // if(this.orderExcelFileOfSelectedSupplier.exit == true){
                 this.isLoading = true
                 // get file name
                 this.selectedSupplierInfo.excelFileName = this.orderExcelFileOfSelectedSupplier.link;
@@ -523,9 +526,9 @@ export default {
                     }
                 })
 
-            } else {
-                alert('Your excel order file has not been generated. You must generate excel file first.');
-            }
+            // } else {
+            //     alert('Your excel order file has not been generated. You must generate excel file first.');
+            // }
         
         },
 

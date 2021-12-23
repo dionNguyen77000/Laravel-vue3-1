@@ -38,7 +38,7 @@
                             </template>  
                              <template v-else-if="column=='unit_id'">
                             <label  class="font-semibold" :for="column">Unit : </label>
-                            <select :name="column" :id="column" v-model="creating.form[column]">
+                            <select class="bg-gray-100 border-2 p-1 rounded-lg"  :name="column" :id="column" v-model="creating.form[column]">
                                 <option :value="index" v-for="option,index in response.unitOptions" :key="option">
                                     {{option}}
                                 </option>
@@ -48,7 +48,7 @@
                             <template v-else-if="column=='category_id'">
                             <label  class="font-semibold" :for="column">Category : </label>
        
-                            <select :name="column" :id="column" v-model="creating.form[column]">
+                            <select class="bg-gray-100 border-2 p-1 rounded-lg"  :name="column" :id="column" v-model="creating.form[column]">
                                 <option :value="index" v-for="option,index in response.categoryOptions" :key="option">
                                     {{option}}
                                 </option>
@@ -75,7 +75,7 @@
                             <template v-else-if="column=='Active'">
                                 <label  class="font-semibold" :for="column">Active : </label>
         
-                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                <select class="bg-gray-100 border-2 p-1 rounded-lg"  :name="column" :id="column" v-model="creating.form[column]">
                                     <option  value="1">Yes</option>
                                     <option  value="0">No</option>                               
                                 </select>
@@ -83,12 +83,20 @@
                             
                             <template v-else-if="column=='location_id'">
                                 <label  class="font-semibold" :for="column">Location : </label>                           
-                                <select :name="column" :id="column" v-model="creating.form[column]">
+                                <select class="bg-gray-100 border-2 p-1 rounded-lg"  :name="column" :id="column" v-model="creating.form[column]">
                                     <option :value="index" v-for="option,index in response.locationOptions" :key="option">
                                         {{option}}
                                     </option>
                                 </select>
                             </template> 
+                             <template v-else-if="column=='check_id'">
+                            <label :for="column"  class="font-semibold">Check Stock :  </label>
+                            <select class="bg-gray-100 border-2 p-1 rounded-lg" :name="column" :id="column" v-model="creating.form[column]">
+                                <option :value="index" v-for="option,index in response.permissionOptions" :key="option">
+                                    {{option}}
+                                </option>
+                            </select>                     
+                            </template>    
 
                             <template v-else-if="column=='permissions'">
                             <label  class="font-semibold" for="Active">Permissions : </label>    
@@ -234,6 +242,28 @@
                     </div>
                 </div>
             </div>
+
+               <div class="flex flex-row mb-1 sm:mb-0">          
+                <div class="relative">
+                    <select v-model="selected_check" @change="getRecords"
+                        class="appearance-none h-full rounded-l border block appearance-none w-full bg-white border-gray-400 text-gray-700 pl-1 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500">
+                        <option   value= 'All'>Check Stock</option>
+                        <template v-for="permission in response.userPermissionOptions" :key="permission.id">
+                            <option  :value="permission.id" >
+                             <!-- <template v-if="response.userPermissionOptions.includes(option)"> -->
+                                    {{permission.name}}
+                            <!-- </template> -->                            
+                            </option>
+                        </template>                          
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center pl-3 text-gray-700">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
           
             <div class="flex flex-row mb-1 sm:mb-0">          
                 <div class="relative">
@@ -349,7 +379,7 @@
                     <tr class="sticky top-0 collapse py-2 bg-blue-200 text-gray-600 uppercase text-sm leading-normal">
                         <th 
                         v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems"
-                        class="py-2"
+                        class="p-1"
                         >
                                 <input type="checkbox" 
                                 @change="toggleSelectAll" 
@@ -371,7 +401,7 @@
                                 </template>
                                 <!-- Table heading shown in Edit Mode -->
                                 <template v-else>
-                                    <th class="text-left"
+                                    <th class="text-left p-1"
                                     :class="{ 'text-center': textCenterColumns.includes(column) }"
                                     >
                                         <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>
@@ -386,7 +416,7 @@
                             <!-- heading -not in edit mode-->
                              <template v-else>
                                 <th  
-                                class="text-left" 
+                                class="text-left p-1" 
                                 :class="{ 'text-center': textCenterColumns.includes(column) }"
                                 v-if="!hideColumns.includes(column)"
                                 >
@@ -407,7 +437,7 @@
                 <tbody class="text-gray-600 text-sm font-light">
                     <!-- Loop Through each records getting from controller -->
                     <tr v-for="record in filteredRecords" :key="record"  class="border-b border-gray-200 bg-gray-50 hover:bg-gray-100" 
-                    :class="{ 'bg-red-500 text-white hover:bg-red-600' : record.Preparation==('Yes') || record.Preparation==('OnGoing') }" 
+                    :class="{ 'bg-red-100 hover:bg-red-200' : record.Preparation==('Yes') || record.Preparation==('OnGoing') }" 
                     >
                        <!-- bg-red-600 text-white -->
                         <td v-if="(isFirstLevelUser || isSecondLevelUser) && canSelectItems" class=" text-center">
@@ -463,7 +493,7 @@
                                     v-model="editing.form[column]"
                                     :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
                                     >
-                                        <option  value=""></option>
+                                        <!-- <option  value=""></option> -->
                                         <template v-for="option,index in response.categoryOptions" >
                 
                                             <template v-if="record.id != option.id" >                  
@@ -474,6 +504,27 @@
                                         </template>                                       
                                     </select>                                   
                                 </template>  
+
+                                  <template v-else-if="column=='check_id'">
+                                        <select
+                                        class='rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 text-sm text-gray-700'
+                                        :class="{
+                                            'bg-pink-200' : columnsNotAllowToEditAccordingToUserLevel.includes(column)
+                                        }"
+                                        :name="column" :id="column" 
+                                        v-model="editing.form[column]"
+                                        :disabled= " columnsNotAllowToEditAccordingToUserLevel.includes(column)" 
+                                        >
+                                            <template v-for="option,index in response.permissionOptions" >
+                    
+                                                <template v-if="record.id != option.id" >                  
+                                                <option :value="index" :key="option">
+                                                {{option}} 
+                                                </option>
+                                                </template>
+                                            </template>                                       
+                                        </select>                                   
+                                    </template>  
                              
                                 <template v-else-if="column=='permissions'">
                                     <ul id="roles" class="ml-2 w-40 flex flex-wrap">
@@ -540,7 +591,7 @@
 
                                 <template v-else-if="column=='current_qty'">
         
-                                   <input type="text"  
+                                   <input type="number" min="0"  
                                     class="rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                     v-model="editing.form[column]"
                                     :class="{ 
@@ -641,7 +692,7 @@
                                             </template>
 
                                             <template v-else-if="column=='name'">
-                                                    <div class="flex items-center w-24">
+                                                    <div class="flex items-center w-28">
                                                         <a href="#"  @click.prevent="openRecipeModal(record)" 
                                                             class="font-semibold  text-indigo-500 hover:underline"  
                                                             >                     
@@ -651,7 +702,7 @@
                                             </template>
 
                                             <template v-else-if="column=='unit_id'">
-                                                    <div class="flex items-center">
+                                                    <div class="w-28">
                                                     <span class="font-medium" >{{response.unitOptions[columnValue]}}</span>
                                                 </div>
                                             </template>
@@ -681,6 +732,11 @@
                                                     {{ option.name }}
                                                 </div>      
                                             </template>   
+                                              <template v-else-if="column=='check_id'">
+                                                <div class="flex items-center">
+                                                    <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+                                                </div>
+                                            </template>
 
 
                                             <template v-else>
@@ -738,7 +794,7 @@
 
                                 <template v-else-if="column=='current_qty'"> 
                                     <template v-if="editing.currentQtyId === record.id && isUpdatable(column)">
-                                        <input type="text" 
+                                        <input type="number" min="0" 
                                         class="w-20 rounded-r rounded-l sm:rounded-l-none border border-gray-400 pl-1 pr-1 py-1 bg-white text-sm text-gray-700 focus:bg-white"
                                         v-model="editing.form[column]"
                                         :class="{ 
@@ -784,7 +840,7 @@
                                         <span class="font-medium" >{{columnValue}}</span>
                                         </div> -->
 
-                                     <div class="flex items-center w-24">
+                                     <div class="flex items-center w-28">
                                         <a href="#"  @click.prevent="openRecipeModal(record)" 
                                             class="font-semibold  text-indigo-500 hover:underline"  
                                             >                     
@@ -794,7 +850,7 @@
                                 </template>
                                 
                                 <template v-else-if="column=='unit_id'">
-                                        <div class="flex items-center">
+                                        <div class="w-28">
                                         <span class="font-medium" >{{response.unitOptions[columnValue]}}</span>
                                     </div>
                                 </template>
@@ -813,6 +869,12 @@
                                             </a> 
                                     </div>
                                 </template>
+
+                                <template v-else-if="column=='check_id'">
+                                    <div class="flex items-center">
+                                        <span class="font-medium" >{{response.permissionOptions[columnValue]}}</span>
+                                    </div>
+                                </template>  
 
 
                                 <template v-else-if="column=='permissions'">
@@ -906,7 +968,6 @@
                                 :recipe="record.recipe"
                                 :GMOptions="response.GMOptions"
                                 :IPOptions="response.IPOptions"
-                                :table="intermediate_product"
                                 @close="clickRecipeModalId=null" 
                                 @refreshRecords="getRecords" 
                             />
@@ -959,6 +1020,7 @@ export default {
                         supplier_id:1,
                         unit_id:1,
                         category_id:1,
+                        check_id:1,
                         location_id:1,
                         assignedPermissionIds: [ 1 ],
                         assignedAllergyIds: [ 1 ],
@@ -990,8 +1052,13 @@ export default {
                 unshownColumns:['slug','img','recipe'],
 
                 // columns hidden - can be show by unclick the radio buttons
-                hideColumns:['description','price','category_id',
-                'prepared_point','coverage','Active','unit_id'],
+                hideColumns:['description','price',
+                // 'category_id',
+                // 'prepared_point','coverage',
+                // 'permissions',
+                'Active',
+                'unit_id',
+                ],
 
                 // columns unshown in edit mode
                 unshownColumnsInEditMode:['img_thumbnail'],
@@ -1019,18 +1086,20 @@ export default {
                    'name', 'price','unit_id','supplier_id',
                     'category_id','description','prepared_point', 
                     'required_qty', 'coverage','Preparation',
-                    'Active', 'location'  ,'location_id'
+                    'Active', 'location'  ,'location_id',
+                    'check_id'
                 ],     
                             
                 fourthLevel_ColumnNotAllowsToEdit: [
                     'name', 'price','unit_id','supplier_id',
                     'category_id','description','prepared_point', 
                     'required_qty', 'coverage','Preparation',
-                    'Active','location','location_id','permissions','allergies'
+                    'Active','location','location_id','permissions','allergies',
+                    'check_id'
                 ],
 
                 notAllowEditExceptPeopleInCharge: ['name', 'price','unit_id', 'description','category_id' ,'prepared_point', 'required_qty','coverage','Preparation','Active'],
-                textCenterColumns:['price','current_qty',
+                textCenterColumns:['price','unit_id','current_qty',
                 'prepared_point','coverage','required_qty','Preparation','Active',
                 'location'],
                 dollarsSymbolColumns:['price'],
@@ -1041,12 +1110,13 @@ export default {
                 *********************/
 
                 // number of rows per page
-                limit:100,                
+                limit:"",                
                 quickSearchQuery: '',
                 selected_category: 'All',
                 selected_preparation: 'All',
                 selected_active: '1',
                 selected_permission: 'All',
+                selected_check: 'All',
                 selected_location: 'All',
 
                 //image upload
@@ -1230,7 +1300,9 @@ methods:
             Active: this.selected_active,
             permission_id: this.selected_permission,
             location_id: this.selected_location,
-            intermediate_productId: this.intermediate_productId,            
+            intermediate_productId: this.intermediate_productId,   
+            check_id: this.selected_check,
+         
             // ...this.search
         }, 
         {
@@ -1365,7 +1437,8 @@ methods:
                 this.creating.form.Active = 1
                 this.creating.form.unit_id = 1
                 this.creating.form.category_id = 1   
-                this.creating.form.location_id = 1   
+                this.creating.form.location_id = 1
+                this.creating.form.check_id = 1 
                 this.creating.errors = []
                 this.creating.form.assignedPermissionIds = [1]  
                 this.creating.form.assignedAllergyIds = [1]  
@@ -1500,6 +1573,11 @@ mounted() {
     tinymceScript.setAttribute('referrerpolicy', 'origin')
    
     this.getRecords()
+
+     window.Echo.channel('intermediateProduct')
+            .listen('IntermediateProductEvent', (e) => {
+                this.getRecords()
+            });
 },
     
 }

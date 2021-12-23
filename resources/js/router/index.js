@@ -9,6 +9,7 @@ import Reminder from "../Pages/Reminder.vue";
 import Delivery from "../Pages/Delivery.vue";
 import Register from "../Pages/auth/register.vue";
 import Login from "../Pages/auth/login.vue";
+import Orders from "../Pages/pos/orders.vue";
 
 
 //router component Stock Setup on Sidebar
@@ -22,6 +23,7 @@ import Location from "../Pages/stock/location.vue";
 import Goods_Material from "../Pages/stock/goods_material.vue";
 import Intermediate_Product from "../Pages/stock/intermediate_product.vue";
 import Daily_Emp_Work from "../Pages/stock/daily_emp_work.vue";
+import Unit_Conversion from "../Pages/stock/unit_conversion.vue";
 
 //router component Order Setup
 import Orders_To_Suppliers from "../Pages/stock/orders_to_suppliers.vue";
@@ -53,8 +55,7 @@ const routes = [
   {
     path: "/",
     name: "Home",
-    component: Home,
-    
+    component: Dashboard,
   },
   {
     path: "/login",
@@ -67,16 +68,11 @@ const routes = [
     // },
   },
 
+
   {
     path: "/dashboard",
     name: "Dashboard",
     component: Dashboard,
-
-    // meta: {
-    //   middleware: [
-    //     auth
-    //   ]
-    // },
 
     children: [
       { 
@@ -147,6 +143,11 @@ const routes = [
         component: Daily_Emp_Work,
       },
       {
+        path: "/unit_conversion",
+        name: "Unit_Conversion",
+        component: Unit_Conversion,
+      },
+      {
         path: "/orders_to_suppliers",
         name: "Orders_To_Suppliers",
         component: Orders_To_Suppliers,
@@ -180,6 +181,7 @@ const routes = [
   },
   {
     path: "/delivery",
+    redirect: '/delivery_journey',
     name: "Delivery",
     component: Delivery,
 
@@ -225,6 +227,14 @@ const routes = [
     path: "/reminder",
     name: "Reminder",
     component: Reminder,
+    meta: { hideNavigation: true }
+  },
+
+  
+  {
+    path: "/orders",
+    name: "Orders",
+    component: Orders,
     meta: { hideNavigation: true }
   },
  

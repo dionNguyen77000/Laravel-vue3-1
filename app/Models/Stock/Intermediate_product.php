@@ -37,7 +37,7 @@ class Intermediate_product extends Model
         'prepared_point',
         'coverage',
         'required_qty',
-        'permission_id',
+        'check_id',
         'Active',
         'Preparation',
         'location',
@@ -75,5 +75,10 @@ class Intermediate_product extends Model
     public function allergies()
     {
         return $this->belongsToMany(Allergy::class);
+    }
+
+    public function unit_conversions()
+    {
+        return $this->hasMany(Unit_Conversion::class);
     }
 }

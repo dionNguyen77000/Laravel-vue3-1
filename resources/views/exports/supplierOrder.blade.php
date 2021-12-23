@@ -14,8 +14,8 @@
     <tr>
         <th>#</th>
         <th>Name</th>
-        <th>Unit</th>
         <th>Quantity</th>
+        <th>Unit</th>
         <th>Category</th>
     </tr>
     </thead>
@@ -31,8 +31,8 @@
                 <td>{{ $good_material->required_qty }}</td>
                 <td>{{ $good_material->category->name}}</td> --}}
                 <td>{{ $good_material['name'] }}</td>
-                <td>{{ $unitOptions[$good_material['unit_id']] }}</td>
                 <td>{{ $good_material['required_qty'] }}</td>
+                <td>{{ $unitOptions[$good_material['unit_id']] }}</td>
                 <td>{{ $categoryOptions[$good_material['category_id']] }}</td>
             </tr>
         {{-- @endif --}}

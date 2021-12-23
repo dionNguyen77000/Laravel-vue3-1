@@ -194,6 +194,54 @@ class User extends Authenticatable implements JWTSubject
 
     }
 
+    public function getIntermediateProductOptions()
+    {
+         // get all roles of the user from pivot table user_role
+         $user_roles = $this->roles;
+         // get all permissions of the user from pivot table user_permission
+         $user_permissions = $this->permissions;
+
+         $userPermissionId =[];
+        
+         $returnArr = [];
+
+          // get all permissions from the role of user
+        foreach($user_roles as $role){
+            foreach($role->permissions as $permission){
+                // $userPermission[$permission->id] = $permission->name;
+                array_push($userPermissionId,$permission->id);
+            }
+        }
+
+         // get all permissions from the the pivot table of user_permission
+         foreach($user_permissions as $permission)
+         {
+             if(!in_array($permission->id,$userPermissionId))    
+             array_push($userPermissionId,$permission->id);
+         }
+        
+            $ips = Intermediate_Product::select('id','name','required_qty')
+            ->whereIn('Preparation',['Yes','OnGoing'])
+            ->where('active',1)
+            ->orderBy('name','desc')
+            ->get();           
+          
+        
+        
+            // lopp to all intermdeiateProducts
+            foreach ($ips as $ip){
+                $theIP_Permissions = $ip->permissions;
+                //loop through all the assigened permission of the im
+                foreach($theIP_Permissions as $theGM_Permission){
+                    // if the permission of intermediate product is one included in the user permissions
+                    if(in_array($theGM_Permission->id,$userPermissionId)) {
+                        $returnArr[$ip['id']] = $ip;
+                        break;
+                    }
+                }
+            }          
+         return $returnArr;
+    }
     public function getIntermediateProducts()
     {
          // get all roles of the user from pivot table user_role
@@ -223,6 +271,7 @@ class User extends Authenticatable implements JWTSubject
             $ips = Intermediate_Product::select('id','name','required_qty')
             ->whereIn('Preparation',['Yes','OnGoing'])
             ->where('active',1)
+            ->orderBy('name','desc')
             ->get();           
           
         
@@ -234,23 +283,11 @@ class User extends Authenticatable implements JWTSubject
                 foreach($theIP_Permissions as $theGM_Permission){
                     // if the permission of intermediate product is one included in the user permissions
                     if(in_array($theGM_Permission->id,$userPermissionId)) {
-                        $returnArr[$ip['id']] = $ip;
+                        array_push( $returnArr, $ip);
                         break;
                     }
                 }
-            }
-            // foreach ($ips as  $ip) {              
-            //     $returnArr[$ip['id']] = $ip;
-
-
-            // }
-       
-         // }
-         // $r_array = json_decode(json_encode($r), true);
- 
-         // return $r;
-         // return $r_array;
+            }          
          return $returnArr;
-         // return $user_roles;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\DataTable;
 
+use App\Events\GoodMaterialEvent;
 use Image;
 
 use App\Mail\TestMail;
@@ -34,6 +35,8 @@ use App\Models\Stock\Orders_To_Supplier;
 use App\Models\Stock\Invoices_From_Supplier;
 use App\Models\Stock\Order_To_Supplier_Line;
 use App\Http\Resources\Stock\Goods_MaterialResourceDB;
+use App\Models\Stock\Intermediate_product;
+use App\Models\Stock\Unit_Conversion;
 
 class Goods_MaterialController extends DataTableController
 {
@@ -81,7 +84,7 @@ class Goods_MaterialController extends DataTableController
     {
         return [
             'unit_id' => 'Unit',
-            'supplier_id' => 'Supplier',
+            // 'supplier_id' => 'Supplier',
             'category_id' => 'Category',
             'img_thumbnail'=>'image',
             'current_qty' => 'cur_qty',
@@ -89,6 +92,7 @@ class Goods_MaterialController extends DataTableController
             'location_id'=>'Location',
             'Preparation' => 'Prep',
             'required_qty'=> 'Required',
+            'check_id'=> 'Check_Stock',
         ];
     }
 
@@ -99,7 +103,7 @@ class Goods_MaterialController extends DataTableController
             // 'slug', 
             'price',
             'unit_id',
-            'supplier_id',
+            // 'supplier_id',
             'category_id',
             'current_qty',
             'prepared_point',
@@ -107,6 +111,7 @@ class Goods_MaterialController extends DataTableController
             'required_qty',
             'Preparation',
             'suppliers',
+            'check_id',
             'permissions',
             'location_id',
             'O_Status',
@@ -126,7 +131,7 @@ class Goods_MaterialController extends DataTableController
             // 'slug', 
             'price',
             'unit_id',
-            'supplier_id',
+            // 'supplier_id',
             'category_id',
             'current_qty',
             'prepared_point',
@@ -134,6 +139,7 @@ class Goods_MaterialController extends DataTableController
             'required_qty',
             'Preparation',
             'location_id',
+            'check_id',
             'O_Status',
             'Active',
         ];
@@ -146,7 +152,7 @@ class Goods_MaterialController extends DataTableController
             // 'slug', 
             'price',
             'unit_id',
-            'supplier_id',
+            // 'supplier_id',
             'category_id',
             'img',
             'current_qty',
@@ -156,6 +162,7 @@ class Goods_MaterialController extends DataTableController
             'Preparation',
             'suppliers',
             'location_id',
+            'check_id',
             'permissions',
             'O_Status',
             'Active',
@@ -167,15 +174,16 @@ class Goods_MaterialController extends DataTableController
         return [
             'name', 
             'img_thumbnail',
-            'price',
+            // 'price',
             'unit_id',
-            'supplier_id',
+            // 'supplier_id',
             'category_id',
             'img',
             'current_qty',
             'prepared_point',
             'coverage',
             'location_id',
+            'check_id',
             // 'O_Status',
             'Active',
         ];
@@ -205,6 +213,7 @@ class Goods_MaterialController extends DataTableController
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
+            'check_id' => 'required',
             'assignedSupplierIds' => 'required',
             'assignedPermissionIds' => 'required',
             'assignedSupplierUnitPrices' => 'required',
@@ -223,6 +232,7 @@ class Goods_MaterialController extends DataTableController
         $good_material->coverage = $request->coverage;
         $good_material->Active = $request->Active;
         $good_material->location_id = $request->location_id;
+        $good_material->check_id = $request->check_id;
         
 
         // $good_material = $this->builder->create
@@ -267,7 +277,9 @@ class Goods_MaterialController extends DataTableController
             $GM->Preparation = 'No';
             $GM->required_qty = 0;        
         } 
-        $GM->save();       
+        if($GM->save()){
+            broadcast(new GoodMaterialEvent())->toOthers();
+        }       
 
         // dd($request->current_qty);
     }
@@ -281,6 +293,7 @@ class Goods_MaterialController extends DataTableController
             'current_qty' => 'required|numeric',
             'prepared_point' => 'required|numeric',
             'coverage' => 'required|numeric',
+            'check_id' => 'required',
             'assignedSupplierIds' => 'required',
             'assignedPermissionIds' => 'required',
             // 'suppliers' => 'required'
@@ -308,6 +321,7 @@ class Goods_MaterialController extends DataTableController
         $GM->required_qty = $request->required_qty;
         $GM->Active = $request->Active;
         $GM->location_id = $request->location_id;
+        $GM->check_id = $request->check_id;
         if($request->O_Status == ''){
             $GM->O_Status = null;
         }
@@ -373,8 +387,13 @@ class Goods_MaterialController extends DataTableController
             $GM->Preparation = 'No';
             $GM->required_qty = 0;        
         } 
-        $GM->save();       
+        if( $GM->save()){
+
+            broadcast(new GoodMaterialEvent())->toOthers();
+        }
+             
         
+
         return $GM;
     }
 
@@ -424,6 +443,8 @@ class Goods_MaterialController extends DataTableController
         $the_good_material -> img_thumbnail = "/storage/good_material_images/".$thumbnailName;
         $the_good_material -> img = "/storage/good_material_images/".$imageName;
         $the_good_material -> save();
+        broadcast(new GoodMaterialEvent())->toOthers();
+
 
 
         // $img_thumbnail = $image->getClientOriginalName();
@@ -541,6 +562,7 @@ class Goods_MaterialController extends DataTableController
                 Storage::put("public/good_material_images/". $imageName, $imageNameResize->__toString());
                 $the_g_m -> img_three = "/storage/good_material_images/".$imageName;
                 $the_g_m -> save();
+                
             }
           
         }        
@@ -575,6 +597,8 @@ class Goods_MaterialController extends DataTableController
             $the_g_m -> img = "/storage/good_material_images/".$imageName;
             $the_g_m -> save();
         }
+        broadcast(new GoodMaterialEvent())->toOthers();
+
         return $the_g_m;
     }
 
@@ -610,6 +634,9 @@ class Goods_MaterialController extends DataTableController
 
         if (isset($request->location_id) && $request->location_id != 'All') {
             $builder =   $builder->where('location_id','=',$request->location_id);
+        }              
+        if (isset($request->check_id) && $request->check_id != 'All') {
+            $builder =   $builder->where('check_id','=',$request->check_id);
         }              
 
         if (isset($request->goods_MaterialId)) {
@@ -1037,7 +1064,6 @@ class Goods_MaterialController extends DataTableController
         $estimated_price_order_to_supplier = 0;
         foreach($excelData as $good_material)
         {
-
             $theGM = Goods_material::where('name', '=',  $good_material['name'])->first();
             // dd($theGM->Order_Status);
             $theGM->O_Status = 'waiting';
@@ -1046,8 +1072,7 @@ class Goods_MaterialController extends DataTableController
             $order_to_supplier_line = new Order_To_Supplier_Line();
             $order_to_supplier_line->orders_to_supplier_id = $order_to_supplier->id;
             // $order_to_supplier_line->goods_material_id = $good_material->id;
-            //update order_status of the good_material in stock
-            
+            //update order_status of the good_material in stock          
 
             $order_to_supplier_line->goods_material = $good_material['name'];
             $order_to_supplier_line->o_unit_price = $good_material['price'];
@@ -1095,6 +1120,363 @@ class Goods_MaterialController extends DataTableController
         if ($this->emailOrderToSupplier($supplier_id, $request) == 'Email Order Successfully') {
             return $this->createOrderToSupplier($supplier_id,  $request);
         }
+    }
+
+    public function removeWaitingStatus($ids){
+        $arrayIds = explode(',',$ids);
+
+        if (count($arrayIds) > 0 ) {
+            foreach($arrayIds as $id){
+                $theGM = Goods_material::find($id);
+                $theGM->O_Status = null;
+                $theGM->save();
+            }
+        }
+      
+
+    }
+    public function updateCurrentQtyFromIntemediate($ids){
+        $arrayIds = explode(',',$ids);
+        
+        if (count($arrayIds) > 0 ) {
+
+            $totalChickenMinceRequiredForWonton = 0;
+            $totalChickenMinceRequiredForDimsim = 0;
+            $totalChickenMinceRequiredForCurryPuff = 0;
+            $totalChickenMinceRequiredForDimsim = 0;
+            $totalChickenRequiredForHoneyChicken = 0;
+            $totalPorkMinceRequiredForSpringRoll = 0;
+            $totalPorkRequiredForBBQPork = 0;
+            $totalPorkRequiredForSSPork = 0;
+            $totalChickenSlices = 0;
+            $totalBeefSlices = 0;
+            $totalLambSlices = 0;
+            $order2kgOr4kg=0;
+            // for each GM 
+            foreach($arrayIds as $id){
+                // get all unit conversions of the gm 
+                $theGM = Goods_material::find($id);
+
+                //get all the unit conversions for $theGM - the GM may have more than 1 unit conversion
+                $theUnitConversions = Unit_Conversion::where('goods_material_id',$id)->get();
+            //    dd(count($theUnitConversions));
+                // if the GM has to convert unit from intermediate product
+                if(count($theUnitConversions)>0) {   
+                    // dd($theUnitConversion);
+                    $newCurrentQty = 0;
+                    $newPreparedPoint = 0;
+                    $newCoverage = 0;
+                    $newRequiredQty = 0;
+                    foreach ($theUnitConversions as $theUnitConversion) {
+                        $theIP = Intermediate_product::find($theUnitConversion->intermediate_product_id);
+                        // dd($theIP);
+                        // if($theIP->required_qty > 0){
+                            $newCurrentQty = $newCurrentQty + $theIP->current_qty * $theUnitConversion->rate;
+                            $newPreparedPoint =  $newPreparedPoint + $theIP->prepared_point * $theUnitConversion->rate;
+                            $newCoverage=  $newCoverage+ $theIP->coverage * $theUnitConversion->rate;
+                            $newRequiredQty=  $newRequiredQty+ $theIP->required_qty * $theUnitConversion->rate;
+                        // }
+                    } 
+                    // dd($newCurrentQty);
+                // if there is at least one IP have required_qty which is greater than 0
+                    // if($newRequiredQty > 0){   
+                        $theGM->current_qty = $newCurrentQty;
+                        $theGM->prepared_point = $newPreparedPoint;
+                        $theGM->coverage = $newCoverage;         
+                        $theGM->required_qty = $newRequiredQty;  
+                
+                        //update Preparation according to current_qty, Prepared_Point And Coverage
+                        if ($theGM->current_qty <= $theGM->prepared_point){
+                            $theGM->Preparation = 'Yes';
+                        } else {
+                            $theGM->Preparation = 'No';
+                        }
+                        if($theGM->save()){
+                            broadcast(new GoodMaterialEvent())->toOthers();
+                        }    
+                        //total kg of chicken mince for wonton need to order (Deep Fry + Steam)
+                        if($theGM->name == 'Chicken Mince (Wonton)'){
+                            $totalChickenMinceRequiredForWonton = $totalChickenMinceRequiredForWonton + $theGM->required_qty;
+                        }
+                        //total kg of chicken mince for curry_puff need to order (Filling + Spring Roll)
+                        if($theGM->name == 'Chicken Mince (Curry_Puff)'){
+                            $totalChickenMinceRequiredForCurryPuff = $totalChickenMinceRequiredForCurryPuff + $theGM->required_qty;
+                        }
+                        //total kg ofchicken mince for dimsim need to order
+                        if($theGM->name == 'Pork Mince (Spring_Roll)'){
+                            $totalPorkMinceRequiredForSpringRoll = $totalPorkMinceRequiredForSpringRoll + $theGM->required_qty;
+                        }
+                        //total kg of pork mince for spring roll need to order
+                        if($theGM->name == 'Chicken Mince (Dimsim)'){
+                            $totalChickenMinceRequiredForDimsim = $totalChickenMinceRequiredForDimsim + $theGM->required_qty;
+                        }
+                        
+                        if($theGM->name == 'Pork (BBQ Pork)'){
+                            $totalPorkRequiredForBBQPork = $totalPorkRequiredForBBQPork + $theGM->required_qty;
+                        }
+                        
+                        if($theGM->name == 'Pork (S&S_Pork)'){
+                            $totalPorkRequiredForSSPork = $totalPorkRequiredForSSPork + $theGM->required_qty;
+                        }
+                        if($theGM->name == 'Chicken Breast (Honey Chicken)'){
+                            $totalChickenRequiredForHoneyChicken = $totalChickenRequiredForHoneyChicken + $theGM->required_qty;
+                        }
+                        if($theGM->name == 'Chicken (Breast Slice)'){
+                            $totalChickenSlices = $totalChickenSlices + $theGM->required_qty;
+                        }
+                        if($theGM->name == 'Beef (Topside Slices)'){
+                            $totalBeefSlices = $totalBeefSlices + $theGM->required_qty;
+                        }
+                        if($theGM->name == 'Lamb Slices'){
+                            $totalLambSlices = $totalLambSlices + $theGM->required_qty;
+                        }
+                            
+                        // } else{
+                        //     $theGM->Preparation = 'No';
+                        //     $theGM->required_qty = 0;        
+                        // } 
+                       
+                    // }
+                   
+                }
+            }
+
+            // update required qty of wonton in the rule of 2kg, 4kg for 'Chicken Mince (Wonton_Deep_Fry)' and 'Chicken Mince (Wonton_Steam)'                                                                                                                                                                                                                    4kg
+            // if($totalChickenMinceRequiredForWonton > 0.8 && $totalChickenMinceRequiredForWonton < 2.5){
+            //     $order2kgOr4kg = 2;
+            //     $theGM_Wonton_DeepFry = Goods_material::where('name','Chicken Mince (Wonton_Deep_Fry)')->first();
+            //     $theGM_Wonton_Steam = Goods_material::where('name','Chicken Mince (Wonton_Steam)')->first();
+            //     if($theGM_Wonton_DeepFry->required_qty > 0 && $theGM_Wonton_Steam->required_qty > 0){
+            //         $ratioOfDFAndS = $theGM_Wonton_DeepFry->required_qty/$theGM_Wonton_Steam->required_qty;
+            //         $theGM_Wonton_Steam->required_qty =  round((2/(1+$ratioOfDFAndS)),2);
+            //         $theGM_Wonton_DeepFry->required_qty = round((2 -  $theGM_Wonton_Steam->required_qty),2);
+            //         // dd($theGM_Wonton_Steam->required_qty);
+            //         $theGM_Wonton_DeepFry->save();
+            //         $theGM_Wonton_Steam->save();
+            //     } else if ($theGM_Wonton_DeepFry->required_qty == 0) {
+            //         $theGM_Wonton_Steam->required_qty = 2;
+            //         $theGM_Wonton_Steam->save();
+            //     }   else if ( $theGM_Wonton_Steam->required_qty == 0){
+            //         $theGM_Wonton_DeepFry->required_qty =  2;
+            //         $theGM_Wonton_DeepFry->save();
+            //     }    
+            // // update required qty in the rule of 4kg /    
+            // } elseif ($totalChickenMinceRequiredForWonton >= 2.5) {
+            //     $order2kgOr4kg = 4;
+            //     $theGM_Wonton_DeepFry = Goods_material::where('name','Chicken Mince (Wonton_Deep_Fry)')->first();
+            //     $theGM_Wonton_Steam = Goods_material::where('name','Chicken Mince (Wonton_Steam)')->first();
+            //     if($theGM_Wonton_DeepFry->required_qty != 0 && $theGM_Wonton_Steam->required_qty != 0){
+            //         $ratioOfDFAndS = $theGM_Wonton_DeepFry->required_qty/$theGM_Wonton_Steam->required_qty;
+            //         $theGM_Wonton_Steam->required_qty =  round((4/(1+$ratioOfDFAndS)),2);
+            //         $theGM_Wonton_DeepFry->required_qty = round((4 -  $theGM_Wonton_Steam->required_qty),2);
+            //         $theGM_Wonton_DeepFry->save();
+            //         $theGM_Wonton_Steam->save();
+            //     } else if ($theGM_Wonton_DeepFry->required_qty == 0) {
+            //         $theGM_Wonton_Steam->required_qty = 4;
+            //         $theGM_Wonton_Steam->save();
+            //     }   else if ( $theGM_Wonton_Steam->required_qty == 0){
+            //         $theGM_Wonton_DeepFry->required_qty =  4;
+            //         $theGM_Wonton_DeepFry->save();
+            //     }    
+            // }
+
+            // update required qty of wonton in the rule of 2,4                                                                                                                                                                                                                      4kg
+            if($totalChickenMinceRequiredForWonton > 0.5 && $totalChickenMinceRequiredForWonton < 2.5){
+                $theGM_CurryPuff = Goods_material::where('name','Chicken Mince (Wonton)')->first();
+                $theGM_CurryPuff->required_qty = 2;
+                $theGM_CurryPuff->save();
+            } elseif ($totalChickenMinceRequiredForWonton >= 2.5){
+                $theGM_CurryPuff = Goods_material::where('name','Chicken Mince (Wonton)')->first();
+                $theGM_CurryPuff->required_qty = 4;
+                $theGM_CurryPuff->save();
+            }
+            // update required qty of currypuff in the rule of 2kg                                                                                                                                                                                                                      4kg
+            if($totalChickenMinceRequiredForCurryPuff > 0.8 && $totalChickenMinceRequiredForCurryPuff < 3){
+                $theGM_CurryPuff = Goods_material::where('name','Chicken Mince (Curry_Puff)')->first();
+                $theGM_CurryPuff->required_qty = 2;
+                $theGM_CurryPuff->save();
+            } elseif ($totalChickenMinceRequiredForCurryPuff >= 3){
+                $theGM_CurryPuff = Goods_material::where('name','Chicken Mince (Curry_Puff)')->first();
+                $theGM_CurryPuff->required_qty = 4;
+                $theGM_CurryPuff->save();
+            }
+
+            // update required qty of dimsim in the rule of 2kg                                                                                                                                                                                                                      4kg
+            if($totalChickenMinceRequiredForDimsim > 0.8 && $totalChickenMinceRequiredForDimsim < 3){
+                $theGM_Dimsim = Goods_material::where('name','Chicken Mince (Dimsim)')->first();
+                $theGM_Dimsim->required_qty = 2;
+                $theGM_Dimsim->save();
+            } elseif ($totalChickenMinceRequiredForDimsim >= 3){
+                $theGM_Dimsim = Goods_material::where('name','Chicken Mince (Dimsim)')->first();
+                $theGM_Dimsim->required_qty = 4;
+                $theGM_Dimsim->save();
+            }
+            
+            // update required qty of porkmince in the rule of 2kg, 4kg and 6kg                                                                                                                                                                                                                    4kg
+            if($totalPorkMinceRequiredForSpringRoll > 0.8 && $totalPorkMinceRequiredForSpringRoll < 3){
+                $theGM_SpringRoll = Goods_material::where('name','Pork Mince (Spring_Roll)')->first();
+                $theGM_SpringRoll->required_qty = 2;
+                $theGM_SpringRoll->save();
+            } elseif ($totalPorkMinceRequiredForSpringRoll >= 3 && $totalPorkMinceRequiredForSpringRoll < 6){
+                $theGM_SpringRoll = Goods_material::where('name','Pork Mince (Spring_Roll)')->first();
+                $theGM_SpringRoll->required_qty = 4;
+                $theGM_SpringRoll->save();
+            
+            } elseif ($totalPorkMinceRequiredForSpringRoll >= 6){
+                $theGM_SpringRoll = Goods_material::where('name','Pork Mince (Spring_Roll)')->first();
+                $theGM_SpringRoll->required_qty = 6;
+                $theGM_SpringRoll->save();
+            }
+            // update required qty of Pork for BBQ in the rule of 10kg, 15kg, 20kg and 25kg                                                                                                                                                                                                                    4kg
+            if($totalPorkRequiredForSSPork > 5 && $totalPorkRequiredForSSPork <10 ){
+                $theGM_SSPork = Goods_material::where('name','Pork (S&S_Pork)')->first();
+                $theGM_SSPork->required_qty = 10;
+                $theGM_SSPork->save();
+            } elseif ($totalPorkRequiredForSSPork >= 10 && $totalPorkRequiredForSSPork < 15){
+                $theGM_SSPork = Goods_material::where('name','Pork (S&S_Pork)')->first();
+                $theGM_SSPork->required_qty = 15;
+                $theGM_SSPork->save();
+            
+            } elseif ($totalPorkRequiredForSSPork >= 15){
+                $theGM_SSPork = Goods_material::where('name','Pork (S&S_Pork)')->first();
+                $theGM_SSPork->required_qty = 20;
+                $theGM_SSPork->save();
+            
+            } elseif ($totalPorkRequiredForSSPork >= 20){
+                $theGM_SSPork = Goods_material::where('name','Pork (S&S_Pork)')->first();
+                $theGM_SSPork->required_qty = 25;
+                $theGM_SSPork->save();
+            }
+            // update required qty of Pork for BBQ in the rule of 2kg, 4kg and 6kg                                                                                                                                                                                                                    4kg
+            if($totalPorkRequiredForBBQPork > 5 && $totalPorkRequiredForBBQPork <10 ){
+                $theGM_BBQPork = Goods_material::where('name','Pork (BBQ Pork)')->first();
+                $theGM_BBQPork->required_qty = 10;
+                $theGM_BBQPork->save();
+            } elseif ($totalPorkRequiredForBBQPork >= 10 && $totalPorkRequiredForBBQPork < 15){
+                $theGM_BBQPork = Goods_material::where('name','Pork (BBQ Pork)')->first();
+                $theGM_BBQPork->required_qty = 15;
+                $theGM_BBQPork->save();
+            
+            } elseif ($totalPorkRequiredForBBQPork >= 15){
+                $theGM_BBQPork = Goods_material::where('name','Pork (BBQ Pork)')->first();
+                $theGM_BBQPork->required_qty = 20;
+                $theGM_BBQPork->save();
+            }
+
+            // update required qty of Chicken for Honey CHicken in the rule of 10kg,15kg, 20kg and 25kg                                                                                                                                                                                                                    4kg
+            if($totalChickenRequiredForHoneyChicken > 5 && $totalChickenRequiredForHoneyChicken <10 ){
+                $theGM_BBQPork = Goods_material::where('name','Pork (BBQ Pork)')->first();
+                $theGM_BBQPork->required_qty = 10;
+                $theGM_BBQPork->save();
+            } elseif ($totalChickenRequiredForHoneyChicken >= 10 && $totalChickenRequiredForHoneyChicken < 15){
+                $theGM_BBQPork = Goods_material::where('name','Pork (BBQ Pork)')->first();
+                $theGM_BBQPork->required_qty = 15;
+                $theGM_BBQPork->save();
+            
+            } elseif ($totalChickenRequiredForHoneyChicken >= 15){
+                $theGM_BBQPork = Goods_material::where('name','Pork (BBQ Pork)')->first();
+                $theGM_BBQPork->required_qty = 20;
+                $theGM_BBQPork->save();
+            }
+
+            // update required qty of Chicken/Beef/Lamb slices in the rule of 10kg,15kg, 20kg, 25kg,30kg,35 and 40kg                                                                                                                                                                                                                    4kg
+            if($totalChickenSlices > 5 && $totalChickenSlices <10 ){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 10;
+                $theGM_ChickenSlices->save();
+            } elseif ($totalChickenSlices >= 10 && $totalChickenSlices < 15){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 15;
+                $theGM_ChickenSlices->save();
+            
+            } elseif ($totalChickenSlices >= 15 && $totalChickenSlices < 20){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 20;
+                $theGM_ChickenSlices->save();
+            
+            } elseif ($totalChickenSlices >= 20 && $totalChickenSlices < 25){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 25;
+                $theGM_ChickenSlices->save();
+            
+            } elseif ($totalChickenSlices >= 25 && $totalChickenSlices < 30){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 30;
+                $theGM_ChickenSlices->save();
+            
+            } elseif ($totalChickenSlices >= 30 && $totalChickenSlices < 35){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 35;
+                $theGM_ChickenSlices->save();
+            
+            } elseif ($totalChickenSlices > 35 ){
+                $theGM_ChickenSlices = Goods_material::where('name','Chicken (Breast Slice)')->first();
+                $theGM_ChickenSlices->required_qty = 40;
+                $theGM_ChickenSlices->save();
+            }
+            // update required qty of Beef for Stir Fry slices in the rule of 10kg,15kg, 20kg, 25kg,30kg,35 and 40kg                                                                                                                                                                                                                    4kg
+            if($totalBeefSlices > 5 && $totalBeefSlices <10 ){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 10;
+                $theGM_BeefSlices->save();
+            } elseif ($totalBeefSlices >= 10 && $totalBeefSlices < 15){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 15;
+                $theGM_BeefSlices->save();
+            
+            } elseif ($totalBeefSlices >= 15 && $totalBeefSlices < 20){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 20;
+                $theGM_BeefSlices->save();
+            
+            } elseif ($totalBeefSlices >= 20 && $totalBeefSlices < 25){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 25;
+                $theGM_BeefSlices->save();
+            
+            } elseif ($totalBeefSlices >= 25 && $totalBeefSlices < 30){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 30;
+                $theGM_BeefSlices->save();
+            
+            } elseif ($totalBeefSlices >= 30 && $totalBeefSlices < 35){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 35;
+                $theGM_BeefSlices->save();
+            
+            } elseif ($totalBeefSlices > 35 ){
+                $theGM_BeefSlices = Goods_material::where('name','Beef (Topside Slices)')->first();
+                $theGM_BeefSlices->required_qty = 40;
+                $theGM_BeefSlices->save();
+            }
+            // update required qty of Lamb for Stir Fry slices in the rule of 5kg, 10kg,15kg, 20kg                                                                                                                                                                                                                 4kg
+            if($totalLambSlices > 1 && $totalLambSlices <5 ){
+                $theGM_LambSlices = Goods_material::where('name','Lamb Slices')->first();
+                $theGM_LambSlices->required_qty = 5;
+                $theGM_LambSlices->save();
+            } 
+            elseif ($totalLambSlices >= 5 && $totalLambSlices < 10){
+                $theGM_LambSlices = Goods_material::where('name','Lamb Slices')->first();
+                $theGM_LambSlices->required_qty = 10;
+                $theGM_LambSlices->save();
+            
+            }elseif ($totalLambSlices >= 10 && $totalLambSlices < 15){
+                $theGM_LambSlices = Goods_material::where('name','Lamb Slices')->first();
+                $theGM_LambSlices->required_qty = 15;
+                $theGM_LambSlices->save();
+            
+            } elseif ($totalLambSlices >= 15){
+                $theGM_LambSlices = Goods_material::where('name','Lamb Slices')->first();
+                $theGM_LambSlices->required_qty = 20;
+                $theGM_LambSlices->save();           
+            }  
+            // var_dump('wonton total is: ' . $totalChickenMinceRequiredForWonton);
+            // var_dump('currypuff total is: ' . $totalChickenMinceRequiredForCurryPuff);
+            // var_dump('springRoll total is: ' . $totalPorkMinceRequiredForSpringRoll);
+            // var_dump('springRoll total is: ' . $totalChickenMinceRequiredForDimsim);
+        }
+      
+
     }
 
     

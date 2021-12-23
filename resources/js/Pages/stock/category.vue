@@ -151,7 +151,7 @@
                 <table class="min-w-max w-full table-auto">
                     <thead class="py-2">
                         <tr class="py-2 bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-2" v-if="canSelectItems">
+                            <th class="p-1" v-if="canSelectItems">
                                     <input type="checkbox" 
                                     @change="toggleSelectAll" 
                                     :checked="filteredRecords.length === selected.length"
@@ -159,7 +159,7 @@
                             </th>
                             <template v-for="column in response.displayable" :key="column">
                             <th  
-                            class="text-left"  
+                            class="text-left p-1"  
                             v-if="!hideColumns.includes(column)"
                             >
                                 <span class="sortable" @click="sortBy(column)">{{response.custom_columns[column] || column}}</span>

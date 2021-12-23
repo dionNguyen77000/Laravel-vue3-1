@@ -58,7 +58,7 @@ export default createStore({
           page
         }
       })
-      console.log(response)
+      // console.log(response)
       // console.log(response.data.meta)
       commit('setPosts', response.data.data)
       commit('setPaginationMeta', response.data.meta)

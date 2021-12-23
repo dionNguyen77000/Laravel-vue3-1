@@ -25,6 +25,8 @@ class Delivery_JourneyResourceDB extends JsonResource
             'est_return'=>$this->getEstimatedReturn(),
             // Carbon($new_delivery_detail->departure->format('Y-m-d H:i:s.u'),  $new_delivery_detail->departure->getTimezone());
             'actual_return' => $this->actual_return,
+            'cust_pay'=>$this->getCashPaidByCustomers(),
+            'change'=>$this->getChange(),
             'fuel_payment'=>$this->getFuelPayment(),
             // 'status' => $this->status,   
             'approve' => $this->approve,   

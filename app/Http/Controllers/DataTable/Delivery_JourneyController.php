@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\DataTable;
 
-
+use App\Events\JourneyEvent;
+use App\Models\User;
+use App\Events\NewJourney;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use App\Models\User;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Delivery\Delivery_Detail;
 use App\Models\Delivery\Delivery_Journey;
 use App\Models\Delivery\Delivery_Setting;
-use App\Http\Resources\Delivery\Delivery_JourneyResourceDB;
-use App\Models\Delivery\Delivery_Detail;
 use App\Models\Delivery\Delivery_Travel_Time;
+use App\Http\Resources\Delivery\Delivery_JourneyResourceDB;
 
 class Delivery_JourneyController extends DataTableController
 {
@@ -69,8 +71,9 @@ class Delivery_JourneyController extends DataTableController
             'duration',
             'est_return',
             'actual_return',
+            'cust_pay',
+            'change',           
             'fuel_payment',
-            
             'approve'
 
         
@@ -145,6 +148,35 @@ class Delivery_JourneyController extends DataTableController
         if (isset($request->approve) && $request->approve != 'All')  {
             $builder =   $builder->where('approve','=',$request->approve);
         }
+        if (isset($request->selected_time) && $request->selected_time != 'All')  {
+            if($request->selected_time=='Today'){
+                $today = date("Y-m-d");
+                // dd($today);
+                $builder =   $builder->where('date',$today);
+            } elseif($request->selected_time=='Yesterday'){
+               
+                $yesterday = date("Y-m-d", strtotime("-1 days"));
+                $builder =   $builder->where('date',$yesterday);
+               
+            }
+             elseif($request->selected_time=='Last_Week'){
+               
+
+                $start_week = date("Y-m-d", strtotime("last week monday"));
+                $end_week = date("Y-m-d", strtotime("last week sunday"));
+                // echo $start_week.' '.$end_week ;
+                $builder =   $builder->where('date','>=',$start_week)
+                ->where('date','<=',$end_week);
+               
+            }
+             elseif($request->selected_time=='Current_Week'){
+            
+                $start_week = date("Y-m-d", strtotime("this week monday"));
+                $today = date("Y-m-d", strtotime("today"));
+                $builder =   $builder->where('date','>=',$start_week)
+                ->where('date','<=',$today );             
+            }            
+        }
   
         try {
             $locations = $builder
@@ -193,16 +225,23 @@ class Delivery_JourneyController extends DataTableController
     }
     public function store(Request $request)
     {
-        // dd(now());
-        // dd($request->delivery_details);
+
+       
+        
+        $dateTimeString = strtotime($request->departure);
+        $date =  date('Y-m-d', $dateTimeString);
         $user = auth()->user();       
         $new_delivery_journey = new Delivery_Journey();
-        $new_delivery_journey->date=$request->date;;
+        $new_delivery_journey->date=$date;
         $new_delivery_journey->driver= $user->name;
         $new_delivery_journey->mobile= $user->mobile;
-        $new_delivery_journey->status= 'OnGoing';
+        // $new_delivery_journey->status= 'OnGoing';
         $new_delivery_journey->approve =  'No';
-        $new_delivery_journey->save();
+
+        if($new_delivery_journey->save()){
+            broadcast(new JourneyEvent($user))->toOthers();
+        }
+
         if(count($request->delivery_details)>0){
             // loop through 
             
@@ -238,7 +277,7 @@ class Delivery_JourneyController extends DataTableController
                    
                     $the_delivery_setting = Delivery_Setting::where('zone',$delivery_detail['zone'])->first();
 
-                    //find the travel delivery betwen the suburb and previous suburb                   
+                    //find the travel delivery betwen the current suburb and previous suburb                   
                     $the_delivery_travel = Delivery_Travel_Time::where('destination_one_id',$previous_zone_id)
                                                             ->where('destination_two_id',$the_delivery_setting->id)
                                                             ->first();
@@ -260,11 +299,7 @@ class Delivery_JourneyController extends DataTableController
                         $new_delivery_detail->estimated_return =  $current_time_destination_track->addMinutes($new_delivery_detail->estimated_duration_return);
                     }            
                 $new_delivery_detail->save();
-
-            }
-        
-
-        
+            }     
         }
     }
 
@@ -282,7 +317,10 @@ class Delivery_JourneyController extends DataTableController
         $the_delivery_journey -> actual_return = $request->actual_return;
         $the_delivery_journey -> approve = $request->approve;
 
+        $user = auth()->user();
         if($the_delivery_journey->save()){
+            broadcast(new JourneyEvent($user))->toOthers();
+
             //update the return of delivery_detail
             if($the_delivery_journey -> actual_return) {
                 $the_last_delivery_detail = $the_delivery_journey->delivery_details->last();
@@ -291,8 +329,63 @@ class Delivery_JourneyController extends DataTableController
             }
         }
 
+       
+
         return $the_delivery_journey;
         // return $this->builder->find($id)->update($request->only($this->getUpdatableColumns()));
+    }
+
+    public function destroy($ids, Request $request)
+    {
+        if (!$this->allowDeletion) {
+            return;
+        }
+
+        $arrayIds = explode(',',$ids);
+
+        $user = auth()->user();
+        if (count($arrayIds) > 1 ) {
+            $this->builder->whereIn('id', explode(',', $ids))->delete();
+            broadcast(new JourneyEvent($user))->toOthers();
+
+        } else if (count($arrayIds) == 1){
+            $this->builder->find($ids)->delete();
+            // $this->builder->find($ids)->delete();
+            broadcast(new JourneyEvent($user))->toOthers();
+
+        }
+    }
+
+    
+    public function approveJourney($ids, Request $request)
+    {
+        $arrayIds = explode(',',$ids);
+
+        if (count($arrayIds) > 0 ) {
+            foreach($arrayIds as $id){
+                $theJourney = Delivery_Journey::find($id);
+
+                // dd($theJourney);
+                $theJourney->approve = 'Yes';
+                $theJourney->save();
+            }
+        }
+
+    }
+    public function disApproveJourney($ids, Request $request)
+    {
+        $arrayIds = explode(',',$ids);
+
+        if (count($arrayIds) > 0 ) {
+            foreach($arrayIds as $id){
+
+                $theJourney = Delivery_Journey::find($id);
+                // dd($theJourney);
+                $theJourney->approve = 'No';
+                $theJourney->save();
+            }
+        }
+
     }
 
      
